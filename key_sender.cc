@@ -116,277 +116,342 @@ map<string, UINT> keysDef = {
     {"num*", VK_MULTIPLY},
     {"num/", VK_DIVIDE},
     {"num.", VK_DECIMAL}};
-map<UINT, bool> extendKeys = {
-    {VK_RCONTROL, true},
-    {VK_SNAPSHOT, true},
-    {VK_RMENU, true},
-    {VK_PAUSE, true},
-    {VK_HOME, true},
-    {VK_UP, true},
-    {VK_PRIOR, true},
-    {VK_LEFT, true},
-    {VK_RIGHT, true},
-    {VK_END, true},
-    {VK_DOWN, true},
-    {VK_NEXT, true},
-    {VK_INSERT, true},
-    {VK_DELETE, true},
-    {VK_LWIN, true},
-    {VK_RWIN, true},
-    {VK_APPS, true},
-    {VK_VOLUME_MUTE, true},
-    {VK_VOLUME_DOWN, true},
-    {VK_VOLUME_UP, true},
-    {VK_MEDIA_NEXT_TRACK, true},
-    {VK_MEDIA_PREV_TRACK, true},
-    {VK_MEDIA_STOP, true},
-    {VK_MEDIA_PLAY_PAUSE, true},
-    {VK_BROWSER_BACK, true},
-    {VK_BROWSER_FORWARD, true},
-    {VK_BROWSER_REFRESH, true},
-    {VK_BROWSER_STOP, true},
-    {VK_BROWSER_SEARCH, true},
-    {VK_BROWSER_FAVORITES, true},
-    {VK_BROWSER_HOME, true},
-    {VK_LAUNCH_MAIL, true},
-    {VK_RCONTROL, true},
-    {VK_SNAPSHOT, true},
-    {VK_RMENU, true},
-    {VK_PAUSE, true},
-    {VK_HOME, true},
-    {VK_UP, true},
-    {VK_PRIOR, true},
-    {VK_LEFT, true},
-    {VK_RIGHT, true},
-    {VK_END, true},
-    {VK_DOWN, true},
-    {VK_NEXT, true},
-    {VK_INSERT, true},
-    {VK_DELETE, true},
-    {VK_LWIN, true},
-    {VK_RWIN, true},
-    {VK_APPS, true},
-    {VK_VOLUME_MUTE, true},
-    {VK_VOLUME_DOWN, true},
-    {VK_VOLUME_UP, true},
-    {VK_MEDIA_NEXT_TRACK, true},
-    {VK_MEDIA_PREV_TRACK, true},
-    {VK_MEDIA_STOP, true},
-    {VK_MEDIA_PLAY_PAUSE, true},
-    {VK_BROWSER_BACK, true},
-    {VK_BROWSER_FORWARD, true},
-    {VK_BROWSER_REFRESH, true},
-    {VK_BROWSER_STOP, true},
-    {VK_BROWSER_SEARCH, true},
-    {VK_BROWSER_FAVORITES, true},
-    {VK_BROWSER_HOME, true},
-    {VK_LAUNCH_MAIL, true}};
+UINT extendKeys[] = {
+    VK_RCONTROL,
+    VK_SNAPSHOT,
+    VK_RMENU,
+    VK_PAUSE,
+    VK_HOME,
+    VK_UP,
+    VK_PRIOR,
+    VK_LEFT,
+    VK_RIGHT,
+    VK_END,
+    VK_DOWN,
+    VK_NEXT,
+    VK_INSERT,
+    VK_DELETE,
+    VK_LWIN,
+    VK_RWIN,
+    VK_APPS,
+    VK_VOLUME_MUTE,
+    VK_VOLUME_DOWN,
+    VK_VOLUME_UP,
+    VK_MEDIA_NEXT_TRACK,
+    VK_MEDIA_PREV_TRACK,
+    VK_MEDIA_STOP,
+    VK_MEDIA_PLAY_PAUSE,
+    VK_BROWSER_BACK,
+    VK_BROWSER_FORWARD,
+    VK_BROWSER_REFRESH,
+    VK_BROWSER_STOP,
+    VK_BROWSER_SEARCH,
+    VK_BROWSER_FAVORITES,
+    VK_BROWSER_HOME,
+    VK_LAUNCH_MAIL,
+    VK_RCONTROL,
+    VK_SNAPSHOT,
+    VK_RMENU,
+    VK_PAUSE,
+    VK_HOME,
+    VK_UP,
+    VK_PRIOR,
+    VK_LEFT,
+    VK_RIGHT,
+    VK_END,
+    VK_DOWN,
+    VK_NEXT,
+    VK_INSERT,
+    VK_DELETE,
+    VK_LWIN,
+    VK_RWIN,
+    VK_APPS,
+    VK_VOLUME_MUTE,
+    VK_VOLUME_DOWN,
+    VK_VOLUME_UP,
+    VK_MEDIA_NEXT_TRACK,
+    VK_MEDIA_PREV_TRACK,
+    VK_MEDIA_STOP,
+    VK_MEDIA_PLAY_PAUSE,
+    VK_BROWSER_BACK,
+    VK_BROWSER_FORWARD,
+    VK_BROWSER_REFRESH,
+    VK_BROWSER_STOP,
+    VK_BROWSER_SEARCH,
+    VK_BROWSER_FAVORITES,
+    VK_BROWSER_HOME,
+    VK_LAUNCH_MAIL};
 
 HWND workwindow = HWND_BROADCAST;
 int keyboardDelay = 30;
 
-static UINT flags(UINT key)
+class Keyboard
 {
-    UINT flags = KEYEVENTF_SCANCODE;
-    if (extendKeys[key] == true)
-        flags |= KEYEVENTF_EXTENDEDKEY;
-    return flags;
-}
+public:
+    Value setKeyboardDelay(const CallbackInfo &info)
+    {
+        Napi::Env env = info.Env();
+        if (info.Length() != 1)
+        {
+            Error::New(env, "Expected exactly one argument")
+                .ThrowAsJavaScriptException();
+            return env.Undefined();
+        }
+        if (!info[0].IsNumber())
+        {
+            Error::New(env, "Expected an Number")
+                .ThrowAsJavaScriptException();
+            return env.Undefined();
+        }
+        keyboardDelay = info[0].As<Number>();
+        return env.Undefined();
+    };
+    Value printText(const CallbackInfo &info)
+    {
+        Napi::Env env = info.Env();
+        if (info.Length() != 1)
+        {
+            Error::New(env, "Expected exactly one argument")
+                .ThrowAsJavaScriptException();
+            return env.Undefined();
+        }
+        if (!info[0].IsString())
+        {
+            Error::New(env, "Expected an String")
+                .ThrowAsJavaScriptException();
+            return env.Undefined();
+        }
+        string text = info[0].As<String>();
+        for (short int i = 0; i < text.length(); i++)
+        {
+            SendMessageW(GetForegroundWindow(), WM_CHAR, (WPARAM)text[i], 0);
+        }
+        return Boolean::New(env, false);
+    };
+    Value sendKeyCombo(const CallbackInfo &info)
+    {
+        Napi::Env env = info.Env();
+        if (info.Length() != 1)
+        {
+            Error::New(env, "Expected exactly one argument")
+                .ThrowAsJavaScriptException();
+            return env.Undefined();
+        }
+        if (!info[0].IsArray())
+        {
+            Error::New(env, "Expected an Array")
+                .ThrowAsJavaScriptException();
+            return env.Undefined();
+        }
+        INPUT ip;
+        ip.type = INPUT_KEYBOARD;
+        ip.ki.time = 0;
+        ip.ki.wVk = 0;
+        ip.ki.dwExtraInfo = 0;
+        Array keys = info[0].As<Array>();
+        for (size_t i = 0; i < keys.Length(); i++)
+        {
+            Value vKey = keys[i];
+            if (vKey.IsString())
+            {
+                UINT key = keysDef[vKey.As<String>()];
+                UINT wScan = MapVirtualKeyA(key, MAPVK_VK_TO_VSC);
+                UINT dwFlags = flags(key);
+                keyToogler(ip, wScan, dwFlags, true);
+            }
+        }
+        for (short int i = keys.Length() - 1; i >= 0; i--)
+        {
+            Value vKey = keys[i];
+            if (vKey.IsString())
+            {
+                UINT key = keysDef[vKey.As<String>()];
+                UINT wScan = MapVirtualKeyA(key, MAPVK_VK_TO_VSC);
+                UINT dwFlags = flags(key);
+                keyToogler(ip, wScan, dwFlags, false);
+            }
+        }
+        return Boolean::New(env, false);
+    };
+    Value sendKeys(const CallbackInfo &info)
+    {
+        Napi::Env env = info.Env();
+        if (info.Length() != 1)
+        {
+            Error::New(env, "Expected exactly one argument")
+                .ThrowAsJavaScriptException();
+            return env.Undefined();
+        }
+        if (!info[0].IsArray())
+        {
+            Error::New(env, "Expected an Array")
+                .ThrowAsJavaScriptException();
+            return env.Undefined();
+        }
+        INPUT ip;
+        ip.type = INPUT_KEYBOARD;
+        ip.ki.time = 0;
+        ip.ki.wVk = 0;
+        ip.ki.dwExtraInfo = 0;
+        Array keys = info[0].As<Array>();
+        for (size_t i = 0; i < keys.Length(); i++)
+        {
+            keySender(ip, keys[i]);
+        }
+        return Boolean::New(env, false);
+    }
 
-static void keyToogler(INPUT ip, UINT wScan, UINT dwFlags, bool isKeyDown)
-{
-    ip.ki.dwFlags = isKeyDown ? dwFlags : dwFlags | KEYEVENTF_KEYUP;
-    ip.ki.wScan = wScan;
-    SendInput(1, &ip, sizeof(INPUT));
-    Sleep(keyboardDelay);
-}
+    Value sendKey(const CallbackInfo &info)
+    {
+        Napi::Env env = info.Env();
+        if (info.Length() != 1)
+        {
+            Error::New(env, "Expected exactly one argument")
+                .ThrowAsJavaScriptException();
+            return env.Undefined();
+        }
+        INPUT ip;
+        ip.type = INPUT_KEYBOARD;
+        ip.ki.time = 0;
+        ip.ki.wVk = 0;
+        ip.ki.dwExtraInfo = 0;
+        keySender(ip, info[0]);
+        return Boolean::New(env, false);
+    }
 
-static void keySender(INPUT &ip, Value vKey)
-{
-    if (vKey.IsString())
-    {
-        UINT key = keysDef[vKey.As<String>()];
-        UINT wScan = MapVirtualKeyA(key, MAPVK_VK_TO_VSC);
-        UINT dwFlags = flags(key);
-        keyToogler(ip, wScan, dwFlags, true);
-        keyToogler(ip, wScan, dwFlags, false);
-    }
-}
+private:
+    virtual void keySender(INPUT &ip, Value vKey) = 0;
+    virtual UINT flags(UINT key) = 0;
+    virtual void keyToogler(INPUT ip, UINT wScan, UINT dwFlags, bool isKeyDown) = 0;
+};
 
-static Value setKeyboardDelay(const CallbackInfo &info)
+class CurrentWindow : public Napi::ObjectWrap<CurrentWindow>, public Keyboard
 {
-    Napi::Env env = info.Env();
-    if (info.Length() != 1)
-    {
-        Error::New(env, "Expected exactly one argument")
-            .ThrowAsJavaScriptException();
-        return env.Undefined();
-    }
-    if (!info[0].IsNumber())
-    {
-        Error::New(env, "Expected an Number")
-            .ThrowAsJavaScriptException();
-        return env.Undefined();
-    }
-    keyboardDelay = info[0].As<Number>();
-    return env.Undefined();
-}
+public:
+    static Napi::Object Init(Napi::Env env, Napi::Object exports);
+    CurrentWindow(const Napi::CallbackInfo &info);
 
-static Value setWorkWindow(const CallbackInfo &info)
-{
-    Napi::Env env = info.Env();
-    if (info.Length() != 1)
+private:
+    UINT flags(UINT key)
     {
-        Error::New(env, "Expected exactly one argument")
-            .ThrowAsJavaScriptException();
-        return env.Undefined();
-    }
-    if (!info[0].IsString())
+        UINT flags = KEYEVENTF_SCANCODE;
+        if (find(begin(extendKeys), end(extendKeys), key) != end(extendKeys))
+            flags |= KEYEVENTF_EXTENDEDKEY;
+        return flags;
+    };
+    void keyToogler(INPUT ip, UINT wScan, UINT dwFlags, bool isKeyDown)
     {
-        Error::New(env, "Expected an String")
-            .ThrowAsJavaScriptException();
-        return env.Undefined();
-    }
-    string w = info[0].As<String>();
-    workwindow = FindWindowW(NULL, LPCWSTR(wstring(w.begin(), w.end()).c_str()));
-    return env.Undefined();
-}
-
-static Value isWorkwindowActive(const CallbackInfo &info)
-{
-    return Boolean::New(info.Env(), workwindow == GetForegroundWindow());
-}
-
-static Value printText(const CallbackInfo &info)
-{
-    Napi::Env env = info.Env();
-    if (info.Length() != 1)
+        ip.ki.dwFlags = isKeyDown ? dwFlags : dwFlags | KEYEVENTF_KEYUP;
+        ip.ki.wScan = wScan;
+        SendInput(1, &ip, sizeof(INPUT));
+        Sleep(keyboardDelay);
+    };
+    void keySender(INPUT &ip, Napi::Value vKey)
     {
-        Error::New(env, "Expected exactly one argument")
-            .ThrowAsJavaScriptException();
-        return env.Undefined();
-    }
-    if (!info[0].IsString())
-    {
-        Error::New(env, "Expected an String")
-            .ThrowAsJavaScriptException();
-        return env.Undefined();
-    }
-    string text = info[0].As<String>();
-    for (short int i = 0; i < text.length(); i++)
-    {
-        SendMessageW(workwindow, WM_CHAR, (WPARAM)text[i], 0);
-    }
-    return Boolean::New(env, false);
-}
-
-static Value sendKeyCombo(const CallbackInfo &info)
-{
-    Napi::Env env = info.Env();
-    if (info.Length() != 1)
-    {
-        Error::New(env, "Expected exactly one argument")
-            .ThrowAsJavaScriptException();
-        return env.Undefined();
-    }
-    if (!info[0].IsArray())
-    {
-        Error::New(env, "Expected an Array")
-            .ThrowAsJavaScriptException();
-        return env.Undefined();
-    }
-    INPUT ip;
-    ip.type = INPUT_KEYBOARD;
-    ip.ki.time = 0;
-    ip.ki.wVk = 0;
-    ip.ki.dwExtraInfo = 0;
-    Array keys = info[0].As<Array>();
-    for (size_t i = 0; i < keys.Length(); i++)
-    {
-        Value vKey = keys[i];
         if (vKey.IsString())
         {
             UINT key = keysDef[vKey.As<String>()];
             UINT wScan = MapVirtualKeyA(key, MAPVK_VK_TO_VSC);
             UINT dwFlags = flags(key);
             keyToogler(ip, wScan, dwFlags, true);
-        }
-    }
-    for (short int i = keys.Length() - 1; i >= 0; i--)
-    {
-        Value vKey = keys[i];
-        if (vKey.IsString())
-        {
-            UINT key = keysDef[vKey.As<String>()];
-            UINT wScan = MapVirtualKeyA(key, MAPVK_VK_TO_VSC);
-            UINT dwFlags = flags(key);
             keyToogler(ip, wScan, dwFlags, false);
         }
-    }
-    return Boolean::New(env, false);
-}
+    };
+    static Napi::FunctionReference constructor;
+};
 
-static Value sendKeys(const CallbackInfo &info)
-{
-    Napi::Env env = info.Env();
-    if (info.Length() != 1)
-    {
-        Error::New(env, "Expected exactly one argument")
-            .ThrowAsJavaScriptException();
-        return env.Undefined();
-    }
-    if (!info[0].IsArray())
-    {
-        Error::New(env, "Expected an Array")
-            .ThrowAsJavaScriptException();
-        return env.Undefined();
-    }
-    INPUT ip;
-    ip.type = INPUT_KEYBOARD;
-    ip.ki.time = 0;
-    ip.ki.wVk = 0;
-    ip.ki.dwExtraInfo = 0;
-    Array keys = info[0].As<Array>();
-    for (size_t i = 0; i < keys.Length(); i++)
-    {
-        keySender(ip, keys[i]);
-    }
-    return Boolean::New(env, false);
-}
+// static Value setWorkWindow(const CallbackInfo &info)
+// {
+//     Env env = info.Env();
+//     if (info.Length() != 1)
+//     {
+//         Error::New(env, "Expected exactly one argument")
+//             .ThrowAsJavaScriptException();
+//         return env.Undefined();
+//     }
+//     if (!info[0].IsString())
+//     {
+//         Error::New(env, "Expected an String")
+//             .ThrowAsJavaScriptException();
+//         return env.Undefined();
+//     }
+//     string w = info[0].As<String>();
+//     workwindow = FindWindowW(NULL, LPCWSTR(wstring(w.begin(), w.end()).c_str()));
+//     return env.Undefined();
+// }
 
-static Value sendKey(const CallbackInfo &info)
-{
-    Napi::Env env = info.Env();
-    if (info.Length() != 1)
-    {
-        Error::New(env, "Expected exactly one argument")
-            .ThrowAsJavaScriptException();
-        return env.Undefined();
-    }
-    INPUT ip;
-    ip.type = INPUT_KEYBOARD;
-    ip.ki.time = 0;
-    ip.ki.wVk = 0;
-    ip.ki.dwExtraInfo = 0;
-    keySender(ip, info[0]);
-    // UINT key = keysDef[info[0].As<String>()];
-    // UINT lParam = 0 | (key << 16) | (0 << 24) | (0 << 29);
-    // PostMessageA(workwindow, WM_KEYDOWN, key, lParam | (0 << keyboardDelay) | (0 << 31));
-    // Sleep(keyboardDelay);
-    // PostMessageA(workwindow, WM_KEYUP, key, lParam | (1 << keyboardDelay) | (1 << 31));
-    return Boolean::New(env, false);
-}
+// static Value isWorkwindowActive(const CallbackInfo &info)
+// {
+//     return Boolean::New(info.Env(), workwindow == GetForegroundWindow());
+// }
 
-static Object Init(Env env, Object exports)
+// static Value sendKeyToWorkwindow(const CallbackInfo &info)
+// {
+//     Napi::Env env = info.Env();
+//     if (info.Length() != 1)
+//     {
+//         Error::New(env, "Expected exactly one argument")
+//             .ThrowAsJavaScriptException();
+//         return env.Undefined();
+//     }
+//     UINT key = keysDef[info[0].As<String>()];
+//     UINT lParam = 0 | (key << 16) | (0 << 24) | (0 << 29);
+//     PostMessageA(workwindow, WM_KEYDOWN, key, lParam | (0 << keyboardDelay) | (0 << 31));
+//     Sleep(keyboardDelay);
+//     PostMessageA(workwindow, WM_KEYUP, key, lParam | (1 << keyboardDelay) | (1 << 31));
+//     return Boolean::New(env, false);
+// }
+
+Napi::FunctionReference CurrentWindow::constructor;
+
+Napi::Object CurrentWindow::Init(Napi::Env env, Napi::Object exports)
 {
-    exports["setKeyboardDelay"] = Function::New(env, setKeyboardDelay);
-    exports["isWorkwindowActive"] = Function::New(env, isWorkwindowActive);
-    exports["setWorkWindow"] = Function::New(env, setWorkWindow);
-    exports["sendKeys"] = Function::New(env, sendKeys);
-    exports["sendKey"] = Function::New(env, sendKey);
-    exports["sendKeyCombo"] = Function::New(env, sendKeyCombo);
-    exports["printText"] = Function::New(env, printText);
+    Napi::HandleScope scope(env);
+
+    Napi::Function func = DefineClass(
+        env, "CurrentWindow", {
+                                  InstanceMethod("setKeyboardDelay", &CurrentWindow::setKeyboardDelay),
+                                  InstanceMethod("sendKeys", &CurrentWindow::sendKeys),
+                                  InstanceMethod("sendKey", &CurrentWindow::sendKey),
+                                  InstanceMethod("sendKeyCombo", &CurrentWindow::sendKeyCombo),
+                                  InstanceMethod("printText", &CurrentWindow::printText),
+                              });
+
+    constructor = Napi::Persistent(func);
+    constructor.SuppressDestruct();
+
+    exports.Set("CurrentWindow", func);
     return exports;
 }
+CurrentWindow::CurrentWindow(const Napi::CallbackInfo &info) : Napi::ObjectWrap<CurrentWindow>(info)
+{
+    Napi::Env env = info.Env();
+}
+Napi::Object Init(Napi::Env env, Napi::Object exports)
+{
+    CurrentWindow::Init(env, exports);
+    return exports;
+}
+
+// static Object Init(Env env, Object exports)
+// {
+//     Function func = DefineClass(
+//         env, "CurrentWindow", {
+//                                   InstanceMethod("setKeyboardDelay", &CurrentWindow::setKeyboardDelay),
+//                                   InstanceMethod("sendKeys", &CurrentWindow::sendKeys),
+//                                   InstanceMethod("sendKey", &CurrentWindow::sendKey),
+//                                   InstanceMethod("sendKeyCombo", &CurrentWindow::sendKeyCombo),
+//                                   InstanceMethod("printText", &CurrentWindow::printText),
+//                               });
+//     exports.Set("CurrentWindow", func);
+//     // exports["setKeyboardDelay"] = Function::New(env, &CurrentWindow::setKeyboardDelay);
+//     // exports["isWorkwindowActive"] = Function::New(env, isWorkwindowActive);
+//     // exports["setWorkWindow"] = Function::New(env, setWorkWindow);
+//     // exports["sendKeys"] = Function::New(env, &CurrentWindow::sendKeys);
+//     // exports["sendKey"] = Function::New(env, &CurrentWindow::sendKey);
+//     // exports["sendKeyCombo"] = Function::New(env, &CurrentWindow::sendKeyCombo);
+//     // exports["printText"] = Function::New(env, &CurrentWindow::printText);
+//     return exports;
+// }
 
 NODE_API_MODULE(NODE_GYP_MODULE_NAME, Init)
