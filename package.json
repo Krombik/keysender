@@ -12,11 +12,13 @@
   },
   "author": "Krombik",
   "license": "MIT",
+  "gypfile": true,
   "bugs": {
     "url": "https://github.com/Krombik/keysender/issues"
   },
   "homepage": "https://github.com/Krombik/keysender#readme",
   "dependencies": {
-    "node-addon-api": "^2.0.0"
+    "node-addon-api": "^2.0.0",
+    "bindings": "1.5.0"
   }
 }

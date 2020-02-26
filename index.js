@@ -1,3 +1,19 @@
-const keySender = require('./build/Release/key_sender.node');
+const hardware = require('./build/Release/key_sender.node');
 
-module.exports = keySender;
+class Hardware extends hardware.Hardware {
+
+
+    sendKey(key, delay) {
+        this.toogleKey(key, true, delay);
+        this.toogleKey(key, false, delay);
+    }
+}
+// class Virtual extends hardware.Virtual {
+
+//     sendKey(key, delay) {
+//         this.toogleKey(key, true, delay);
+//         this.toogleKey(key, false, delay);
+//     }
+// }
+
+module.exports = { Hardware };

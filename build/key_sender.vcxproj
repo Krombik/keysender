@@ -124,7 +124,9 @@
     <None Include="..\binding.gyp"/>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\key_sender.cc"/>
+    <ClCompile Include="..\src\key_sender.cpp"/>
+    <ClCompile Include="..\src\keyboard.cpp"/>
+    <ClCompile Include="..\src\hardware.cpp"/>
     <ClCompile Include="C:\Users\jitel\AppData\Roaming\npm\node_modules\node-gyp\src\win_delay_load_hook.cc"/>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets"/>
