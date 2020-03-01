@@ -7,22 +7,19 @@ using namespace std;
 void Keyboard::toogleKey(const CallbackInfo &info)
 {
     Env env = info.Env();
-    if (info.Length() > 3)
-        Error::New(env, "Expected 1-3 arguments")
+    if (info.Length() > 3 || info.Length() < 2)
+        Error::New(env, "Expected 2-3 arguments")
             .ThrowAsJavaScriptException();
-    else
-    {
-        if (!info[0].IsString())
-            Error::New(env, "arg1 - Expected an string")
-                .ThrowAsJavaScriptException();
-        if (!info[1].IsBoolean())
-            Error::New(env, "arg2 - Expected an boolean")
-                .ThrowAsJavaScriptException();
-        if (!info[2].IsNumber())
-            Error::New(env, "arg2 - Expected an number")
-                .ThrowAsJavaScriptException();
-    }
-    keyToogler(keysDef.at(info[0].As<String>()), info[1].As<Boolean>(), info[2].As<Number>().Int32Value());
+    if (!info[0].IsString())
+        Error::New(env, "arg1 - Expected an string")
+            .ThrowAsJavaScriptException();
+    if (!info[1].IsBoolean())
+        Error::New(env, "arg2 - Expected an boolean")
+            .ThrowAsJavaScriptException();
+    if (info.Length() != 2 && !info[2].IsNumber())
+        Error::New(env, "arg2 - Expected an number")
+            .ThrowAsJavaScriptException();
+    keyToogler(keysDef.at(info[0].As<String>()), info[1].As<Boolean>(), info.Length() == 3 ? info[2].As<Number>().Int32Value() : keyTooglerDelay);
 }
 
 void Keyboard::printText(const CallbackInfo &info)
