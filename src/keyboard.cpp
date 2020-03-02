@@ -1,5 +1,7 @@
 #include <windows.h>
 #include "keyboard.hpp"
+#include <locale>
+#include <codecvt>
 
 using namespace Napi;
 using namespace std;
@@ -7,52 +9,38 @@ using namespace std;
 void Keyboard::toogleKey(const CallbackInfo &info)
 {
     Env env = info.Env();
-    if (info.Length() > 3 || info.Length() < 2)
-        Error::New(env, "Expected 2-3 arguments")
+    if (info.Length() != 3)
+        Error::New(env, "Expected exactly 3 arguments")
             .ThrowAsJavaScriptException();
     if (!info[0].IsString())
-        Error::New(env, "arg1 - Expected an string")
+        Error::New(env, "arg1 - Expected an String")
             .ThrowAsJavaScriptException();
     if (!info[1].IsBoolean())
-        Error::New(env, "arg2 - Expected an boolean")
+        Error::New(env, "arg2 - Expected an Boolean")
             .ThrowAsJavaScriptException();
-    if (info.Length() != 2 && !info[2].IsNumber())
-        Error::New(env, "arg2 - Expected an number")
+    if (!info[2].IsNumber())
+        Error::New(env, "arg2 - Expected an Number")
             .ThrowAsJavaScriptException();
-    keyToogler(keysDef.at(info[0].As<String>()), info[1].As<Boolean>(), info.Length() == 3 ? info[2].As<Number>().Int32Value() : keyTooglerDelay);
+    keyToogler(keysDef.at(info[0].As<String>()), info[1].As<Boolean>(), info[2].As<Number>().Int32Value());
 }
 
 void Keyboard::printText(const CallbackInfo &info)
 {
     Env env = info.Env();
-    if (info.Length() != 1)
-    {
-        Error::New(env, "Expected exactly one argument")
+    if (info.Length() != 3)
+        Error::New(env, "Expected exactly 3 arguments")
             .ThrowAsJavaScriptException();
-    }
-    if (!info[0].IsString())
-    {
-        Error::New(env, "Expected an String")
+    if (!info[0].IsArray())
+        Error::New(env, "arg1 - Expected an Array")
             .ThrowAsJavaScriptException();
-    }
-    textPrinter(info[0].As<String>());
+    if (!info[1].IsNumber())
+        Error::New(env, "arg2 - Expected an Number")
+            .ThrowAsJavaScriptException();
+    if (!info[2].IsNumber())
+        Error::New(env, "arg3 - Expected an Number")
+            .ThrowAsJavaScriptException();
+    textPrinter(info[0].As<Array>(), info[1].As<Number>().Int32Value(), info[2].As<Number>().Int32Value());
 };
-void Keyboard::setKeyTooglerDelay(const Napi::CallbackInfo &info, const Napi::Value &value)
-{
-    this->keyTooglerDelay = value.As<Napi::Number>().Int32Value();
-}
-void Keyboard::setKeySenderDelay(const Napi::CallbackInfo &info, const Napi::Value &value)
-{
-    this->keySenderDelay = value.As<Napi::Number>().Int32Value();
-}
-Value Keyboard::getKeyTooglerDelay(const Napi::CallbackInfo &info)
-{
-    return Number::New(info.Env(), this->keyTooglerDelay);
-}
-Value Keyboard::getKeySenderDelay(const Napi::CallbackInfo &info)
-{
-    return Number::New(info.Env(), this->keySenderDelay);
-}
 
 const map<string, UINT> Keyboard::keysDef = {
     {"0", 0x30},

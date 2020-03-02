@@ -98,10 +98,26 @@ void Hardware::keyToogler(UINT key, bool isKeyDown, int delay)
         Sleep(delay);
 }
 
-void Hardware::textPrinter(std::string text)
+void Hardware::textPrinter(Napi::Array text, int keyTooglerDelay, int keySenderDelay)
 {
-    for (short int i = 0; i < text.length(); i++)
-        SendMessageW(GetForegroundWindow(), WM_CHAR, (WPARAM)text[i], 0);
+    for (size_t i = 0; i < text.Length(); i++)
+    {
+        // SendMessageW(GetForegroundWindow(), WM_CHAR, (WPARAM)text[i], 0);
+        INPUT ip;
+        ip.ki.time = 0;
+        ip.ki.wVk = 0;
+        ip.ki.dwExtraInfo = 0;
+        ip.type = INPUT_KEYBOARD;
+        ip.ki.dwFlags = KEYEVENTF_UNICODE;
+        ip.ki.wScan = Napi::Value(text[i]).ToNumber().Int32Value();
+        SendInput(1, &ip, sizeof(INPUT));
+        if (keyTooglerDelay != 0)
+            Sleep(keyTooglerDelay);
+        ip.ki.dwFlags |= KEYEVENTF_KEYUP;
+        SendInput(1, &ip, sizeof(INPUT));
+        if (keySenderDelay != 0)
+            Sleep(keySenderDelay);
+    }
 }
 
 Napi::Value Hardware::isWorkwindowActive(const Napi::CallbackInfo &info)
@@ -116,7 +132,7 @@ Napi::Object Hardware::Init(Napi::Env env, Napi::Object exports)
     Napi::HandleScope scope(env);
 
     Napi::Function func = DefineClass(
-        env, "Hardware", {InstanceMethod("toogleKey", &Hardware::toogleKey), InstanceMethod("isWorkwindowActive", &Hardware::isWorkwindowActive), InstanceMethod("printText", &Hardware::printText), InstanceAccessor("keyTooglerDelay", &Hardware::getKeyTooglerDelay, &Hardware::setKeyTooglerDelay), InstanceAccessor("keySenderDelay", &Hardware::getKeySenderDelay, &Hardware::setKeySenderDelay)});
+        env, "Hardware", {InstanceMethod("toogleKey", &Hardware::toogleKey), InstanceMethod("isWorkwindowActive", &Hardware::isWorkwindowActive), InstanceMethod("printText", &Hardware::printText)});
 
     constructor = Napi::Persistent(func);
     constructor.SuppressDestruct();

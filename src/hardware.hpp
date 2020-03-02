@@ -15,7 +15,7 @@ private:
     static Napi::FunctionReference constructor;
     static const UINT extendKeys[];
     void keyToogler(UINT key, bool isKeyDown, int delay);
-    void textPrinter(std::string text);
+    void textPrinter(Napi::Array text, int keyTooglerDelay, int keySenderDelay);
     Napi::Value isWorkwindowActive(const Napi::CallbackInfo &info);
 
 protected:
