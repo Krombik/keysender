@@ -6,14 +6,6 @@
 
 using namespace std;
 
-Hardware::Hardware(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Hardware>(info)
-{
-    Napi::Env env = info.Env();
-    Napi::HandleScope scope(env);
-    string w = info[0].As<Napi::String>();
-    this->workwindow = FindWindowW(NULL, LPCWSTR(wstring(w.begin(), w.end()).c_str()));
-}
-
 const UINT Hardware::extendKeys[] = {VK_RCONTROL,
                                      VK_SNAPSHOT,
                                      VK_RMENU,
@@ -111,18 +103,13 @@ void Hardware::textPrinter(Napi::Array text, int keyTooglerDelay, int keySenderD
         ip.ki.dwFlags = KEYEVENTF_UNICODE;
         ip.ki.wScan = Napi::Value(text[i]).ToNumber().Int32Value();
         SendInput(1, &ip, sizeof(INPUT));
-        if (keyTooglerDelay != 0)
+        if (keyTooglerDelay > 0)
             Sleep(keyTooglerDelay);
         ip.ki.dwFlags |= KEYEVENTF_KEYUP;
         SendInput(1, &ip, sizeof(INPUT));
-        if (keySenderDelay != 0)
+        if (keySenderDelay > 0)
             Sleep(keySenderDelay);
     }
-}
-
-Napi::Value Hardware::isWorkwindowActive(const Napi::CallbackInfo &info)
-{
-    return Napi::Boolean::New(info.Env(), workwindow == GetForegroundWindow());
 }
 
 Napi::FunctionReference Hardware::constructor;
@@ -132,7 +119,13 @@ Napi::Object Hardware::Init(Napi::Env env, Napi::Object exports)
     Napi::HandleScope scope(env);
 
     Napi::Function func = DefineClass(
-        env, "Hardware", {InstanceMethod("toogleKey", &Hardware::toogleKey), InstanceMethod("isWorkwindowActive", &Hardware::isWorkwindowActive), InstanceMethod("printText", &Hardware::printText)});
+        env, "Hardware", {
+                             InstanceMethod("toogleKey", &Hardware::toogleKey),
+                             InstanceMethod("printText", &Hardware::printText),
+                             InstanceMethod("isForeground", &Hardware::isForeground),
+                             InstanceMethod("isOpen", &Hardware::isOpen),
+                             InstanceAccessor("WORKWINDOW", &Hardware::getWorkwindow, &Hardware::setWorkwindow),
+                         });
 
     constructor = Napi::Persistent(func);
     constructor.SuppressDestruct();

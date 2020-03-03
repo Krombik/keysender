@@ -5,6 +5,7 @@
       "sources": [ 
         "src/key_sender.cpp",
         "src/keyboard.cpp",
+        "src/workwindow.cpp",
         "src/hardware.cpp"
       ],
       "cflags!": [ "-fno-exceptions" ],

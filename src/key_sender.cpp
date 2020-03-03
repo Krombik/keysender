@@ -5,6 +5,7 @@
 Napi::Object Init(Napi::Env env, Napi::Object exports)
 {
     Hardware::Init(env, exports);
+    exports["getAllOpenWindowsList"] = Napi::Function::New(env, getAllOpenWindowsList);
     return exports;
 }
 

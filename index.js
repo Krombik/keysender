@@ -1,4 +1,10 @@
 const nodeAddon = require('./build/Release/key_sender.node');
+const stringToDWORDArray = str => {
+    const arr = [];
+    for (let i = 0; i < str.length; i++)
+        arr[i] = str.codePointAt(i);
+    return arr;
+}
 
 const Keyboard = ClassName => class extends ClassName {
     get keyboard() {
@@ -9,7 +15,7 @@ const Keyboard = ClassName => class extends ClassName {
                 keyTooglerDelay: 35,
                 keySenderDelay: 35,
                 printText(text, keyTooglerDelay = 0, keySenderDelay = 0) {
-                    self.printText([...text].map((_, index) => text.codePointAt(index)), keyTooglerDelay, keySenderDelay);
+                    self.printText(stringToDWORDArray(text), keyTooglerDelay, keySenderDelay);
                 },
                 toogleKey(key, isKeyDown = true, delay = this.keyTooglerDelay) {
                     self.toogleKey(key, isKeyDown, delay);
@@ -67,26 +73,21 @@ const Keyboard = ClassName => class extends ClassName {
     }
 }
 
-// const KeyboardSync = ClassName => class extends ClassName {
-//         sendKey(key) {
-//             const down = [key, true];
-//             const up = [key, false, this.keySenderDelay];
-//             if (arguments.length > 1) {
-//                 down[2] = arguments[1];
-//                 up[2] = arguments[arguments.length - 1];
-//             }
-//             sync(() => this.kek(...down),
-//                 () => this.kek(...up));
-
-//         }
-//         sendKeys(keys) {
-//             const delays = [...arguments].slice(1);
-//             keys.forEach(key => {
-//                 this.sendKey(key, ...delays)
-//             });
-//         }
-// }
-class Hardware extends Keyboard(nodeAddon.Hardware) {
+const Workwindow = ClassName => class extends ClassName {
+    constructor(workwindow) {
+        super();
+        this.WORKWINDOW = typeof workwindow === 'string' ? stringToDWORDArray(workwindow) : workwindow;
+    }
+    set workwindow(workwindow) {
+        this.WORKWINDOW = stringToDWORDArray(workwindow)
+    }
+    get workwindow() {
+        const workwindow = { ...this.WORKWINDOW };
+        workwindow.title = String.fromCodePoint(...workwindow.title)
+        return workwindow;
+    }
+}
+class Hardware extends Keyboard(Workwindow(nodeAddon.Hardware)) {
 
 
     // sendKey(key, delay) {
@@ -94,6 +95,9 @@ class Hardware extends Keyboard(nodeAddon.Hardware) {
     //     this.toogleKey(key, false, delay);
     // }
 }
+
+const getAllOpenWindowsList = () =>
+    nodeAddon.getAllOpenWindowsList().map(item => ({ handle: item.handle, title: String.fromCodePoint(...item.title) }))
 // class Virtual extends hardware.Virtual {
 
 //     sendKey(key, delay) {
@@ -102,4 +106,4 @@ class Hardware extends Keyboard(nodeAddon.Hardware) {
 //     }
 // }
 
-module.exports = { Hardware };
+module.exports = { Hardware, getAllOpenWindowsList };
