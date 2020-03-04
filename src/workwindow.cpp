@@ -52,10 +52,10 @@ Napi::Value Workwindow::getWorkwindow(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
     Napi::Object workwindow = Napi::Object::New(env);
+    Napi::Array titleA = Napi::Array::New(env);
     HWND hWnd = this->hWnd;
     std::wstring title(GetWindowTextLengthA(hWnd) + 1, L'\0');
     GetWindowTextW(hWnd, &title[0], title.size());
-    Napi::Array titleA = Napi::Array::New(env);
     for (size_t i = 0; i < title.length() - 1; i++)
         titleA[i] = Napi::Number::New(env, DWORD(title.at(i)));
     workwindow["title"] = titleA;
@@ -71,4 +71,9 @@ Napi::Value Workwindow::isForeground(const Napi::CallbackInfo &info)
 Napi::Value Workwindow::isOpen(const Napi::CallbackInfo &info)
 {
     return Napi::Boolean::New(info.Env(), IsWindow(this->hWnd));
+};
+
+void Workwindow::setForeground(const Napi::CallbackInfo &info)
+{
+    SetForegroundWindow(this->hWnd);
 };

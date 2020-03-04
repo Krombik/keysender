@@ -123,8 +123,9 @@ Napi::Object Hardware::Init(Napi::Env env, Napi::Object exports)
                              InstanceMethod("toogleKey", &Hardware::toogleKey),
                              InstanceMethod("printText", &Hardware::printText),
                              InstanceMethod("isForeground", &Hardware::isForeground),
+                             InstanceMethod("setForeground", &Hardware::setForeground),
                              InstanceMethod("isOpen", &Hardware::isOpen),
-                             InstanceAccessor("WORKWINDOW", &Hardware::getWorkwindow, &Hardware::setWorkwindow),
+                             InstanceAccessor("workwindow", &Hardware::getWorkwindow, &Hardware::setWorkwindow),
                          });
 
     constructor = Napi::Persistent(func);

@@ -76,13 +76,13 @@ const Keyboard = ClassName => class extends ClassName {
 const Workwindow = ClassName => class extends ClassName {
     constructor(workwindow) {
         super();
-        this.WORKWINDOW = typeof workwindow === 'string' ? stringToDWORDArray(workwindow) : workwindow;
+        this.workwindow = typeof workwindow === 'string' ? stringToDWORDArray(workwindow) : workwindow;
     }
-    set workwindow(workwindow) {
-        this.WORKWINDOW = stringToDWORDArray(workwindow)
+    set is(workwindow) {
+        this.workwindow = typeof workwindow === 'string' ? stringToDWORDArray(workwindow) : workwindow;
     }
-    get workwindow() {
-        const workwindow = { ...this.WORKWINDOW };
+    get is() {
+        const workwindow = { ...this.workwindow };
         workwindow.title = String.fromCodePoint(...workwindow.title)
         return workwindow;
     }
