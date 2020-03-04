@@ -6,7 +6,8 @@
         "src/key_sender.cpp",
         "src/keyboard.cpp",
         "src/workwindow.cpp",
-        "src/hardware.cpp"
+        "src/hardware.cpp",
+        "src/virtual.cpp"
       ],
       "cflags!": [ "-fno-exceptions" ],
       "cflags_cc!": [ "-fno-exceptions" ],

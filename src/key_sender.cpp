@@ -1,11 +1,13 @@
 
 #include <windows.h>
 #include "hardware.hpp"
+#include "virtual.hpp"
 
 Napi::Object Init(Napi::Env env, Napi::Object exports)
 {
     Hardware::Init(env, exports);
-    exports["getAllOpenWindowsList"] = Napi::Function::New(env, getAllOpenWindowsList);
+    Virtual::Init(env, exports);
+    exports["_getAllOpenWindowsList"] = Napi::Function::New(env, getAllOpenWindowsList);
     return exports;
 }
 

@@ -1,4 +1,4 @@
-const nodeAddon = require('./build/Release/key_sender.node');
+const { _Virtual, _Hardware, _getAllOpenWindowsList } = require('./build/Release/key_sender.node');
 const stringToDWORDArray = str => {
     const arr = [];
     for (let i = 0; i < str.length; i++)
@@ -15,55 +15,55 @@ const Keyboard = ClassName => class extends ClassName {
                 keyTooglerDelay: 35,
                 keySenderDelay: 35,
                 printText(text, keyTooglerDelay = 0, keySenderDelay = 0) {
-                    self.printText(stringToDWORDArray(text), keyTooglerDelay, keySenderDelay);
+                    self._printText(stringToDWORDArray(text), keyTooglerDelay, keySenderDelay);
                 },
                 toogleKey(key, isKeyDown = true, delay = this.keyTooglerDelay) {
-                    self.toogleKey(key, isKeyDown, delay);
+                    self._toogleKey(key, isKeyDown, delay);
                 },
                 async toogleKeyAsync(key, isKeyDown = true, delay = this.keyTooglerDelay) {
-                    self.toogleKey(key, isKeyDown, 0);
+                    self._toogleKey(key, isKeyDown, 0);
                     await new Promise(_ => setTimeout(_, delay));
                 },
                 sendKey(key, keyTooglerDelay = this.keyTooglerDelay, keySenderDelay = 0) {
-                    self.toogleKey(key, true, keyTooglerDelay);
-                    self.toogleKey(key, false, keySenderDelay);
+                    self._toogleKey(key, true, keyTooglerDelay);
+                    self._toogleKey(key, false, keySenderDelay);
                 },
                 async sendKeyAsync(key, keyTooglerDelay = this.keyTooglerDelay, keySenderDelay = 0) {
-                    self.toogleKey(key, true, 0);
+                    self._toogleKey(key, true, 0);
                     await new Promise(_ => setTimeout(_, keyTooglerDelay));
-                    self.toogleKey(key, false, 0);
+                    self._toogleKey(key, false, 0);
                     if (keySenderDelay !== 0) await new Promise(_ => setTimeout(_, keySenderDelay));
                 },
                 sendKeys(keys, keyTooglerDelay = this.keyTooglerDelay, keySenderDelay = keyTooglerDelay === undefined ? this.keySenderDelay : keyTooglerDelay) {
                     keys.forEach((key, index) => {
-                        self.toogleKey(key, true, keyTooglerDelay);
-                        self.toogleKey(key, false, index !== keys.length - 1 ? keySenderDelay : 0);
+                        self._toogleKey(key, true, keyTooglerDelay);
+                        self._toogleKey(key, false, index !== keys.length - 1 ? keySenderDelay : 0);
                     });
                 },
                 async sendKeysAsync(keys, keyTooglerDelay = this.keyTooglerDelay, keySenderDelay = keyTooglerDelay === undefined ? this.keySenderDelay : keyTooglerDelay) {
                     for (let i = 0; i < keys.length; i++) {
-                        self.toogleKey(keys[i], true, 0);
+                        self._toogleKey(keys[i], true, 0);
                         await new Promise(_ => setTimeout(_, keyTooglerDelay));
-                        self.toogleKey(keys[i], false, 0);
+                        self._toogleKey(keys[i], false, 0);
                         if (i !== keys.length - 1) await new Promise(_ => setTimeout(_, keySenderDelay));
                     }
                 },
                 sendKeyCombo(keys, keyTooglerDelay = this.keyTooglerDelay, keySenderDelay = 0) {
                     const last = keys.length - 1;
                     keys.forEach((key, index) => {
-                        self.toogleKey(key, true, index !== last ? microSleep : keyTooglerDelay);
+                        self._toogleKey(key, true, index !== last ? microSleep : keyTooglerDelay);
                     });
                     for (let index = last; index >= 0; index--)
-                        self.toogleKey(keys[index], false, index !== 0 ? microSleep : keySenderDelay);
+                        self._toogleKey(keys[index], false, index !== 0 ? microSleep : keySenderDelay);
                 },
                 async sendKeyComboAsync(keys, keyTooglerDelay = this.keyTooglerDelay, keySenderDelay = 0) {
                     const last = keys.length - 1;
                     for (var i = 0; i <= last; i++) {
-                        self.toogleKey(keys[i], true, 0);
+                        self._toogleKey(keys[i], true, 0);
                         await new Promise(_ => setTimeout(_, i !== last ? microSleep : keyTooglerDelay));
                     };
                     for (i--; i >= 0; i--) {
-                        self.toogleKey(keys[i], false, 0);
+                        self._toogleKey(keys[i], false, 0);
                         await new Promise(_ => setTimeout(_, i !== 0 ? microSleep : keySenderDelay));
                     }
                 }
@@ -76,34 +76,22 @@ const Keyboard = ClassName => class extends ClassName {
 const Workwindow = ClassName => class extends ClassName {
     constructor(workwindow) {
         super();
-        this.workwindow = typeof workwindow === 'string' ? stringToDWORDArray(workwindow) : workwindow;
+        this._workwindow = typeof workwindow === 'string' ? stringToDWORDArray(workwindow) : workwindow;
     }
     set is(workwindow) {
-        this.workwindow = typeof workwindow === 'string' ? stringToDWORDArray(workwindow) : workwindow;
+        this._workwindow = typeof workwindow === 'string' ? stringToDWORDArray(workwindow) : workwindow;
     }
     get is() {
-        const workwindow = { ...this.workwindow };
+        const workwindow = { ...this._workwindow };
         workwindow.title = String.fromCodePoint(...workwindow.title)
         return workwindow;
     }
 }
-class Hardware extends Keyboard(Workwindow(nodeAddon.Hardware)) {
 
-
-    // sendKey(key, delay) {
-    //     this.toogleKey(key, true, delay);
-    //     this.toogleKey(key, false, delay);
-    // }
-}
-
+class Hardware extends Keyboard(Workwindow(_Hardware)) { };
+class Virtual extends Keyboard(Workwindow(_Virtual)) { };
 const getAllOpenWindowsList = () =>
-    nodeAddon.getAllOpenWindowsList().map(item => ({ handle: item.handle, title: String.fromCodePoint(...item.title) }))
-// class Virtual extends hardware.Virtual {
+    _getAllOpenWindowsList()
+        .map(item => ({ handle: item.handle, title: String.fromCodePoint(...item.title) }));
 
-//     sendKey(key, delay) {
-//         this.toogleKey(key, true, delay);
-//         this.toogleKey(key, false, delay);
-//     }
-// }
-
-module.exports = { Hardware, getAllOpenWindowsList };
+module.exports = { Virtual, Hardware, getAllOpenWindowsList };
