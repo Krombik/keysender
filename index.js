@@ -73,6 +73,30 @@ const Keyboard = ClassName => class extends ClassName {
     }
 }
 
+const Mouse = ClassName => class extends ClassName {
+    get mouse() {
+        const self = this;
+        Object.defineProperty(this, "mouse", {
+            value: {
+                click(button = "left", delay) {
+                    self._toogleMb(button, true, delay);
+                    self._toogleMb(button, false, delay);
+                },
+                moveTo(x, y) {
+                    self._move(x, y, true);
+                },
+                move(x, y) {
+                    self._move(x, y, false);
+                },
+                scrollWheel(x) {
+                    self._scrollWheel(x);
+                }
+            }
+        });
+        return this.mouse
+    }
+}
+
 const Workwindow = ClassName => class extends ClassName {
     constructor(workwindow) {
         super();
@@ -88,7 +112,7 @@ const Workwindow = ClassName => class extends ClassName {
     }
 }
 
-class Hardware extends Keyboard(Workwindow(_Hardware)) { };
+class Hardware extends Mouse(Keyboard(Workwindow(_Hardware))) { };
 class Virtual extends Keyboard(Workwindow(_Virtual)) { };
 const getAllOpenWindowsList = () =>
     _getAllOpenWindowsList()

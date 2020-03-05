@@ -71,6 +71,58 @@ const UINT Hardware::extendKeys[] = {VK_RCONTROL,
                                      VK_BROWSER_HOME,
                                      VK_LAUNCH_MAIL};
 
+const map<string, array<UINT, 2>> Hardware::buttonsDef = {
+    {"left", {MOUSEEVENTF_LEFTUP, MOUSEEVENTF_LEFTDOWN}},
+    {"right", {MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_RIGHTDOWN}},
+    {"wheel", {MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_MIDDLEDOWN}}};
+
+void Hardware::mbToogler(string button, bool isButtonDown, int delay)
+{
+    INPUT ip;
+    ip.type = INPUT_MOUSE;
+    ip.mi.dx = 0;
+    ip.mi.dy = 0;
+    ip.mi.mouseData = 0;
+    ip.mi.dwExtraInfo = 0;
+    ip.mi.time = 0;
+    ip.mi.dwFlags = buttonsDef.at(button)[(int)isButtonDown];
+    SendInput(1, &ip, sizeof(INPUT));
+    if (delay > 0)
+        Sleep(delay);
+}
+
+void Hardware::mover(int x, int y, bool isAbsolute)
+{
+    INPUT ip;
+    ip.type = INPUT_MOUSE;
+    ip.mi.dx = x;
+    ip.mi.dy = y;
+    ip.mi.mouseData = 0;
+    ip.mi.dwExtraInfo = 0;
+    ip.mi.time = 0;
+    ip.mi.dwFlags = MOUSEEVENTF_MOVE;
+    if (isAbsolute)
+    {
+        ip.mi.dx *= 65536 / GetSystemMetrics(SM_CXSCREEN);
+        ip.mi.dy *= 65536 / GetSystemMetrics(SM_CYSCREEN);
+        ip.mi.dwFlags |= MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESK;
+    }
+    SendInput(1, &ip, sizeof(INPUT));
+}
+
+void Hardware::wheelScroller(int x)
+{
+    INPUT ip;
+    ip.type = INPUT_MOUSE;
+    ip.mi.dx = 0;
+    ip.mi.dy = 0;
+    ip.mi.mouseData = x * WHEEL_DELTA;
+    ip.mi.dwExtraInfo = 0;
+    ip.mi.time = 0;
+    ip.mi.dwFlags = MOUSEEVENTF_WHEEL;
+    SendInput(1, &ip, sizeof(INPUT));
+}
+
 void Hardware::keyToogler(UINT key, bool isKeyDown, int delay)
 {
     INPUT ip;
@@ -120,6 +172,9 @@ Napi::Object Hardware::Init(Napi::Env env, Napi::Object exports)
         env, "_Hardware", {
                               InstanceMethod("_toogleKey", &Hardware::toogleKey),
                               InstanceMethod("_printText", &Hardware::printText),
+                              InstanceMethod("_toogleMb", &Hardware::toogleMb),
+                              InstanceMethod("_move", &Hardware::move),
+                              InstanceMethod("_scrollWheel", &Hardware::scrollWheel),
                               InstanceMethod("isForeground", &Hardware::isForeground),
                               InstanceMethod("setForeground", &Hardware::setForeground),
                               InstanceMethod("isOpen", &Hardware::isOpen),

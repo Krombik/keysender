@@ -2,11 +2,13 @@
 #define HARDWARE_H
 
 #include "keyboard.hpp"
+#include "mouse.hpp"
 #include "workwindow.hpp"
 #include <napi.h>
 #include <winuser.h>
+#include <array>
 
-class Hardware : public Keyboard, public Workwindow, public Napi::ObjectWrap<Hardware>
+class Hardware : public Keyboard, public Mouse, public Workwindow, public Napi::ObjectWrap<Hardware>
 {
 public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
@@ -15,6 +17,10 @@ public:
 private:
     static Napi::FunctionReference constructor;
     static const UINT extendKeys[];
+    static const std::map<std::string, std::array<UINT, 2>> buttonsDef;
+    void mbToogler(std::string button, bool isButtonDown, int delay);
+    void mover(int x, int y, bool isAbsolute);
+    void wheelScroller(int x);
     void keyToogler(UINT key, bool isKeyDown, int delay);
     void textPrinter(Napi::Array text, int keyTooglerDelay, int keySenderDelay);
 };

@@ -1,7 +1,5 @@
 #include <windows.h>
 #include "keyboard.hpp"
-#include <locale>
-#include <codecvt>
 
 using namespace Napi;
 using namespace std;

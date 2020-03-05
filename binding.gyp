@@ -5,6 +5,7 @@
       "sources": [ 
         "src/key_sender.cpp",
         "src/keyboard.cpp",
+        "src/mouse.cpp",
         "src/workwindow.cpp",
         "src/hardware.cpp",
         "src/virtual.cpp"
