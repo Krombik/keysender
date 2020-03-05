@@ -18,11 +18,11 @@ private:
     static Napi::FunctionReference constructor;
     static const UINT extendKeys[];
     static const std::map<std::string, std::array<UINT, 2>> buttonsDef;
-    void mbToogler(std::string button, bool isButtonDown, int delay);
+    void mbToogler(std::string button, bool isButtonDown);
     void mover(int x, int y, bool isAbsolute);
     void wheelScroller(int x);
-    void keyToogler(UINT key, bool isKeyDown, int delay);
-    void textPrinter(Napi::Array text, int keyTooglerDelay, int keySenderDelay);
+    void keyToogler(UINT key, bool isKeyDown);
+    void charPrinter(int code);
 };
 
 #endif

@@ -76,7 +76,7 @@ const map<string, array<UINT, 2>> Hardware::buttonsDef = {
     {"right", {MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_RIGHTDOWN}},
     {"wheel", {MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_MIDDLEDOWN}}};
 
-void Hardware::mbToogler(string button, bool isButtonDown, int delay)
+void Hardware::mbToogler(string button, bool isButtonDown)
 {
     INPUT ip;
     ip.type = INPUT_MOUSE;
@@ -87,8 +87,6 @@ void Hardware::mbToogler(string button, bool isButtonDown, int delay)
     ip.mi.time = 0;
     ip.mi.dwFlags = buttonsDef.at(button)[(int)isButtonDown];
     SendInput(1, &ip, sizeof(INPUT));
-    if (delay > 0)
-        Sleep(delay);
 }
 
 void Hardware::mover(int x, int y, bool isAbsolute)
@@ -123,7 +121,7 @@ void Hardware::wheelScroller(int x)
     SendInput(1, &ip, sizeof(INPUT));
 }
 
-void Hardware::keyToogler(UINT key, bool isKeyDown, int delay)
+void Hardware::keyToogler(UINT key, bool isKeyDown)
 {
     INPUT ip;
     DWORD dwFlags = KEYEVENTF_SCANCODE;
@@ -138,29 +136,20 @@ void Hardware::keyToogler(UINT key, bool isKeyDown, int delay)
     ip.ki.dwFlags = dwFlags;
     ip.ki.wScan = MapVirtualKeyA(key, MAPVK_VK_TO_VSC);
     SendInput(1, &ip, sizeof(INPUT));
-    if (delay > 0)
-        Sleep(delay);
 }
 
-void Hardware::textPrinter(Napi::Array text, int keyTooglerDelay, int keySenderDelay)
+void Hardware::charPrinter(int code)
 {
-    for (size_t i = 0; i < text.Length(); i++)
-    {
-        INPUT ip;
-        ip.ki.time = 0;
-        ip.ki.wVk = 0;
-        ip.ki.dwExtraInfo = 0;
-        ip.type = INPUT_KEYBOARD;
-        ip.ki.dwFlags = KEYEVENTF_UNICODE;
-        ip.ki.wScan = Napi::Value(text[i]).ToNumber().Int32Value();
-        SendInput(1, &ip, sizeof(INPUT));
-        if (keyTooglerDelay > 0)
-            Sleep(keyTooglerDelay);
-        ip.ki.dwFlags |= KEYEVENTF_KEYUP;
-        SendInput(1, &ip, sizeof(INPUT));
-        if (keySenderDelay > 0 && i != text.Length() - 1)
-            Sleep(keySenderDelay);
-    }
+    INPUT ip;
+    ip.ki.time = 0;
+    ip.ki.wVk = 0;
+    ip.ki.dwExtraInfo = 0;
+    ip.type = INPUT_KEYBOARD;
+    ip.ki.dwFlags = KEYEVENTF_UNICODE;
+    ip.ki.wScan = code;
+    SendInput(1, &ip, sizeof(INPUT));
+    ip.ki.dwFlags |= KEYEVENTF_KEYUP;
+    SendInput(1, &ip, sizeof(INPUT));
 }
 
 Napi::FunctionReference Hardware::constructor;
@@ -170,8 +159,9 @@ Napi::Object Hardware::Init(Napi::Env env, Napi::Object exports)
     Napi::HandleScope scope(env);
     Napi::Function func = DefineClass(
         env, "_Hardware", {
+                              InstanceMethod("_sleep", &Hardware::sleep),
                               InstanceMethod("_toogleKey", &Hardware::toogleKey),
-                              InstanceMethod("_printText", &Hardware::printText),
+                              InstanceMethod("_printChar", &Hardware::printChar),
                               InstanceMethod("_toogleMb", &Hardware::toogleMb),
                               InstanceMethod("_move", &Hardware::move),
                               InstanceMethod("_scrollWheel", &Hardware::scrollWheel),

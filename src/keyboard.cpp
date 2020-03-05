@@ -7,8 +7,8 @@ using namespace std;
 void Keyboard::toogleKey(const CallbackInfo &info)
 {
     Env env = info.Env();
-    if (info.Length() != 3)
-        Error::New(env, "Expected exactly 3 arguments")
+    if (info.Length() != 2)
+        Error::New(env, "Expected exactly 2 arguments")
             .ThrowAsJavaScriptException();
     if (!info[0].IsString())
         Error::New(env, "arg1 - Expected an String")
@@ -16,28 +16,19 @@ void Keyboard::toogleKey(const CallbackInfo &info)
     if (!info[1].IsBoolean())
         Error::New(env, "arg2 - Expected an Boolean")
             .ThrowAsJavaScriptException();
-    if (!info[2].IsNumber())
-        Error::New(env, "arg2 - Expected an Number")
-            .ThrowAsJavaScriptException();
-    keyToogler(keysDef.at(info[0].As<String>()), info[1].As<Boolean>(), info[2].As<Number>().Int32Value());
+    keyToogler(keysDef.at(info[0].As<String>()), info[1].As<Boolean>());
 }
 
-void Keyboard::printText(const CallbackInfo &info)
+void Keyboard::printChar(const CallbackInfo &info)
 {
     Env env = info.Env();
-    if (info.Length() != 3)
-        Error::New(env, "Expected exactly 3 arguments")
+    if (info.Length() != 1)
+        Error::New(env, "Expected exactly 1 arguments")
             .ThrowAsJavaScriptException();
-    if (!info[0].IsArray())
-        Error::New(env, "arg1 - Expected an Array")
+    if (!info[0].IsNumber())
+        Error::New(env, "Expected an Number")
             .ThrowAsJavaScriptException();
-    if (!info[1].IsNumber())
-        Error::New(env, "arg2 - Expected an Number")
-            .ThrowAsJavaScriptException();
-    if (!info[2].IsNumber())
-        Error::New(env, "arg3 - Expected an Number")
-            .ThrowAsJavaScriptException();
-    textPrinter(info[0].As<Array>(), info[1].As<Number>().Int32Value(), info[2].As<Number>().Int32Value());
+    charPrinter(info[0].As<Number>().Int32Value());
 };
 
 const map<string, UINT> Keyboard::keysDef = {

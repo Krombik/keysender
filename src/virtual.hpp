@@ -14,8 +14,8 @@ public:
 
 private:
     static Napi::FunctionReference constructor;
-    void keyToogler(UINT key, bool isKeyDown, int delay);
-    void textPrinter(Napi::Array text, int keyTooglerDelay, int keySenderDelay);
+    void keyToogler(UINT key, bool isKeyDown);
+    void charPrinter(int code);
 };
 
 #endif

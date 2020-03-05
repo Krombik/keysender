@@ -18,10 +18,7 @@ void Mouse::toogleMb(const CallbackInfo &info)
     if (!info[1].IsBoolean())
         Error::New(env, "arg2 - Expected an Boolean")
             .ThrowAsJavaScriptException();
-    if (!info[2].IsNumber())
-        Error::New(env, "arg2 - Expected an Number")
-            .ThrowAsJavaScriptException();
-    mbToogler(info[0].As<String>(), info[1].As<Boolean>(), info[2].As<Number>().Int32Value());
+    mbToogler(info[0].As<String>(), info[1].As<Boolean>());
 }
 
 void Mouse::scrollWheel(const CallbackInfo &info)

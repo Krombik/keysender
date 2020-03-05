@@ -33,6 +33,18 @@ Napi::Value getAllOpenWindowsList(const Napi::CallbackInfo &info)
     return windows;
 }
 
+void Workwindow::sleep(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+    if (info.Length() != 1)
+        Napi::Error::New(env, "Expected exactly 1 arguments")
+            .ThrowAsJavaScriptException();
+    if (!info[0].IsNumber())
+        Napi::Error::New(env, "Expected an Number")
+            .ThrowAsJavaScriptException();
+    Sleep(info[0].As<Napi::Number>().Int32Value());
+}
+
 void Workwindow::setWorkwindow(const Napi::CallbackInfo &info, const Napi::Value &value)
 {
     if (info[0].IsArray())

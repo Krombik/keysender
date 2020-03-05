@@ -14,7 +14,7 @@ public:
     void scrollWheel(const Napi::CallbackInfo &info);
 
 private:
-    virtual void mbToogler(std::string button, bool isButtonDown, int delay) = 0;
+    virtual void mbToogler(std::string button, bool isButtonDown) = 0;
     virtual void mover(int x, int y, bool isAbsolute) = 0;
     virtual void wheelScroller(int x) = 0;
 };

@@ -10,11 +10,11 @@ class Keyboard
 {
 public:
     void toogleKey(const Napi::CallbackInfo &info);
-    void printText(const Napi::CallbackInfo &info);
+    void printChar(const Napi::CallbackInfo &info);
 
 private:
     static const std::map<std::string, UINT> keysDef;
-    virtual void keyToogler(UINT key, bool isKeyDown, int delay) = 0;
-    virtual void textPrinter(Napi::Array text, int keyTooglerDelay, int keySenderDelay) = 0;
+    virtual void keyToogler(UINT key, bool isKeyDown) = 0;
+    virtual void charPrinter(int code) = 0;
 };
 #endif

@@ -14,57 +14,76 @@ const Keyboard = ClassName => class extends ClassName {
             value: {
                 keyTooglerDelay: 35,
                 keySenderDelay: 35,
-                printText(text, keyTooglerDelay = 0, keySenderDelay = 0) {
-                    self._printText(stringToDWORDArray(text), keyTooglerDelay, keySenderDelay);
+                printText(text, keySenderDelay = 0) {
+                    for (var i = 0; i < text.length - 1; i++) {
+                        self._printChar(text.codePointAt(i));
+                        self.sleep(keySenderDelay);
+                    }
+                    self._printChar(text.codePointAt(i));
+                },
+                async printTextAsync(text, keySenderDelay = 0) {
+                    for (var i = 0; i < text.length - 1; i++) {
+                        self._printChar(text.codePointAt(i));
+                        if (keySenderDelay > 0) await self.sleepAsync(keySenderDelay);
+                    }
+                    self._printChar(text.codePointAt(i));
                 },
                 toogleKey(key, isKeyDown = true, delay = this.keyTooglerDelay) {
-                    self._toogleKey(key, isKeyDown, delay);
+                    self._toogleKey(key, isKeyDown);
+                    self.sleep(delay);
                 },
                 async toogleKeyAsync(key, isKeyDown = true, delay = this.keyTooglerDelay) {
-                    self._toogleKey(key, isKeyDown, 0);
-                    await new Promise(_ => setTimeout(_, delay));
+                    self._toogleKey(key, isKeyDown);
+                    if (delay > 0) await self.sleepAsync(delay);
                 },
                 sendKey(key, keyTooglerDelay = this.keyTooglerDelay, keySenderDelay = 0) {
-                    self._toogleKey(key, true, keyTooglerDelay);
-                    self._toogleKey(key, false, keySenderDelay);
+                    self._toogleKey(key, true);
+                    self.sleep(keyTooglerDelay);
+                    self._toogleKey(key, false);
+                    self.sleep(keySenderDelay);
                 },
                 async sendKeyAsync(key, keyTooglerDelay = this.keyTooglerDelay, keySenderDelay = 0) {
-                    self._toogleKey(key, true, 0);
-                    await new Promise(_ => setTimeout(_, keyTooglerDelay));
-                    self._toogleKey(key, false, 0);
-                    if (keySenderDelay !== 0) await new Promise(_ => setTimeout(_, keySenderDelay));
+                    self._toogleKey(key, true);
+                    if (keyTooglerDelay > 0) await self.sleepAsync(keyTooglerDelay);
+                    self._toogleKey(key, false);
+                    if (keySenderDelay > 0) await self.sleepAsync(keySenderDelay);
                 },
                 sendKeys(keys, keyTooglerDelay = this.keyTooglerDelay, keySenderDelay = keyTooglerDelay === undefined ? this.keySenderDelay : keyTooglerDelay) {
                     keys.forEach((key, index) => {
-                        self._toogleKey(key, true, keyTooglerDelay);
-                        self._toogleKey(key, false, index !== keys.length - 1 ? keySenderDelay : 0);
+                        self._toogleKey(key, true);
+                        self.sleep(keyTooglerDelay);
+                        self._toogleKey(key, false);
+                        if (index !== keys.length - 1) self.sleep(keySenderDelay);
                     });
                 },
                 async sendKeysAsync(keys, keyTooglerDelay = this.keyTooglerDelay, keySenderDelay = keyTooglerDelay === undefined ? this.keySenderDelay : keyTooglerDelay) {
                     for (let i = 0; i < keys.length; i++) {
-                        self._toogleKey(keys[i], true, 0);
-                        await new Promise(_ => setTimeout(_, keyTooglerDelay));
-                        self._toogleKey(keys[i], false, 0);
-                        if (i !== keys.length - 1) await new Promise(_ => setTimeout(_, keySenderDelay));
+                        self._toogleKey(keys[i], true);
+                        if (keyTooglerDelay > 0) await self.sleepAsync(keyTooglerDelay);
+                        self._toogleKey(keys[i], false);
+                        if (keySenderDelay > 0 && i !== keys.length - 1) await self.sleepAsync(keySenderDelay);
                     }
                 },
                 sendKeyCombo(keys, keyTooglerDelay = this.keyTooglerDelay, keySenderDelay = 0) {
                     const last = keys.length - 1;
                     keys.forEach((key, index) => {
-                        self._toogleKey(key, true, index !== last ? microSleep : keyTooglerDelay);
+                        self._toogleKey(key, true);
+                        index !== last ? self._sleep(microSleep) : self.sleep(keyTooglerDelay);
                     });
-                    for (let index = last; index >= 0; index--)
-                        self._toogleKey(keys[index], false, index !== 0 ? microSleep : keySenderDelay);
+                    for (let index = last; index >= 0; index--) {
+                        self._toogleKey(keys[index], false);
+                        index !== last ? self._sleep(microSleep) : self.sleep(keySenderDelay);
+                    }
                 },
                 async sendKeyComboAsync(keys, keyTooglerDelay = this.keyTooglerDelay, keySenderDelay = 0) {
                     const last = keys.length - 1;
                     for (var i = 0; i <= last; i++) {
-                        self._toogleKey(keys[i], true, 0);
-                        await new Promise(_ => setTimeout(_, i !== last ? microSleep : keyTooglerDelay));
-                    };
+                        self._toogleKey(keys[i], true);
+                        if (i !== last || keyTooglerDelay > 0) await self.sleepAsync(i !== last ? microSleep : keyTooglerDelay);
+                    }
                     for (i--; i >= 0; i--) {
-                        self._toogleKey(keys[i], false, 0);
-                        await new Promise(_ => setTimeout(_, i !== 0 ? microSleep : keySenderDelay));
+                        self._toogleKey(keys[i], false);
+                        if (i !== last || keySenderDelay > 0) await self.sleepAsync(i !== last ? microSleep : keySenderDelay);
                     }
                 }
             }
@@ -93,7 +112,7 @@ const Mouse = ClassName => class extends ClassName {
                 }
             }
         });
-        return this.mouse
+        return this.mouse;
     }
 }
 
@@ -109,6 +128,16 @@ const Workwindow = ClassName => class extends ClassName {
         const workwindow = { ...this._workwindow };
         workwindow.title = String.fromCodePoint(...workwindow.title)
         return workwindow;
+    }
+    randomStep = 0;
+    random(ms) {
+        return ms + Math.floor(Math.random() * this.randomStep);
+    }
+    sleep(ms) {
+        if (ms > 0) this._sleep(this.randomStep > 0 ? this.random(ms) : ms);
+    }
+    sleepAsync(ms) {
+        return new Promise(_ => setTimeout(_, this.randomStep > 0 ? this.random(ms) : ms));
     }
 }
 
