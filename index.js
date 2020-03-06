@@ -79,11 +79,13 @@ const Keyboard = ClassName => class extends ClassName {
                     const last = keys.length - 1;
                     for (var i = 0; i <= last; i++) {
                         self._toogleKey(keys[i], true);
-                        if (i !== last || keyTooglerDelay > 0) await self.sleepAsync(i !== last ? microSleep : keyTooglerDelay);
+                        if (i !== last || keyTooglerDelay > 0)
+                            await self.sleepAsync(i !== last ? microSleep : keyTooglerDelay);
                     }
                     for (i--; i >= 0; i--) {
                         self._toogleKey(keys[i], false);
-                        if (i !== last || keySenderDelay > 0) await self.sleepAsync(i !== last ? microSleep : keySenderDelay);
+                        if (i !== last || keySenderDelay > 0)
+                            await self.sleepAsync(i !== last ? microSleep : keySenderDelay);
                     }
                 }
             }
@@ -92,14 +94,23 @@ const Keyboard = ClassName => class extends ClassName {
     }
 }
 
-const Mouse = ClassName => class extends ClassName {
+const MouseH = ClassName => class extends ClassName {
     get mouse() {
         const self = this;
         Object.defineProperty(this, "mouse", {
             value: {
-                click(button = "left", delay) {
-                    self._toogleMb(button, true, delay);
-                    self._toogleMb(button, false, delay);
+                buttonTooglerDelay: 25,
+                click(button = "left", buttonTooglerDelay = this.buttonTooglerDelay, buttonSenderDelay = 0) {
+                    self._toogleMb(button, true);
+                    self.sleep(buttonTooglerDelay);
+                    self._toogleMb(button, false);
+                    self.sleep(buttonSenderDelay);
+                },
+                async clickAsync(button = "left", buttonTooglerDelay = this.buttonTooglerDelay, buttonSenderDelay = 0) {
+                    self._toogleMb(button, true);
+                    if (buttonTooglerDelay > 0) await self.sleepAsync(buttonTooglerDelay);
+                    self._toogleMb(button, false);
+                    if (buttonSenderDelay > 0) await self.sleepAsync(buttonSenderDelay);
                 },
                 moveTo(x, y) {
                     self._move(x, y, true);
@@ -107,8 +118,45 @@ const Mouse = ClassName => class extends ClassName {
                 move(x, y) {
                     self._move(x, y, false);
                 },
-                scrollWheel(x) {
-                    self._scrollWheel(x);
+                scrollWheel(count = 1, wheelTooglerDelay = 0) {
+                    self._scrollWheel(count);
+                    self.sleep(wheelTooglerDelay);
+                },
+                async scrollWheelAsync(count = 1, wheelTooglerDelay = 0) {
+                    self._scrollWheel(count);
+                    if (wheelTooglerDelay > 0) await self.sleepAsync(wheelTooglerDelay);
+                }
+            }
+        });
+        return this.mouse;
+    }
+}
+
+const MouseV = ClassName => class extends ClassName {
+    get mouse() {
+        const self = this;
+        Object.defineProperty(this, "mouse", {
+            value: {
+                buttonTooglerDelay: 25,
+                clickAt(x, y, button = "left", buttonTooglerDelay = this.buttonTooglerDelay, buttonSenderDelay = 0) {
+                    self._toogleMbAt(button, true, x, y);
+                    self.sleep(buttonTooglerDelay);
+                    self._toogleMbAt(button, false, x, y);
+                    self.sleep(buttonSenderDelay);
+                },
+                async clickAtAsync(x, y, button = "left", buttonTooglerDelay = this.buttonTooglerDelay, buttonSenderDelay = 0) {
+                    self._toogleMbAt(button, true, x, y);
+                    if (buttonTooglerDelay > 0) await self.sleepAsync(buttonTooglerDelay);
+                    self._toogleMbAt(button, false, x, y);
+                    if (buttonSenderDelay > 0) await self.sleepAsync(buttonSenderDelay);
+                },
+                scrollWheelAt(count, x, y, wheelTooglerDelay = 0) {
+                    self._scrollWheelAt(count, x, y);
+                    self.sleep(wheelTooglerDelay);
+                },
+                async scrollWheelAtAsync(count, x, y, wheelTooglerDelay = 0) {
+                    self._scrollWheelAt(count, x, y);
+                    if (wheelTooglerDelay > 0) await self.sleepAsync(wheelTooglerDelay);
                 }
             }
         });
@@ -141,8 +189,8 @@ const Workwindow = ClassName => class extends ClassName {
     }
 }
 
-class Hardware extends Mouse(Keyboard(Workwindow(_Hardware))) { };
-class Virtual extends Keyboard(Workwindow(_Virtual)) { };
+class Hardware extends MouseH(Keyboard(Workwindow(_Hardware))) { };
+class Virtual extends MouseV(Keyboard(Workwindow(_Virtual))) { };
 const getAllOpenWindowsList = () =>
     _getAllOpenWindowsList()
         .map(item => ({ handle: item.handle, title: String.fromCodePoint(...item.title) }));

@@ -76,8 +76,18 @@ const map<string, array<UINT, 2>> Hardware::buttonsDef = {
     {"right", {MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_RIGHTDOWN}},
     {"wheel", {MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_MIDDLEDOWN}}};
 
-void Hardware::mbToogler(string button, bool isButtonDown)
+void Hardware::toogleMb(const Napi::CallbackInfo &info)
 {
+    Napi::Env env = info.Env();
+    if (info.Length() != 2)
+        Napi::Error::New(env, "Expected exactly 2 arguments")
+            .ThrowAsJavaScriptException();
+    if (!info[0].IsString())
+        Napi::Error::New(env, "arg1 - Expected an String")
+            .ThrowAsJavaScriptException();
+    if (!info[1].IsBoolean())
+        Napi::Error::New(env, "arg2 - Expected an Boolean")
+            .ThrowAsJavaScriptException();
     INPUT ip;
     ip.type = INPUT_MOUSE;
     ip.mi.dx = 0;
@@ -85,21 +95,34 @@ void Hardware::mbToogler(string button, bool isButtonDown)
     ip.mi.mouseData = 0;
     ip.mi.dwExtraInfo = 0;
     ip.mi.time = 0;
-    ip.mi.dwFlags = buttonsDef.at(button)[(int)isButtonDown];
+    ip.mi.dwFlags = buttonsDef.at(info[0].As<Napi::String>())[(int)info[1].As<Napi::Boolean>()];
     SendInput(1, &ip, sizeof(INPUT));
 }
 
-void Hardware::mover(int x, int y, bool isAbsolute)
+void Hardware::move(const Napi::CallbackInfo &info)
 {
+    Napi::Env env = info.Env();
+    if (info.Length() != 3)
+        Napi::Error::New(env, "Expected exactly 3 arguments")
+            .ThrowAsJavaScriptException();
+    if (!info[0].IsNumber())
+        Napi::Error::New(env, "arg1 - Expected an Number")
+            .ThrowAsJavaScriptException();
+    if (!info[1].IsNumber())
+        Napi::Error::New(env, "arg2 - Expected an Number")
+            .ThrowAsJavaScriptException();
+    if (!info[2].IsBoolean())
+        Napi::Error::New(env, "arg3 - Expected an Boolean")
+            .ThrowAsJavaScriptException();
     INPUT ip;
     ip.type = INPUT_MOUSE;
-    ip.mi.dx = x;
-    ip.mi.dy = y;
+    ip.mi.dx = info[0].As<Napi::Number>().Int32Value();
+    ip.mi.dy = info[1].As<Napi::Number>().Int32Value();
     ip.mi.mouseData = 0;
     ip.mi.dwExtraInfo = 0;
     ip.mi.time = 0;
     ip.mi.dwFlags = MOUSEEVENTF_MOVE;
-    if (isAbsolute)
+    if (info[2].As<Napi::Boolean>())
     {
         ip.mi.dx *= 65536 / GetSystemMetrics(SM_CXSCREEN);
         ip.mi.dy *= 65536 / GetSystemMetrics(SM_CYSCREEN);
@@ -108,13 +131,20 @@ void Hardware::mover(int x, int y, bool isAbsolute)
     SendInput(1, &ip, sizeof(INPUT));
 }
 
-void Hardware::wheelScroller(int x)
+void Hardware::scrollWheel(const Napi::CallbackInfo &info)
 {
+    Napi::Env env = info.Env();
+    if (info.Length() != 1)
+        Napi::Error::New(env, "Expected exactly 1 arguments")
+            .ThrowAsJavaScriptException();
+    if (!info[0].IsNumber())
+        Napi::Error::New(env, "Expected an Number")
+            .ThrowAsJavaScriptException();
     INPUT ip;
     ip.type = INPUT_MOUSE;
     ip.mi.dx = 0;
     ip.mi.dy = 0;
-    ip.mi.mouseData = x * WHEEL_DELTA;
+    ip.mi.mouseData = info[0].As<Napi::Number>().Int32Value() * WHEEL_DELTA;
     ip.mi.dwExtraInfo = 0;
     ip.mi.time = 0;
     ip.mi.dwFlags = MOUSEEVENTF_WHEEL;
@@ -160,11 +190,11 @@ Napi::Object Hardware::Init(Napi::Env env, Napi::Object exports)
     Napi::Function func = DefineClass(
         env, "_Hardware", {
                               InstanceMethod("_sleep", &Hardware::sleep),
-                              InstanceMethod("_toogleKey", &Hardware::toogleKey),
-                              InstanceMethod("_printChar", &Hardware::printChar),
                               InstanceMethod("_toogleMb", &Hardware::toogleMb),
                               InstanceMethod("_move", &Hardware::move),
                               InstanceMethod("_scrollWheel", &Hardware::scrollWheel),
+                              InstanceMethod("_toogleKey", &Hardware::toogleKey),
+                              InstanceMethod("_printChar", &Hardware::printChar),
                               InstanceMethod("isForeground", &Hardware::isForeground),
                               InstanceMethod("setForeground", &Hardware::setForeground),
                               InstanceMethod("isOpen", &Hardware::isOpen),
