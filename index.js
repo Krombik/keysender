@@ -97,6 +97,11 @@ const Keyboard = ClassName => class extends ClassName {
 const MouseH = ClassName => class extends ClassName {
     get mouse() {
         const self = this;
+        const rnd = (min, max) => min < max ? Math.floor(Math.random() * (max - min)) + min : min;
+        const choice = (...items) => items[Math.round(Math.random() * (items.length - 1))];
+        const curvDotMaker = (start, end, deviation, sign) => Math.round(start + (end - start) / 2 + sign * (end - start) * 0.01 * deviation);
+        const firstCurvDotMaker = (start, end, deviation, sign) => Math.round(start + sign * (end - start) * 0.01 * deviation);
+        const curvMaker = (t, start, curvDot1, curvDot2, end) => Math.floor(Math.pow(1 - t, 3) * start + 3 * Math.pow(1 - t, 2) * t * curvDot1 + 3 * (1 - t) * t * t * curvDot2 + t * t * t * end);
         Object.defineProperty(this, "mouse", {
             value: {
                 buttonTooglerDelay: 25,
@@ -114,6 +119,64 @@ const MouseH = ClassName => class extends ClassName {
                 },
                 moveTo(x, y) {
                     self._move(x, y, true);
+                },
+                moveH(coords, speed = 5, deviation = 30, width = 0, height = 0) {
+                    let [xE, yE, xS, yS] = coords;
+                    if (width > 0) xE += rnd(0, width);
+                    if (height > 0) yE += rnd(0, height);
+                    const path = [];
+                    const partLength = rnd(50, 200) / 2;
+                    const partsTotal = Math.ceil(Math.pow(Math.pow(xE - xS, 2) + Math.pow(yE - yS, 2), 0.5) / partLength);
+                    const xPartLength = (xE - xS) / partsTotal;
+                    const yPartLength = (yE - yS) / partsTotal;
+                    const speedMultiplicator = (speed > 1 ? (speed + 2) : 3) / partLength;
+                    let partsLeft = partsTotal;
+                    let parts = rnd(1, partsTotal / 2);
+                    let xPartStart = xS;
+                    let yPartStart = yS;
+                    let xPartEnd = xS + xPartLength * parts;
+                    let yPartEnd = yS + yPartLength * parts;
+                    while (true) {
+                        let curvDotX1, curvDotX2, curvDotY1, curvDotY2;
+                        const dotIterator = speedMultiplicator / parts;
+                        if (partsLeft !== partsTotal) {
+                            curvDotX1 = curvDotMaker(xPartStart, xPartEnd, rnd(deviation / 3, deviation), choice(-1, 1));
+                            curvDotY1 = curvDotMaker(yPartStart, yPartEnd, rnd(deviation / 3, deviation / 2), choice(-1, 1));
+                            curvDotX2 = curvDotMaker(xPartStart, xPartEnd, rnd(0, deviation), choice(-1, 1));
+                            curvDotY2 = curvDotMaker(yPartStart, yPartEnd, rnd(0, deviation / 2), choice(-1, 1));
+                        }
+                        else {
+                            curvDotX1 = firstCurvDotMaker(xPartStart, xPartEnd, rnd(deviation / 2, deviation), 1);
+                            curvDotY1 = firstCurvDotMaker(yPartStart, yPartEnd, rnd(deviation / 4, deviation / 3), 1);
+                            curvDotX2 = firstCurvDotMaker(xPartStart, xPartEnd, rnd(deviation / 2, deviation), choice(-1, 1));
+                            curvDotY2 = firstCurvDotMaker(yPartStart, yPartEnd, rnd(deviation / 2, deviation), choice(-1, 1));
+                        }
+                        for (let t = 0; t <= 1; t += dotIterator) {
+                            const cur = [curvMaker(t, xPartStart, curvDotX1, curvDotX2, xPartEnd), curvMaker(t, yPartStart, curvDotY1, curvDotY2, yPartEnd)];
+                            const prev = path[path.length - 1];
+                            if (path.length === 0 || !(prev[0] === cur[0] && prev[1] === cur[1]))
+                                path.push(cur);
+                        }
+                        if (xPartEnd === xE && yPartEnd === yE) break;
+                        xPartStart = xPartEnd;
+                        yPartStart = yPartEnd;
+                        partsLeft -= parts;
+                        if (partsLeft > 2) {
+                            parts = rnd(1, partsLeft - 1);
+                            xPartEnd += xPartLength * parts;
+                            yPartEnd += yPartLength * parts;
+                        }
+                        else {
+                            parts = partsLeft;
+                            xPartEnd = xE;
+                            yPartEnd = yE;
+                        }
+                    }
+                    const sleepTime = speed >= 1 ? 1 : speed !== "max" ? Math.round(1 / speed) : 0;
+                    path.map(item => [item[0], item[1] + choice(-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1)]).forEach(dot => {
+                        self._move(dot[0], dot[1], true);
+                        self.sleep(sleepTime);
+                    });
                 },
                 move(x, y) {
                     self._move(x, y, false);

@@ -1,5 +1,7 @@
 #include <windows.h>
 #include <tchar.h>
+#include <chrono>
+#include <thread>
 #include "workwindow.hpp"
 
 BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
@@ -42,7 +44,7 @@ void Workwindow::sleep(const Napi::CallbackInfo &info)
     if (!info[0].IsNumber())
         Napi::Error::New(env, "Expected an Number")
             .ThrowAsJavaScriptException();
-    Sleep(info[0].As<Napi::Number>().Int32Value());
+    std::this_thread::sleep_for(std::chrono::milliseconds(info[0].As<Napi::Number>().Int32Value()));
 }
 
 void Workwindow::setWorkwindow(const Napi::CallbackInfo &info, const Napi::Value &value)
