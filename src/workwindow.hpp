@@ -6,7 +6,8 @@
 #include <windows.h>
 #include <iostream>
 
-Napi::Value getAllOpenWindowsList(const Napi::CallbackInfo &info);
+Napi::Value getWindow(const Napi::CallbackInfo &info);
+Napi::Value getWindowChild(const Napi::CallbackInfo &info);
 
 class Workwindow
 {

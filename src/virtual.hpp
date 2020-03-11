@@ -12,6 +12,7 @@ class Virtual : public Keyboard, public Workwindow, public Napi::ObjectWrap<Virt
 public:
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
     void toogleMbAt(const Napi::CallbackInfo &info);
+    void moveTo(const Napi::CallbackInfo &info);
     void scrollWheelAt(const Napi::CallbackInfo &info);
     Virtual(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Virtual>(info){};
 

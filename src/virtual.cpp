@@ -37,8 +37,30 @@ void Virtual::toogleMbAt(const Napi::CallbackInfo &info)
             .ThrowAsJavaScriptException();
     const LPARAM lParam = MAKELPARAM(info[2].As<Napi::Number>().Int32Value(), info[3].As<Napi::Number>().Int32Value());
     const UINT action = msgs.at(info[0].As<Napi::String>())[(int)info[1].As<Napi::Boolean>()];
-    SendMessageA(hWnd, WM_MOUSEMOVE, 1, lParam);
-    SendMessageA(hWnd, action, wParams.at(action), lParam);
+    PostMessageA(hWnd, WM_MOUSEMOVE, 1, lParam);
+    PostMessageA(hWnd, action, wParams.at(action), lParam);
+}
+
+void Virtual::moveTo(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+    if (info.Length() != 4)
+        Napi::Error::New(env, "Expected exactly 4 arguments")
+            .ThrowAsJavaScriptException();
+    if (!info[0].IsNumber())
+        Napi::Error::New(env, "arg1 - Expected an Number")
+            .ThrowAsJavaScriptException();
+    if (!info[1].IsNumber())
+        Napi::Error::New(env, "arg2 - Expected an Number")
+            .ThrowAsJavaScriptException();
+    if (!info[2].IsNumber())
+        Napi::Error::New(env, "arg3 - Expected an Number")
+            .ThrowAsJavaScriptException();
+    if (!info[3].IsNumber())
+        Napi::Error::New(env, "arg4 - Expected an Number")
+            .ThrowAsJavaScriptException();
+    PostMessageA(hWnd, WM_MOUSEMOVE, 1, MAKELPARAM(info[2].As<Napi::Number>().Int32Value(), info[3].As<Napi::Number>().Int32Value()));
+    PostMessageA(hWnd, WM_MOUSEMOVE, 1, MAKELPARAM(info[0].As<Napi::Number>().Int32Value(), info[1].As<Napi::Number>().Int32Value()));
 }
 
 void Virtual::scrollWheelAt(const Napi::CallbackInfo &info)
@@ -78,6 +100,7 @@ Napi::Object Virtual::Init(Napi::Env env, Napi::Object exports)
         env, "_Virtual", {
                              InstanceMethod("_sleep", &Virtual::sleep),
                              InstanceMethod("_toogleMbAt", &Virtual::toogleMbAt),
+                             InstanceMethod("_moveTo", &Virtual::moveTo),
                              InstanceMethod("_scrollWheelAt", &Virtual::scrollWheelAt),
                              InstanceMethod("_toogleKey", &Virtual::toogleKey),
                              InstanceMethod("_printChar", &Virtual::printChar),
