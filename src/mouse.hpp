@@ -15,9 +15,12 @@ public:
     void scrollWheel(const Napi::CallbackInfo &info);
 
 protected:
-    POINT lastCoords;
+    POINT lastCoords = {-1, -1};
+    bool saveMod = false;
     void setLastCoords(const Napi::CallbackInfo &info, const Napi::Value &value);
     Napi::Value getLastCoords(const Napi::CallbackInfo &info);
+    void setSaveMod(const Napi::CallbackInfo &info, const Napi::Value &value);
+    Napi::Value getSaveMod(const Napi::CallbackInfo &info);
     virtual void mousePosGetter(POINT *coords) = 0;
     virtual void mbToogler(std::string button, bool isButtonDown) = 0;
     virtual void mover(int x, int y, bool isAbsolute) = 0;

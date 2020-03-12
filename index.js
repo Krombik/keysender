@@ -4,7 +4,7 @@ const sleep = arg => {
     const ms = !Array.isArray(arg) ? arg : random(...arg);
     if (ms > 0) _sleep(ms);
 }
-const sleepAsync = ms => new Promise(_ => setTimeout(_, !Array.isArray(ms) ? ms : random(...ms)));
+const sleepAsync = ms => new Promise(_ => setTimeout(_, Array.isArray(ms) ? random(...ms) : ms));
 
 const Keyboard = ClassName => class extends ClassName {
     get keyboard() {
@@ -145,11 +145,18 @@ const Mouse = ClassName => class extends ClassName {
                     yPartEnd = yE;
                 }
             } while (true);
+            path.shift();
             return path.map((item, index) => index !== path.length - 1 ? [item[0], item[1] + choice(-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1)] : [xE, yE]);
         }
         Object.defineProperty(this, "mouse", {
             value: {
                 buttonTooglerDelay: 35,
+                get saveMod() {
+                    return self._saveMod;
+                },
+                set saveMod(bool) {
+                    self._saveMod = bool;
+                },
                 getPos() {
                     return self._getPos();
                 },
@@ -175,12 +182,10 @@ const Mouse = ClassName => class extends ClassName {
                 },
                 moveTo(x, y, delay = 0) {
                     self._move(x, y, true);
-                    self._lastCoords = [x, y];
                     sleep(delay);
                 },
                 async moveToAsync(x, y, delay = 0) {
                     self._move(x, y, true);
-                    self._lastCoords = [x, y];
                     await sleepAsync(delay);
                 },
                 moveCurveTo(x, y, speed = 5, deviation = 30) {
@@ -189,16 +194,13 @@ const Mouse = ClassName => class extends ClassName {
                         self._move(dot[0], dot[1], true);
                         sleep(sleepTime);
                     });
-                    self._lastCoords = [x, y];
                 },
                 async moveCurveToAsync(x, y, speed = 5, deviation = 30) {
                     const sleepTime = speed >= 1 ? 1 : speed !== "max" ? Math.round(1 / speed) : 0;
-                    const curve = humanCurv(x, y, ...self._lastCoords, speed, deviation);
-                    for (let i = 0; i < curve.length; i++) {
-                        self._move(curve[i][0], curve[i][1], true);
+                    for (const dot of humanCurv(x, y, ...self._lastCoords, speed, deviation)) {
+                        self._move(dot[0], dot[1], true);
                         await sleepAsync(sleepTime);
                     }
-                    self._lastCoords = [x, y];
                 },
                 move(x, y, delay = 0) {
                     self._move(x, y, false);

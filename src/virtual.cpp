@@ -25,15 +25,14 @@ void Virtual::mousePosGetter(POINT *coords)
 
 void Virtual::mbToogler(std::string button, bool isButtonDown)
 {
-    const LPARAM lParam = MAKELPARAM(lastCoords.x, lastCoords.y);
     const UINT action = msgs.at(button)[(int)isButtonDown];
-    // PostMessageA(hWnd, WM_MOUSEMOVE, 1, lParam);
-    PostMessageA(hWnd, action, wParams.at(action), lParam);
+    PostMessageA(hWnd, action, wParams.at(action), MAKELPARAM(lastCoords.x, lastCoords.y));
 }
 
 void Virtual::mover(int x, int y, bool isAbsolute)
 {
-    // PostMessageA(hWnd, WM_MOUSEMOVE, 1, MAKELPARAM(info[2].As<Napi::Number>().Int32Value(), info[3].As<Napi::Number>().Int32Value()));
+    if (saveMod)
+        PostMessageA(hWnd, WM_MOUSEMOVE, 1, MAKELPARAM(lastCoords.x, lastCoords.y));
     PostMessageA(hWnd, WM_MOUSEMOVE, 1, isAbsolute ? MAKELPARAM(x, y) : MAKELPARAM(lastCoords.x + x, lastCoords.y + y));
 }
 
@@ -70,6 +69,7 @@ Napi::Object Virtual::Init(Napi::Env env, Napi::Object exports)
                              InstanceMethod("isOpen", &Virtual::isOpen),
                              InstanceAccessor("_workwindow", &Virtual::getWorkwindow, &Virtual::setWorkwindow),
                              InstanceAccessor("_lastCoords", &Virtual::getLastCoords, &Virtual::setLastCoords),
+                             InstanceAccessor("_saveMod", &Virtual::getSaveMod, &Virtual::setSaveMod),
                          });
     constructor = Napi::Persistent(func);
     constructor.SuppressDestruct();

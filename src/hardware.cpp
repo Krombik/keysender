@@ -98,17 +98,31 @@ void Hardware::mover(int x, int y, bool isAbsolute)
 {
     INPUT ip;
     ip.type = INPUT_MOUSE;
-    ip.mi.dx = x;
-    ip.mi.dy = y;
     ip.mi.mouseData = 0;
     ip.mi.dwExtraInfo = 0;
     ip.mi.time = 0;
     ip.mi.dwFlags = MOUSEEVENTF_MOVE;
+    if (saveMod && lastCoords.x != -1 && lastCoords.y != -1)
+    {
+        POINT currCoords;
+        GetCursorPos(&currCoords);
+        if (currCoords.x != lastCoords.x && currCoords.y != lastCoords.y)
+        {
+            ip.mi.dx = lastCoords.x - currCoords.x;
+            ip.mi.dy = lastCoords.y - currCoords.y;
+            SendInput(1, &ip, sizeof(INPUT));
+        }
+    }
     if (isAbsolute)
     {
-        ip.mi.dx *= 65536 / GetSystemMetrics(SM_CXSCREEN);
-        ip.mi.dy *= 65536 / GetSystemMetrics(SM_CYSCREEN);
+        ip.mi.dx = (x + 1) * 65536 / GetSystemMetrics(SM_CXSCREEN);
+        ip.mi.dy = (y + 1) * 65536 / GetSystemMetrics(SM_CYSCREEN);
         ip.mi.dwFlags |= MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESK;
+    }
+    else
+    {
+        ip.mi.dx = x;
+        ip.mi.dy = y;
     }
     SendInput(1, &ip, sizeof(INPUT));
 }
@@ -175,6 +189,7 @@ Napi::Object Hardware::Init(Napi::Env env, Napi::Object exports)
                               InstanceMethod("isOpen", &Hardware::isOpen),
                               InstanceAccessor("_workwindow", &Hardware::getWorkwindow, &Hardware::setWorkwindow),
                               InstanceAccessor("_lastCoords", &Hardware::getLastCoords, &Hardware::setLastCoords),
+                              InstanceAccessor("_saveMod", &Hardware::getSaveMod, &Hardware::setSaveMod),
                           });
     constructor = Napi::Persistent(func);
     constructor.SuppressDestruct();

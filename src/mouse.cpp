@@ -14,7 +14,7 @@ Value Mouse::getMousePos(const CallbackInfo &info)
     POINT coords;
     mousePosGetter(&coords);
     pos[(uint32_t)0] = coords.x;
-    pos[(uint32_t)1] = coords.y;
+    pos[1] = coords.y;
     return pos;
 }
 
@@ -60,17 +60,26 @@ void Mouse::move(const CallbackInfo &info)
     if (!info[2].IsBoolean())
         Error::New(env, "arg3 - Expected an Boolean")
             .ThrowAsJavaScriptException();
-    mover(info[0].As<Number>().Int32Value(), info[1].As<Number>().Int32Value(), info[2].As<Boolean>());
+    int x = info[0].As<Number>().Int32Value();
+    int y = info[1].As<Number>().Int32Value();
+    bool isAbsolute = info[2].As<Boolean>();
+    mover(x, y, isAbsolute);
+    if (isAbsolute)
+    {
+        lastCoords.x = x;
+        lastCoords.y = y;
+    }
+    else
+    {
+        lastCoords.x += x;
+        lastCoords.y += y;
+    }
 }
 
 void Mouse::setLastCoords(const Napi::CallbackInfo &info, const Napi::Value &value)
 {
-    Napi::Env env = info.Env();
-    if (info.Length() != 1)
-        Napi::Error::New(env, "Expected exactly 1 arguments")
-            .ThrowAsJavaScriptException();
     if (!info[0].IsArray())
-        Napi::Error::New(env, "Expected an Array")
+        Napi::Error::New(info.Env(), "Expected an Array")
             .ThrowAsJavaScriptException();
     Napi::Array coords = info[0].As<Napi::Array>();
     lastCoords.x = coords.Get((uint32_t)0).As<Number>().Int64Value();
@@ -84,4 +93,17 @@ Napi::Value Mouse::getLastCoords(const Napi::CallbackInfo &info)
     coords[(uint32_t)0] = lastCoords.x;
     coords[1] = lastCoords.y;
     return coords;
+};
+
+void Mouse::setSaveMod(const Napi::CallbackInfo &info, const Napi::Value &value)
+{
+    if (!info[0].IsBoolean())
+        Napi::Error::New(info.Env(), "Expected an Boolean")
+            .ThrowAsJavaScriptException();
+    saveMod = info[0].As<Boolean>();
+};
+
+Napi::Value Mouse::getSaveMod(const Napi::CallbackInfo &info)
+{
+    return Napi::Boolean::New(info.Env(), saveMod);
 };
