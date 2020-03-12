@@ -76,6 +76,11 @@ const map<string, array<UINT, 2>> Hardware::buttonsDef = {
     {"right", {MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_RIGHTDOWN}},
     {"wheel", {MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_MIDDLEDOWN}}};
 
+void Hardware::mousePosGetter(POINT *coords)
+{
+    GetCursorPos(&*coords);
+}
+
 void Hardware::mbToogler(std::string button, bool isButtonDown)
 {
     INPUT ip;
@@ -159,6 +164,7 @@ Napi::Object Hardware::Init(Napi::Env env, Napi::Object exports)
     Napi::HandleScope scope(env);
     Napi::Function func = DefineClass(
         env, "_Hardware", {
+                              InstanceMethod("_getPos", &Hardware::getMousePos),
                               InstanceMethod("_toogleMb", &Hardware::toogleMb),
                               InstanceMethod("_move", &Hardware::move),
                               InstanceMethod("_scrollWheel", &Hardware::scrollWheel),

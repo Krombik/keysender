@@ -150,6 +150,9 @@ const Mouse = ClassName => class extends ClassName {
         Object.defineProperty(this, "mouse", {
             value: {
                 buttonTooglerDelay: 35,
+                getPos() {
+                    return self._getPos();
+                },
                 toogle(isButtonDown, button = "left", buttonTooglerDelay = this.buttonTooglerDelay) {
                     self._toogleMb(button, isButtonDown);
                     sleep(buttonTooglerDelay);

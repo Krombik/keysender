@@ -17,6 +17,12 @@ const map<UINT, UINT> Virtual::wParams = {{WM_LBUTTONDOWN, MK_LBUTTON},
                                           {WM_RBUTTONUP, 0},
                                           {WM_MBUTTONUP, 0}};
 
+void Virtual::mousePosGetter(POINT *coords)
+{
+    GetCursorPos(&*coords);
+    ScreenToClient(hWnd, &*coords);
+}
+
 void Virtual::mbToogler(std::string button, bool isButtonDown)
 {
     const LPARAM lParam = MAKELPARAM(lastCoords.x, lastCoords.y);
@@ -53,6 +59,7 @@ Napi::Object Virtual::Init(Napi::Env env, Napi::Object exports)
     Napi::HandleScope scope(env);
     Napi::Function func = DefineClass(
         env, "_Virtual", {
+                             InstanceMethod("_getPos", &Virtual::getMousePos),
                              InstanceMethod("_toogleMb", &Virtual::toogleMb),
                              InstanceMethod("_move", &Virtual::move),
                              InstanceMethod("_scrollWheel", &Virtual::scrollWheel),

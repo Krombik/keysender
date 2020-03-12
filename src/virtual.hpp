@@ -18,6 +18,7 @@ private:
     static Napi::FunctionReference constructor;
     static const std::map<std::string, std::array<UINT, 2>> msgs;
     static const std::map<UINT, UINT> wParams;
+    void mousePosGetter(POINT *coords);
     void mbToogler(std::string button, bool isButtonDown);
     void mover(int x, int y, bool isAbsolute);
     void wheelScroller(int x);

@@ -4,6 +4,20 @@
 using namespace Napi;
 using namespace std;
 
+Value Mouse::getMousePos(const CallbackInfo &info)
+{
+    Env env = info.Env();
+    if (info.Length() != 0)
+        Error::New(env, "Expected exactly 0 arguments")
+            .ThrowAsJavaScriptException();
+    Array pos = Array::New(env);
+    POINT coords;
+    mousePosGetter(&coords);
+    pos[(uint32_t)0] = coords.x;
+    pos[(uint32_t)1] = coords.y;
+    return pos;
+}
+
 void Mouse::toogleMb(const CallbackInfo &info)
 {
     Env env = info.Env();
