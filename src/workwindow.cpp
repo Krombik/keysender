@@ -93,7 +93,7 @@ Napi::Value getWindowChild(const Napi::CallbackInfo &info)
     return Napi::Number::New(env, HandleToLong(FindWindowExA((HWND)info[0].As<Napi::Number>().Int64Value(), NULL, std::string(info[1].As<Napi::String>()).c_str(), NULL)));
 }
 
-void Workwindow::sleep(const Napi::CallbackInfo &info)
+void sleep(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
     if (info.Length() != 1)

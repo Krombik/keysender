@@ -8,6 +8,7 @@
 
 Napi::Value getWindow(const Napi::CallbackInfo &info);
 Napi::Value getWindowChild(const Napi::CallbackInfo &info);
+void sleep(const Napi::CallbackInfo &info);
 
 class Workwindow
 {
@@ -15,7 +16,6 @@ public:
     Napi::Value isForeground(const Napi::CallbackInfo &info);
     Napi::Value isOpen(const Napi::CallbackInfo &info);
     void Workwindow::setForeground(const Napi::CallbackInfo &info);
-    void sleep(const Napi::CallbackInfo &info);
 
 protected:
     HWND hWnd = NULL;

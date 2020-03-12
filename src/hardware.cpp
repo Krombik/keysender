@@ -76,18 +76,8 @@ const map<string, array<UINT, 2>> Hardware::buttonsDef = {
     {"right", {MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_RIGHTDOWN}},
     {"wheel", {MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_MIDDLEDOWN}}};
 
-void Hardware::toogleMb(const Napi::CallbackInfo &info)
+void Hardware::mbToogler(std::string button, bool isButtonDown)
 {
-    Napi::Env env = info.Env();
-    if (info.Length() != 2)
-        Napi::Error::New(env, "Expected exactly 2 arguments")
-            .ThrowAsJavaScriptException();
-    if (!info[0].IsString())
-        Napi::Error::New(env, "arg1 - Expected an String")
-            .ThrowAsJavaScriptException();
-    if (!info[1].IsBoolean())
-        Napi::Error::New(env, "arg2 - Expected an Boolean")
-            .ThrowAsJavaScriptException();
     INPUT ip;
     ip.type = INPUT_MOUSE;
     ip.mi.dx = 0;
@@ -95,34 +85,21 @@ void Hardware::toogleMb(const Napi::CallbackInfo &info)
     ip.mi.mouseData = 0;
     ip.mi.dwExtraInfo = 0;
     ip.mi.time = 0;
-    ip.mi.dwFlags = buttonsDef.at(info[0].As<Napi::String>())[(int)info[1].As<Napi::Boolean>()];
+    ip.mi.dwFlags = buttonsDef.at(button)[(int)isButtonDown];
     SendInput(1, &ip, sizeof(INPUT));
 }
 
-void Hardware::move(const Napi::CallbackInfo &info)
+void Hardware::mover(int x, int y, bool isAbsolute)
 {
-    Napi::Env env = info.Env();
-    if (info.Length() != 3)
-        Napi::Error::New(env, "Expected exactly 3 arguments")
-            .ThrowAsJavaScriptException();
-    if (!info[0].IsNumber())
-        Napi::Error::New(env, "arg1 - Expected an Number")
-            .ThrowAsJavaScriptException();
-    if (!info[1].IsNumber())
-        Napi::Error::New(env, "arg2 - Expected an Number")
-            .ThrowAsJavaScriptException();
-    if (!info[2].IsBoolean())
-        Napi::Error::New(env, "arg3 - Expected an Boolean")
-            .ThrowAsJavaScriptException();
     INPUT ip;
     ip.type = INPUT_MOUSE;
-    ip.mi.dx = info[0].As<Napi::Number>().Int32Value();
-    ip.mi.dy = info[1].As<Napi::Number>().Int32Value();
+    ip.mi.dx = x;
+    ip.mi.dy = y;
     ip.mi.mouseData = 0;
     ip.mi.dwExtraInfo = 0;
     ip.mi.time = 0;
     ip.mi.dwFlags = MOUSEEVENTF_MOVE;
-    if (info[2].As<Napi::Boolean>())
+    if (isAbsolute)
     {
         ip.mi.dx *= 65536 / GetSystemMetrics(SM_CXSCREEN);
         ip.mi.dy *= 65536 / GetSystemMetrics(SM_CYSCREEN);
@@ -131,20 +108,13 @@ void Hardware::move(const Napi::CallbackInfo &info)
     SendInput(1, &ip, sizeof(INPUT));
 }
 
-void Hardware::scrollWheel(const Napi::CallbackInfo &info)
+void Hardware::wheelScroller(int x)
 {
-    Napi::Env env = info.Env();
-    if (info.Length() != 1)
-        Napi::Error::New(env, "Expected exactly 1 arguments")
-            .ThrowAsJavaScriptException();
-    if (!info[0].IsNumber())
-        Napi::Error::New(env, "Expected an Number")
-            .ThrowAsJavaScriptException();
     INPUT ip;
     ip.type = INPUT_MOUSE;
     ip.mi.dx = 0;
     ip.mi.dy = 0;
-    ip.mi.mouseData = info[0].As<Napi::Number>().Int32Value() * WHEEL_DELTA;
+    ip.mi.mouseData = x;
     ip.mi.dwExtraInfo = 0;
     ip.mi.time = 0;
     ip.mi.dwFlags = MOUSEEVENTF_WHEEL;
@@ -189,7 +159,6 @@ Napi::Object Hardware::Init(Napi::Env env, Napi::Object exports)
     Napi::HandleScope scope(env);
     Napi::Function func = DefineClass(
         env, "_Hardware", {
-                              InstanceMethod("_sleep", &Hardware::sleep),
                               InstanceMethod("_toogleMb", &Hardware::toogleMb),
                               InstanceMethod("_move", &Hardware::move),
                               InstanceMethod("_scrollWheel", &Hardware::scrollWheel),
@@ -199,6 +168,7 @@ Napi::Object Hardware::Init(Napi::Env env, Napi::Object exports)
                               InstanceMethod("setForeground", &Hardware::setForeground),
                               InstanceMethod("isOpen", &Hardware::isOpen),
                               InstanceAccessor("_workwindow", &Hardware::getWorkwindow, &Hardware::setWorkwindow),
+                              InstanceAccessor("_lastCoords", &Hardware::getLastCoords, &Hardware::setLastCoords),
                           });
     constructor = Napi::Persistent(func);
     constructor.SuppressDestruct();

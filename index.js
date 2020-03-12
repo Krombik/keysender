@@ -1,8 +1,8 @@
-const { _Virtual, _Hardware, _getWindow, getWindowChild } = require('./build/Release/key_sender.node');
+const { _Virtual, _Hardware, _getWindow, getWindowChild, _sleep } = require('./build/Release/key_sender.node');
 const random = (min, max) => min < max ? Math.floor(Math.random() * (max + 1 - min)) + min : min;
 const sleep = arg => {
     const ms = !Array.isArray(arg) ? arg : random(...arg);
-    if (ms > 0) this._sleep(ms);
+    if (ms > 0) _sleep(ms);
 }
 const sleepAsync = ms => new Promise(_ => setTimeout(_, !Array.isArray(ms) ? ms : random(...ms)));
 
@@ -91,17 +91,14 @@ const Keyboard = ClassName => class extends ClassName {
     }
 }
 
-const MouseH = ClassName => class extends ClassName {
+const Mouse = ClassName => class extends ClassName {
     get mouse() {
         const self = this;
         const choice = (...items) => items[Math.round(Math.random() * (items.length - 1))];
         const curvDotMaker = (start, end, deviation, sign) => Math.round(start + (end - start) / 2 + sign * (end - start) * 0.01 * deviation);
         const firstCurvDotMaker = (start, end, deviation, sign) => Math.round(start + sign * (end - start) * 0.01 * deviation);
         const curvMaker = (t, start, curvDot1, curvDot2, end) => Math.floor(Math.pow(1 - t, 3) * start + 3 * Math.pow(1 - t, 2) * t * curvDot1 + 3 * (1 - t) * t * t * curvDot2 + t * t * t * end);
-        const humanCurv = (coords, speed, deviation, width, height) => {
-            let [xE, yE, xS, yS] = coords;
-            if (width > 0) xE += random(0, width);
-            if (height > 0) yE += random(0, height);
+        const humanCurv = (xE, yE, xS, yS, speed, deviation) => {
             const path = [];
             const partLength = random(50, 200) / 2;
             const partsTotal = Math.ceil(Math.pow(Math.pow(xE - xS, 2) + Math.pow(yE - yS, 2), 0.5) / partLength);
@@ -148,7 +145,7 @@ const MouseH = ClassName => class extends ClassName {
                     yPartEnd = yE;
                 }
             } while (true);
-            return path.map(item => [item[0], item[1] + choice(-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1)]);
+            return path.map((item, index) => index !== path.length - 1 ? [item[0], item[1] + choice(-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1)] : [xE, yE]);
         }
         Object.defineProperty(this, "mouse", {
             value: {
@@ -156,6 +153,10 @@ const MouseH = ClassName => class extends ClassName {
                 toogle(isButtonDown, button = "left", buttonTooglerDelay = this.buttonTooglerDelay) {
                     self._toogleMb(button, isButtonDown);
                     sleep(buttonTooglerDelay);
+                },
+                async toogleAsync(isButtonDown, button = "left", buttonTooglerDelay = this.buttonTooglerDelay) {
+                    self._toogleMb(button, isButtonDown);
+                    await sleepAsync(buttonTooglerDelay);
                 },
                 click(button = "left", buttonTooglerDelay = this.buttonTooglerDelay, buttonSenderDelay = 0) {
                     self._toogleMb(button, true);
@@ -165,22 +166,44 @@ const MouseH = ClassName => class extends ClassName {
                 },
                 async clickAsync(button = "left", buttonTooglerDelay = this.buttonTooglerDelay, buttonSenderDelay = 0) {
                     self._toogleMb(button, true);
-                    if (buttonTooglerDelay > 0) await sleepAsync(buttonTooglerDelay);
+                    await sleepAsync(buttonTooglerDelay);
                     self._toogleMb(button, false);
-                    if (buttonSenderDelay > 0) await sleepAsync(buttonSenderDelay);
+                    await sleepAsync(buttonSenderDelay);
                 },
-                moveTo(x, y) {
+                moveTo(x, y, delay = 0) {
                     self._move(x, y, true);
+                    self._lastCoords = [x, y];
+                    sleep(delay);
                 },
-                moveH(coords, speed = 5, deviation = 30, width = 0, height = 0) {
+                async moveToAsync(x, y, delay = 0) {
+                    self._move(x, y, true);
+                    self._lastCoords = [x, y];
+                    await sleepAsync(delay);
+                },
+                moveCurveTo(x, y, speed = 5, deviation = 30) {
                     const sleepTime = speed >= 1 ? 1 : speed !== "max" ? Math.round(1 / speed) : 0;
-                    humanCurv(coords, speed, deviation, width, height).forEach(dot => {
+                    humanCurv(x, y, ...self._lastCoords, speed, deviation).forEach(dot => {
                         self._move(dot[0], dot[1], true);
                         sleep(sleepTime);
                     });
+                    self._lastCoords = [x, y];
                 },
-                move(x, y) {
+                async moveCurveToAsync(x, y, speed = 5, deviation = 30) {
+                    const sleepTime = speed >= 1 ? 1 : speed !== "max" ? Math.round(1 / speed) : 0;
+                    const curve = humanCurv(x, y, ...self._lastCoords, speed, deviation);
+                    for (let i = 0; i < curve.length; i++) {
+                        self._move(curve[i][0], curve[i][1], true);
+                        await sleepAsync(sleepTime);
+                    }
+                    self._lastCoords = [x, y];
+                },
+                move(x, y, delay = 0) {
                     self._move(x, y, false);
+                    sleep(delay);
+                },
+                async moveAsync(x, y, delay = 0) {
+                    self._move(x, y, false);
+                    await sleepAsync(delay);
                 },
                 scrollWheel(count = 1, wheelTooglerDelay = 0) {
                     self._scrollWheel(count);
@@ -188,109 +211,7 @@ const MouseH = ClassName => class extends ClassName {
                 },
                 async scrollWheelAsync(count = 1, wheelTooglerDelay = 0) {
                     self._scrollWheel(count);
-                    if (wheelTooglerDelay > 0) await sleepAsync(wheelTooglerDelay);
-                }
-            }
-        });
-        return this.mouse;
-    }
-}
-
-const MouseV = ClassName => class extends ClassName {
-    get mouse() {
-        const self = this;
-        const rnd = (min, max) => min < max ? Math.floor(Math.random() * (max + 1 - min)) + min : min;
-        const choice = (...items) => items[Math.round(Math.random() * (items.length - 1))];
-        const curvDotMaker = (start, end, deviation, sign) => Math.round(start + (end - start) / 2 + sign * (end - start) * 0.01 * deviation);
-        const firstCurvDotMaker = (start, end, deviation, sign) => Math.round(start + sign * (end - start) * 0.01 * deviation);
-        const curvMaker = (t, start, curvDot1, curvDot2, end) => Math.floor(Math.pow(1 - t, 3) * start + 3 * Math.pow(1 - t, 2) * t * curvDot1 + 3 * (1 - t) * t * t * curvDot2 + t * t * t * end);
-        const humanCurv = (coords, speed, deviation, width, height) => {
-            let [xE, yE, xS, yS] = coords;
-            if (width > 0) xE += rnd(0, width);
-            if (height > 0) yE += rnd(0, height);
-            const path = [];
-            const partLength = rnd(50, 200) / 2;
-            const partsTotal = Math.ceil(Math.pow(Math.pow(xE - xS, 2) + Math.pow(yE - yS, 2), 0.5) / partLength);
-            const xPartLength = (xE - xS) / partsTotal;
-            const yPartLength = (yE - yS) / partsTotal;
-            const speedMultiplicator = (speed > 1 ? (speed + 2) : 3) / partLength;
-            let partsLeft = partsTotal;
-            let parts = rnd(1, partsTotal / 2);
-            let xPartStart = xS;
-            let yPartStart = yS;
-            let xPartEnd = xS + xPartLength * parts;
-            let yPartEnd = yS + yPartLength * parts;
-            do {
-                let curvDotX1, curvDotX2, curvDotY1, curvDotY2;
-                const dotIterator = speedMultiplicator / parts;
-                if (partsLeft !== partsTotal) {
-                    curvDotX1 = curvDotMaker(xPartStart, xPartEnd, rnd(deviation / 3, deviation), choice(-1, 1));
-                    curvDotY1 = curvDotMaker(yPartStart, yPartEnd, rnd(deviation / 3, deviation / 2), choice(-1, 1));
-                    curvDotX2 = curvDotMaker(xPartStart, xPartEnd, rnd(0, deviation), choice(-1, 1));
-                    curvDotY2 = curvDotMaker(yPartStart, yPartEnd, rnd(0, deviation / 2), choice(-1, 1));
-                } else {
-                    curvDotX1 = firstCurvDotMaker(xPartStart, xPartEnd, rnd(deviation / 2, deviation), 1);
-                    curvDotY1 = firstCurvDotMaker(yPartStart, yPartEnd, rnd(deviation / 4, deviation / 3), 1);
-                    curvDotX2 = firstCurvDotMaker(xPartStart, xPartEnd, rnd(deviation / 2, deviation), choice(-1, 1));
-                    curvDotY2 = firstCurvDotMaker(yPartStart, yPartEnd, rnd(deviation / 2, deviation), choice(-1, 1));
-                }
-                for (let t = 0; t < 1.00001; t += dotIterator) {
-                    const curr = [curvMaker(t, xPartStart, curvDotX1, curvDotX2, xPartEnd), curvMaker(t, yPartStart, curvDotY1, curvDotY2, yPartEnd)];
-                    const prev = path[path.length - 1];
-                    if (path.length === 0 || !(prev[0] === curr[0] && prev[1] === curr[1]))
-                        path.push(curr);
-                }
-                if (xPartEnd === xE && yPartEnd === yE) break;
-                partsLeft -= parts;
-                xPartStart = xPartEnd;
-                yPartStart = yPartEnd;
-                if (partsLeft > 2) {
-                    parts = rnd(1, partsLeft - 1);
-                    xPartEnd += xPartLength * parts;
-                    yPartEnd += yPartLength * parts;
-                } else {
-                    parts = partsLeft;
-                    xPartEnd = xE;
-                    yPartEnd = yE;
-                }
-            } while (true);
-            return path.map(item => [item[0], item[1] + choice(-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1)]);
-        }
-        Object.defineProperty(this, "mouse", {
-            value: {
-                buttonTooglerDelay: 25,
-                moveH(coords, speed = 5, deviation = 30, width = 0, height = 0) {
-                    const sleepTime = speed >= 1 ? 1 : speed !== "max" ? Math.round(1 / speed) : 0;
-                    humanCurv(coords, speed, deviation, width, height).forEach((dot, index, arr) => {
-                        if (index !== 0)
-                            self._moveTo(dot[0], dot[1], arr[index - 1][0], arr[index - 1][1]);
-                        else self._moveTo(dot[0], dot[1], coords[2], coords[3]);
-                        sleep(sleepTime);
-                    });
-                },
-                toogle(isButtonDown, x, y, button = "left", buttonTooglerDelay = this.buttonTooglerDelay) {
-                    self._toogleMbAt(button, isButtonDown, x, y);
-                    sleep(buttonTooglerDelay);
-                },
-                clickAt(x, y, button = "left", buttonTooglerDelay = this.buttonTooglerDelay, buttonSenderDelay = 0) {
-                    self._toogleMbAt(button, true, x, y);
-                    sleep(buttonTooglerDelay);
-                    self._toogleMbAt(button, false, x, y);
-                    sleep(buttonSenderDelay);
-                },
-                async clickAtAsync(x, y, button = "left", buttonTooglerDelay = this.buttonTooglerDelay, buttonSenderDelay = 0) {
-                    self._toogleMbAt(button, true, x, y);
-                    await sleepAsync(buttonTooglerDelay);
-                    self._toogleMbAt(button, false, x, y);
-                    await sleepAsync(buttonSenderDelay);
-                },
-                scrollWheelAt(count, x, y, wheelTooglerDelay = 0) {
-                    self._scrollWheelAt(count, x, y);
-                    sleep(wheelTooglerDelay);
-                },
-                async scrollWheelAtAsync(count, x, y, wheelTooglerDelay = 0) {
-                    self._scrollWheelAt(count, x, y);
-                    if (wheelTooglerDelay > 0) await sleepAsync(wheelTooglerDelay);
+                    await sleepAsync(wheelTooglerDelay);
                 }
             }
         });
@@ -313,8 +234,8 @@ const Workwindow = ClassName => class extends ClassName {
     }
 }
 
-class Hardware extends MouseH(Keyboard(Workwindow(_Hardware))) { };
-class Virtual extends MouseV(Keyboard(Workwindow(_Virtual))) { };
+const Hardware = Mouse(Keyboard(Workwindow(_Hardware)));
+const Virtual = Mouse(Keyboard(Workwindow(_Virtual)));
 const getWindow = arg => arg !== undefined ? _getWindow(arg) : _getWindow().map(item => ({ ...item, title: String.fromCodePoint(...item.title) }));
 const windowTitle = str => {
     const arr = [];
