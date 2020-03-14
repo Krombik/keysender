@@ -1,8 +1,7 @@
 #include <windows.h>
-#include <tchar.h>
 #include <chrono>
 #include <thread>
-#include <array>
+#include <iostream>
 #include "workwindow.hpp"
 
 BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
@@ -105,6 +104,59 @@ void sleep(const Napi::CallbackInfo &info)
     std::this_thread::sleep_for(std::chrono::milliseconds(info[0].As<Napi::Number>().Int32Value()));
 }
 
+Napi::Value Workwindow::capture(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+    RECT area;
+    int16_t width, height;
+    if (info.Length() == 0)
+    {
+        GetClientRect(hWnd, &area);
+        width = area.right - area.left;
+        height = area.bottom - area.top;
+    }
+    else if (info.Length() != 4 || !info[0].IsNumber() || !info[1].IsNumber() || !info[2].IsNumber() || !info[3].IsNumber())
+        Napi::Error::New(env, "Expected 4 Number arguments")
+            .ThrowAsJavaScriptException();
+    else
+    {
+        width = info[2].As<Napi::Number>().Int32Value();
+        height = info[3].As<Napi::Number>().Int32Value();
+        area.left = info[0].As<Napi::Number>().Int32Value();
+        area.top = info[1].As<Napi::Number>().Int32Value();
+        area.right = area.left + width;
+        area.bottom = area.top + height;
+    }
+    const uint32_t size = width * height * 4;
+    HDC context = GetDC(hWnd);
+    BITMAPINFO bi;
+    bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bi.bmiHeader.biWidth = width;
+    bi.bmiHeader.biHeight = -height;
+    bi.bmiHeader.biPlanes = 1;
+    bi.bmiHeader.biBitCount = 32;
+    bi.bmiHeader.biCompression = BI_RGB;
+    bi.bmiHeader.biSizeImage = 0;
+    bi.bmiHeader.biXPelsPerMeter = 0;
+    bi.bmiHeader.biYPelsPerMeter = 0;
+    bi.bmiHeader.biClrUsed = 0;
+    bi.bmiHeader.biClrImportant = 0;
+    uint8_t *pixels;
+    HDC memDC = CreateCompatibleDC(context);
+    HBITMAP section = CreateDIBSection(context, &bi, DIB_RGB_COLORS, (void **)&pixels, 0, 0);
+    DeleteObject(SelectObject(memDC, section));
+    BitBlt(memDC, 0, 0, width, height, context, area.left, area.top, SRCCOPY);
+    DeleteDC(memDC);
+    for (uint32_t i = 0; i < size; i += 4)
+        std::swap(pixels[i], pixels[i + 2]);
+    Napi::Object returnValue = Napi::Object::New(env);
+    returnValue["data"] = Napi::Buffer<uint8_t>::Copy(env, pixels, size);
+    returnValue["width"] = width;
+    returnValue["height"] = height;
+    DeleteObject(section);
+    return returnValue;
+}
+
 void Workwindow::setWorkwindow(const Napi::CallbackInfo &info, const Napi::Value &value)
 {
     Napi::Env env = info.Env();
@@ -116,6 +168,7 @@ void Workwindow::setWorkwindow(const Napi::CallbackInfo &info, const Napi::Value
             .ThrowAsJavaScriptException();
     hWnd = (HWND)info[0].As<Napi::Number>().Int64Value();
 };
+
 Napi::Value Workwindow::getWorkwindow(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();

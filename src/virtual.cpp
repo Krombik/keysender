@@ -19,8 +19,8 @@ const map<UINT, UINT> Virtual::wParams = {{WM_LBUTTONDOWN, MK_LBUTTON},
 
 void Virtual::mousePosGetter(POINT *coords)
 {
-    GetCursorPos(&*coords);
-    ScreenToClient(hWnd, &*coords);
+    GetCursorPos(coords);
+    ScreenToClient(hWnd, coords);
 }
 
 void Virtual::mbToogler(std::string button, bool isButtonDown)
@@ -57,22 +57,23 @@ Napi::Object Virtual::Init(Napi::Env env, Napi::Object exports)
 {
     Napi::HandleScope scope(env);
     Napi::Function func = DefineClass(
-        env, "_Virtual", {
-                             InstanceMethod("_getPos", &Virtual::getMousePos),
-                             InstanceMethod("_toogleMb", &Virtual::toogleMb),
-                             InstanceMethod("_move", &Virtual::move),
-                             InstanceMethod("_scrollWheel", &Virtual::scrollWheel),
-                             InstanceMethod("_toogleKey", &Virtual::toogleKey),
-                             InstanceMethod("_printChar", &Virtual::printChar),
-                             InstanceMethod("isForeground", &Virtual::isForeground),
-                             InstanceMethod("setForeground", &Virtual::setForeground),
-                             InstanceMethod("isOpen", &Virtual::isOpen),
-                             InstanceAccessor("_workwindow", &Virtual::getWorkwindow, &Virtual::setWorkwindow),
-                             InstanceAccessor("_lastCoords", &Virtual::getLastCoords, &Virtual::setLastCoords),
-                             InstanceAccessor("_saveMod", &Virtual::getSaveMod, &Virtual::setSaveMod),
-                         });
+        env, "Virtual", {
+                            InstanceMethod("_getPos", &Virtual::getMousePos),
+                            InstanceMethod("_toogleMb", &Virtual::toogleMb),
+                            InstanceMethod("_move", &Virtual::move),
+                            InstanceMethod("_scrollWheel", &Virtual::scrollWheel),
+                            InstanceMethod("_toogleKey", &Virtual::toogleKey),
+                            InstanceMethod("_printChar", &Virtual::printChar),
+                            InstanceMethod("_setForeground", &Virtual::setForeground),
+                            InstanceMethod("_isForeground", &Virtual::isForeground),
+                            InstanceMethod("_isOpen", &Virtual::isOpen),
+                            InstanceMethod("_capture", &Virtual::capture),
+                            InstanceAccessor("_workwindow", &Virtual::getWorkwindow, &Virtual::setWorkwindow),
+                            InstanceAccessor("_lastCoords", &Virtual::getLastCoords, &Virtual::setLastCoords),
+                            InstanceAccessor("_saveMod", &Virtual::getSaveMod, &Virtual::setSaveMod),
+                        });
     constructor = Napi::Persistent(func);
     constructor.SuppressDestruct();
-    exports.Set("_Virtual", func);
+    exports.Set("Virtual", func);
     return exports;
 }

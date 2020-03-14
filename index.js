@@ -1,4 +1,4 @@
-const { _Virtual, _Hardware, _getWindow, getWindowChild, _sleep } = require('./build/Release/key_sender.node');
+const { Virtual, Hardware, _getWindow, getWindowChild, _sleep } = require('./build/Release/key_sender.node');
 const random = (min, max) => min < max ? Math.floor(Math.random() * (max + 1 - min)) + min : min;
 const sleep = arg => {
     const ms = !Array.isArray(arg) ? arg : random(...arg);
@@ -229,18 +229,43 @@ const Workwindow = ClassName => class extends ClassName {
         super();
         this._workwindow = workwindow;
     }
-    set is(workwindow) {
-        this._workwindow = workwindow;
-    }
-    get is() {
-        const workwindow = { ...this._workwindow };
-        workwindow.title = String.fromCodePoint(...workwindow.title)
-        return workwindow;
+    get workwindow() {
+        const self = this;
+        Object.defineProperty(this, "workwindow", {
+            value: {
+                set is(workwindow) {
+                    self._workwindow = workwindow;
+                },
+                get is() {
+                    return ({
+                        ...self._workwindow,
+                        title: String.fromCodePoint(...this.title)
+                    });
+                },
+                setForeground() {
+                    self._setForeground();
+                },
+                isForeground() {
+                    return self._isForeground();
+                },
+                isOpen() {
+                    return self._isOpen();
+                },
+                capture(...args) {
+                    return ({
+                        ...self._capture(...args),
+                        colorAt(x, y) {
+                            const i = this.width * y + x << 2;
+                            return ((this.data[i] << 16) | (this.data[i + 1] << 8) | this.data[i + 2]).toString(16);
+                        }
+                    });
+                }
+            }
+        });
+        return this.workwindow;
     }
 }
 
-const Hardware = Mouse(Keyboard(Workwindow(_Hardware)));
-const Virtual = Mouse(Keyboard(Workwindow(_Virtual)));
 const getWindow = arg => arg !== undefined ? _getWindow(arg) : _getWindow().map(item => ({ ...item, title: String.fromCodePoint(...item.title) }));
 const windowTitle = str => {
     const arr = [];
@@ -249,4 +274,11 @@ const windowTitle = str => {
     return arr;
 }
 
-module.exports = { Virtual, Hardware, getWindow, getWindowChild, windowTitle };
+module.exports = {
+    Virtual: Mouse(Keyboard(Workwindow(Virtual))),
+    Hardware: Mouse(Keyboard(Workwindow(Hardware))),
+    getWindow,
+    getWindowChild,
+    windowTitle,
+    sleep
+};

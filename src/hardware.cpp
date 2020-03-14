@@ -78,7 +78,7 @@ const map<string, array<UINT, 2>> Hardware::buttonsDef = {
 
 void Hardware::mousePosGetter(POINT *coords)
 {
-    GetCursorPos(&*coords);
+    GetCursorPos(coords);
 }
 
 void Hardware::mbToogler(std::string button, bool isButtonDown)
@@ -177,22 +177,23 @@ Napi::Object Hardware::Init(Napi::Env env, Napi::Object exports)
 {
     Napi::HandleScope scope(env);
     Napi::Function func = DefineClass(
-        env, "_Hardware", {
-                              InstanceMethod("_getPos", &Hardware::getMousePos),
-                              InstanceMethod("_toogleMb", &Hardware::toogleMb),
-                              InstanceMethod("_move", &Hardware::move),
-                              InstanceMethod("_scrollWheel", &Hardware::scrollWheel),
-                              InstanceMethod("_toogleKey", &Hardware::toogleKey),
-                              InstanceMethod("_printChar", &Hardware::printChar),
-                              InstanceMethod("isForeground", &Hardware::isForeground),
-                              InstanceMethod("setForeground", &Hardware::setForeground),
-                              InstanceMethod("isOpen", &Hardware::isOpen),
-                              InstanceAccessor("_workwindow", &Hardware::getWorkwindow, &Hardware::setWorkwindow),
-                              InstanceAccessor("_lastCoords", &Hardware::getLastCoords, &Hardware::setLastCoords),
-                              InstanceAccessor("_saveMod", &Hardware::getSaveMod, &Hardware::setSaveMod),
-                          });
+        env, "Hardware", {
+                             InstanceMethod("_getPos", &Hardware::getMousePos),
+                             InstanceMethod("_toogleMb", &Hardware::toogleMb),
+                             InstanceMethod("_move", &Hardware::move),
+                             InstanceMethod("_scrollWheel", &Hardware::scrollWheel),
+                             InstanceMethod("_toogleKey", &Hardware::toogleKey),
+                             InstanceMethod("_printChar", &Hardware::printChar),
+                             InstanceMethod("_isOpen", &Hardware::isOpen),
+                             InstanceMethod("_isForeground", &Hardware::isForeground),
+                             InstanceMethod("_setForeground", &Hardware::setForeground),
+                             InstanceMethod("_capture", &Hardware::capture),
+                             InstanceAccessor("_workwindow", &Hardware::getWorkwindow, &Hardware::setWorkwindow),
+                             InstanceAccessor("_lastCoords", &Hardware::getLastCoords, &Hardware::setLastCoords),
+                             InstanceAccessor("_saveMod", &Hardware::getSaveMod, &Hardware::setSaveMod),
+                         });
     constructor = Napi::Persistent(func);
     constructor.SuppressDestruct();
-    exports.Set("_Hardware", func);
+    exports.Set("Hardware", func);
     return exports;
 }
