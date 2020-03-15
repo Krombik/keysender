@@ -6,11 +6,7 @@ using namespace std;
 
 Value Mouse::getMousePos(const CallbackInfo &info)
 {
-    Env env = info.Env();
-    if (info.Length() != 0)
-        Error::New(env, "Expected exactly 0 arguments")
-            .ThrowAsJavaScriptException();
-    Array pos = Array::New(env);
+    Array pos = Array::New(info.Env());
     POINT coords;
     mousePosGetter(&coords);
     pos[(uint32_t)0] = coords.x;
@@ -20,45 +16,24 @@ Value Mouse::getMousePos(const CallbackInfo &info)
 
 void Mouse::toogleMb(const CallbackInfo &info)
 {
-    Env env = info.Env();
-    if (info.Length() != 2)
-        Error::New(env, "Expected exactly 2 arguments")
-            .ThrowAsJavaScriptException();
-    if (!info[0].IsString())
-        Error::New(env, "arg1 - Expected an String")
-            .ThrowAsJavaScriptException();
-    if (!info[1].IsBoolean())
-        Error::New(env, "arg2 - Expected an Boolean")
+    if (info.Length() != 2 || !info[0].IsString() || !info[1].IsBoolean())
+        Error::New(info.Env(), "Expected 2 arguments: String, Boolean")
             .ThrowAsJavaScriptException();
     mbToogler(info[0].As<String>(), info[1].As<Boolean>());
 }
 
 void Mouse::scrollWheel(const CallbackInfo &info)
 {
-    Env env = info.Env();
-    if (info.Length() != 1)
-        Error::New(env, "Expected exactly 1 arguments")
-            .ThrowAsJavaScriptException();
-    if (!info[0].IsNumber())
-        Error::New(env, "Expected an Number")
+    if (info.Length() != 1 || !info[0].IsNumber())
+        Error::New(info.Env(), "Expected 1 argument: Number")
             .ThrowAsJavaScriptException();
     wheelScroller(info[0].As<Number>().Int32Value());
 }
 
 void Mouse::move(const CallbackInfo &info)
 {
-    Env env = info.Env();
-    if (info.Length() != 3)
-        Error::New(env, "Expected exactly 3 arguments")
-            .ThrowAsJavaScriptException();
-    if (!info[0].IsNumber())
-        Error::New(env, "arg1 - Expected an Number")
-            .ThrowAsJavaScriptException();
-    if (!info[1].IsNumber())
-        Error::New(env, "arg2 - Expected an Number")
-            .ThrowAsJavaScriptException();
-    if (!info[2].IsBoolean())
-        Error::New(env, "arg3 - Expected an Boolean")
+    if (info.Length() != 3 || !info[0].IsNumber() || !info[1].IsNumber() || !info[2].IsBoolean())
+        Error::New(info.Env(), "Expected 3 arguments: Number, Number, Boolean")
             .ThrowAsJavaScriptException();
     int x = info[0].As<Number>().Int32Value();
     int y = info[1].As<Number>().Int32Value();
@@ -83,13 +58,12 @@ void Mouse::setLastCoords(const Napi::CallbackInfo &info, const Napi::Value &val
             .ThrowAsJavaScriptException();
     Napi::Array coords = info[0].As<Napi::Array>();
     lastCoords.x = coords.Get((uint32_t)0).As<Number>().Int64Value();
-    lastCoords.y = coords.Get((uint32_t)1).As<Number>().Int64Value();
+    lastCoords.y = coords.Get(1).As<Number>().Int64Value();
 };
 
 Napi::Value Mouse::getLastCoords(const Napi::CallbackInfo &info)
 {
-    Napi::Env env = info.Env();
-    Napi::Array coords = Napi::Array::New(env);
+    Napi::Array coords = Napi::Array::New(info.Env());
     coords[(uint32_t)0] = lastCoords.x;
     coords[1] = lastCoords.y;
     return coords;
@@ -98,7 +72,7 @@ Napi::Value Mouse::getLastCoords(const Napi::CallbackInfo &info)
 void Mouse::setSaveMod(const Napi::CallbackInfo &info, const Napi::Value &value)
 {
     if (!info[0].IsBoolean())
-        Napi::Error::New(info.Env(), "Expected an Boolean")
+        Napi::Error::New(info.Env(), "Expected a Boolean")
             .ThrowAsJavaScriptException();
     saveMod = info[0].As<Boolean>();
 };

@@ -6,27 +6,16 @@ using namespace std;
 
 void Keyboard::toogleKey(const CallbackInfo &info)
 {
-    Env env = info.Env();
-    if (info.Length() != 2)
-        Error::New(env, "Expected exactly 2 arguments")
-            .ThrowAsJavaScriptException();
-    if (!info[0].IsString())
-        Error::New(env, "arg1 - Expected an String")
-            .ThrowAsJavaScriptException();
-    if (!info[1].IsBoolean())
-        Error::New(env, "arg2 - Expected an Boolean")
+    if (info.Length() != 2 || !info[0].IsString() || !info[1].IsBoolean())
+        Error::New(info.Env(), "Expected 2 arguments: String, Boolean")
             .ThrowAsJavaScriptException();
     keyToogler(keysDef.at(info[0].As<String>()), info[1].As<Boolean>());
 }
 
 void Keyboard::printChar(const CallbackInfo &info)
 {
-    Env env = info.Env();
-    if (info.Length() != 1)
-        Error::New(env, "Expected exactly 1 arguments")
-            .ThrowAsJavaScriptException();
-    if (!info[0].IsNumber())
-        Error::New(env, "Expected an Number")
+    if (info.Length() != 1 || !info[0].IsNumber())
+        Error::New(info.Env(), "Expected 1 argument: Number")
             .ThrowAsJavaScriptException();
     charPrinter(info[0].As<Number>().Int32Value());
 };

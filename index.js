@@ -1,10 +1,20 @@
-const { Virtual, Hardware, _getWindow, getWindowChild, _sleep } = require('./build/Release/key_sender.node');
+const { Virtual, Hardware, _getWindow, _getWindowChild, _sleep } = require('./build/Release/key_sender.node');
+const { Buffer } = require("buffer");
 const random = (min, max) => min < max ? Math.floor(Math.random() * (max + 1 - min)) + min : min;
+const sleepAsync = ms => new Promise(_ => setTimeout(_, Array.isArray(ms) ? random(...ms) : ms));
+
+const getWindow = (title, className = null) => arguments.length === 0 ?
+    _getWindow().map(item => ({ handle: item.handle, className: item.className.toString('ucs2'), title: item.title.toString('ucs2') })) :
+    _getWindow(Buffer.from(title, "ucs2"), className !== null ? Buffer.from(className, "ucs2") : null);
+
+const getWindowChild = (parentHandle, className, title = null) => arguments.length === 1 ?
+    _getWindowChild(parentHandle).map(item => ({ handle: item.handle, className: item.className.toString('ucs2'), title: item.title.toString('ucs2') })) :
+    _getWindowChild(parentHandle, className, title !== null ? Buffer.from(title, "ucs2") : null);
+
 const sleep = arg => {
     const ms = !Array.isArray(arg) ? arg : random(...arg);
     if (ms > 0) _sleep(ms);
 }
-const sleepAsync = ms => new Promise(_ => setTimeout(_, Array.isArray(ms) ? random(...ms) : ms));
 
 const Keyboard = ClassName => class extends ClassName {
     get keyboard() {
@@ -68,11 +78,11 @@ const Keyboard = ClassName => class extends ClassName {
                     let i = keys.length - 1;
                     keys.forEach((key, index) => {
                         self._toogleKey(key, true);
-                        index !== i ? self._sleep(microSleep) : sleep(keyTooglerDelay);
+                        sleep(index !== i ? microSleep : keyTooglerDelay);
                     });
                     for (; i >= 0; i--) {
                         self._toogleKey(keys[i], false);
-                        i !== 0 ? self._sleep(microSleep) : sleep(keySenderDelay);
+                        sleep(index !== 0 ? microSleep : keyTooglerDelay);
                     }
                 },
                 async sendKeyComboAsync(keys, keyTooglerDelay = this.keyTooglerDelay, keySenderDelay = 0) {
@@ -95,6 +105,7 @@ const Mouse = ClassName => class extends ClassName {
     get mouse() {
         const self = this;
         const choice = (...items) => items[Math.round(Math.random() * (items.length - 1))];
+        const tremor = propability => Math.random() <= propability ? choice(-1, 1) : 0;
         const curvDotMaker = (start, end, deviation, sign) => Math.round(start + (end - start) / 2 + sign * (end - start) * 0.01 * deviation);
         const firstCurvDotMaker = (start, end, deviation, sign) => Math.round(start + sign * (end - start) * 0.01 * deviation);
         const curvMaker = (t, start, curvDot1, curvDot2, end) => Math.floor(Math.pow(1 - t, 3) * start + 3 * Math.pow(1 - t, 2) * t * curvDot1 + 3 * (1 - t) * t * t * curvDot2 + t * t * t * end);
@@ -146,7 +157,7 @@ const Mouse = ClassName => class extends ClassName {
                 }
             } while (true);
             path.shift();
-            return path.map((item, index) => index !== path.length - 1 ? [item[0], item[1] + choice(-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1)] : [xE, yE]);
+            return path.map((item, index) => index !== path.length - 1 ? [item[0], item[1] + tremor(speed / 15)] : [xE, yE]);
         }
         Object.defineProperty(this, "mouse", {
             value: {
@@ -237,10 +248,10 @@ const Workwindow = ClassName => class extends ClassName {
                     self._workwindow = workwindow;
                 },
                 get is() {
-                    return ({
-                        ...self._workwindow,
-                        title: String.fromCodePoint(...this.title)
-                    });
+                    const workwindow = { ...self._workwindow };
+                    workwindow.className = workwindow.className.toString('ucs2');
+                    workwindow.title = workwindow.title.toString('ucs2');
+                    return workwindow;
                 },
                 setForeground() {
                     self._setForeground();
@@ -266,19 +277,10 @@ const Workwindow = ClassName => class extends ClassName {
     }
 }
 
-const getWindow = arg => arg !== undefined ? _getWindow(arg) : _getWindow().map(item => ({ ...item, title: String.fromCodePoint(...item.title) }));
-const windowTitle = str => {
-    const arr = [];
-    for (let i = 0; i < str.length; i++)
-        arr[i] = str.codePointAt(i);
-    return arr;
-}
-
 module.exports = {
-    Virtual: Mouse(Keyboard(Workwindow(Virtual))),
-    Hardware: Mouse(Keyboard(Workwindow(Hardware))),
     getWindow,
     getWindowChild,
-    windowTitle,
-    sleep
+    sleep,
+    Virtual: Mouse(Keyboard(Workwindow(Virtual))),
+    Hardware: Mouse(Keyboard(Workwindow(Hardware)))
 };

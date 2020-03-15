@@ -24,6 +24,28 @@ BOOL CALLBACK EnumChildProc(HWND hWnd, LPARAM lParam)
     return TRUE;
 }
 
+Napi::Object windowGetter(HWND hWnd, Napi::Env *env)
+{
+    Napi::Object window = Napi::Object::New(*env);
+    window["handle"] = HandleToLong(hWnd);
+    int titleLenght = GetWindowTextLengthA(hWnd);
+    if (titleLenght > 0)
+    {
+        std::vector<wchar_t> title(titleLenght + 1);
+        GetWindowTextW(hWnd, &title[0], title.size());
+        title.pop_back();
+        window["title"] = Napi::Buffer<wchar_t>::Copy(*env, title.data(), title.size());
+    }
+    else
+        window["title"] = NULL;
+    std::vector<wchar_t> className(256);
+    GetClassNameW(hWnd, &className[0], className.size());
+    className.resize(std::distance(className.begin(), std::search_n(className.begin(), className.end(), 2, 0)));
+    className.shrink_to_fit();
+    window["className"] = Napi::Buffer<wchar_t>::Copy(*env, className.data(), className.size());
+    return window;
+}
+
 Napi::Value getWindow(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
@@ -33,73 +55,43 @@ Napi::Value getWindow(const Napi::CallbackInfo &info)
         EnumWindows(EnumWindowsProc, reinterpret_cast<LPARAM>(&hWnds));
         Napi::Array windows = Napi::Array::New(env);
         for (const HWND &hWnd : hWnds)
-        {
-            std::wstring title(GetWindowTextLengthA(hWnd) + 1, L'\0');
-            GetWindowTextW(hWnd, &title[0], title.size());
-            Napi::Array titleA = Napi::Array::New(env);
-            for (size_t i = 0; i < title.length() - 1; i++)
-                titleA[i] = Napi::Number::New(env, DWORD(title.at(i)));
-            char className[256];
-            GetClassNameA(hWnd, className, 256);
-            Napi::Object window = Napi::Object::New(env);
-            window["handle"] = Napi::Number::New(env, HandleToLong(hWnd));
-            window["className"] = className;
-            window["title"] = titleA;
-            windows[windows.Length()] = window;
-        }
+            windows[windows.Length()] = windowGetter(hWnd, &env);
         return windows;
     }
-    if (!info[0].IsString() && !info[0].IsArray())
-        Napi::Error::New(env, "Expected an String or Array")
+    if (info.Length() != 2)
+        Napi::Error::New(env, "Expected 0 or 2 arguments: Buffer||NULL, Buffer||NULL")
             .ThrowAsJavaScriptException();
-    if (info[0].IsArray())
-    {
-        const Napi::Array name = info[0].As<Napi::Array>();
-        std::wstring nameS;
-        for (size_t i = 0; i < name.Length(); i++)
-            nameS[i] = DWORD(name[i].As<Napi::Number>().Int32Value());
-        return Napi::Number::New(env, HandleToLong(FindWindowW(NULL, LPCWSTR(nameS.c_str()))));
-    }
-    return Napi::Number::New(env, HandleToLong(FindWindowA(std::string(info[0].As<Napi::String>()).c_str(), NULL)));
+    return Napi::Number::New(env, HandleToLong(FindWindowW(
+                                      info[1].IsNull() ? NULL : LPCWSTR(std::u16string(Napi::Buffer<char16_t>(env, info[1]).Data()).data()),
+                                      info[0].IsNull() ? NULL : LPCWSTR(std::u16string(Napi::Buffer<char16_t>(env, info[0]).Data()).data()))));
 }
 
 Napi::Value getWindowChild(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
-    if (info.Length() == 0)
-        Napi::Error::New(env, "Expected exactly 1-2 arguments")
-            .ThrowAsJavaScriptException();
-    if (!info[0].IsNumber())
-        Napi::Error::New(env, "Expected an Number")
-            .ThrowAsJavaScriptException();
-    if (info.Length() == 1)
+    if (info.Length() == 1 && info[0].IsNumber())
     {
         std::vector<HWND> chWnds;
         EnumChildWindows((HWND)info[0].As<Napi::Number>().Int64Value(), EnumChildProc, reinterpret_cast<LPARAM>(&chWnds));
         Napi::Array children = Napi::Array::New(env);
         if (!chWnds.empty())
             for (const HWND &hWnd : chWnds)
-            {
-                char className[256];
-                GetClassNameA(hWnd, className, 256);
-                Napi::Object child = Napi::Object::New(env);
-                child["handle"] = Napi::Number::New(env, HandleToLong(hWnd));
-                child["className"] = Napi::String::New(env, className);
-                children[children.Length()] = child;
-            }
+                children[children.Length()] = windowGetter(hWnd, &env);
         return children;
     }
-    return Napi::Number::New(env, HandleToLong(FindWindowExA((HWND)info[0].As<Napi::Number>().Int64Value(), NULL, std::string(info[1].As<Napi::String>()).c_str(), NULL)));
+    if (info.Length() != 3 || !info[0].IsNumber() || !info[1].IsBuffer() || !info[2].IsBuffer())
+        Napi::Error::New(env, "Expected 1 or 3 arguments: Number, Buffer||NULL, Buffer||NULL")
+            .ThrowAsJavaScriptException();
+    return Napi::Number::New(env, HandleToLong(FindWindowExW((HWND)info[0].As<Napi::Number>().Int64Value(), NULL,
+                                                             info[1].IsNull() ? NULL : LPCWSTR(std::u16string(Napi::Buffer<char16_t>(env, info[1]).Data()).data()),
+                                                             info[2].IsNull() ? NULL : LPCWSTR(std::u16string(Napi::Buffer<char16_t>(env, info[2]).Data()).data()))));
 }
 
 void sleep(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
-    if (info.Length() != 1)
-        Napi::Error::New(env, "Expected exactly 1 arguments")
-            .ThrowAsJavaScriptException();
-    if (!info[0].IsNumber())
-        Napi::Error::New(env, "Expected an Number")
+    if (info.Length() != 1 || !info[0].IsNumber())
+        Napi::Error::New(env, "Expected 1 argument: Number")
             .ThrowAsJavaScriptException();
     std::this_thread::sleep_for(std::chrono::milliseconds(info[0].As<Napi::Number>().Int32Value()));
 }
@@ -116,7 +108,7 @@ Napi::Value Workwindow::capture(const Napi::CallbackInfo &info)
         height = area.bottom - area.top;
     }
     else if (info.Length() != 4 || !info[0].IsNumber() || !info[1].IsNumber() || !info[2].IsNumber() || !info[3].IsNumber())
-        Napi::Error::New(env, "Expected 4 Number arguments")
+        Napi::Error::New(env, "Expected 4 arguments: Number, Number, Number, Number")
             .ThrowAsJavaScriptException();
     else
     {
@@ -160,11 +152,8 @@ Napi::Value Workwindow::capture(const Napi::CallbackInfo &info)
 void Workwindow::setWorkwindow(const Napi::CallbackInfo &info, const Napi::Value &value)
 {
     Napi::Env env = info.Env();
-    if (info.Length() != 1)
-        Napi::Error::New(env, "Expected exactly 1 arguments")
-            .ThrowAsJavaScriptException();
-    if (!info[0].IsNumber())
-        Napi::Error::New(env, "Expected an Number")
+    if (info.Length() != 1 || !info[0].IsNumber())
+        Napi::Error::New(env, "Expected 1 argument: Number")
             .ThrowAsJavaScriptException();
     hWnd = (HWND)info[0].As<Napi::Number>().Int64Value();
 };
@@ -172,18 +161,7 @@ void Workwindow::setWorkwindow(const Napi::CallbackInfo &info, const Napi::Value
 Napi::Value Workwindow::getWorkwindow(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
-    Napi::Object workwindow = Napi::Object::New(env);
-    Napi::Array titleA = Napi::Array::New(env);
-    std::wstring title(GetWindowTextLengthA(hWnd) + 1, L'\0');
-    GetWindowTextW(hWnd, &title[0], title.size());
-    for (size_t i = 0; i < title.length() - 1; i++)
-        titleA[i] = Napi::Number::New(env, DWORD(title.at(i)));
-    char className[256];
-    GetClassNameA(hWnd, className, 256);
-    workwindow["title"] = titleA;
-    workwindow["className"] = className;
-    workwindow["handle"] = Napi::Number::New(env, HandleToLong(hWnd));
-    return workwindow;
+    return windowGetter(hWnd, &env);
 };
 
 Napi::Value Workwindow::isForeground(const Napi::CallbackInfo &info)
