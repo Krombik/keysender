@@ -24,28 +24,27 @@ BOOL CALLBACK EnumChildProc(HWND hWnd, LPARAM lParam)
     return TRUE;
 }
 
-Napi::Object windowGetter(HWND hWnd, Napi::Env *env)
+Napi::Object windowGetter(HWND hWnd, Napi::Env env)
 {
-    Napi::Object window = Napi::Object::New(*env);
-    window["handle"] = NULL;
-    window["title"] = NULL;
-    window["className"] = NULL;
+    Napi::Object window = Napi::Object::New(env);
+    window["handle"] = HandleToLong(hWnd);
+    window["title"] = "";
+    window["className"] = "";
     if (hWnd != NULL)
     {
-        window["handle"] = HandleToLong(hWnd);
         int titleLenght = GetWindowTextLengthA(hWnd);
         if (titleLenght > 0)
         {
             std::vector<wchar_t> title(titleLenght + 1);
             GetWindowTextW(hWnd, &title[0], title.size());
             title.pop_back();
-            window["title"] = Napi::Buffer<wchar_t>::Copy(*env, title.data(), title.size());
+            window["title"] = Napi::Buffer<wchar_t>::Copy(env, title.data(), title.size());
         }
         std::vector<wchar_t> className(256);
         GetClassNameW(hWnd, &className[0], className.size());
         className.resize(std::distance(className.begin(), std::search_n(className.begin(), className.end(), 2, 0)));
         className.shrink_to_fit();
-        window["className"] = Napi::Buffer<wchar_t>::Copy(*env, className.data(), className.size());
+        window["className"] = Napi::Buffer<wchar_t>::Copy(env, className.data(), className.size());
     }
     return window;
 }
@@ -59,7 +58,7 @@ Napi::Value getWindow(const Napi::CallbackInfo &info)
         EnumWindows(EnumWindowsProc, reinterpret_cast<LPARAM>(&hWnds));
         Napi::Array windows = Napi::Array::New(env);
         for (const HWND &hWnd : hWnds)
-            windows[windows.Length()] = windowGetter(hWnd, &env);
+            windows[windows.Length()] = windowGetter(hWnd, env);
         return windows;
     }
     if (info.Length() != 2)
@@ -80,7 +79,7 @@ Napi::Value getWindowChild(const Napi::CallbackInfo &info)
         Napi::Array children = Napi::Array::New(env);
         if (!chWnds.empty())
             for (const HWND &hWnd : chWnds)
-                children[children.Length()] = windowGetter(hWnd, &env);
+                children[children.Length()] = windowGetter(hWnd, env);
         return children;
     }
     if (info.Length() != 3 || !info[0].IsNumber() || !info[1].IsBuffer() || !info[2].IsBuffer())
@@ -91,6 +90,14 @@ Napi::Value getWindowChild(const Napi::CallbackInfo &info)
                                                              info[2].IsNull() ? NULL : LPCWSTR(std::u16string(Napi::Buffer<char16_t>(env, info[2]).Data()).data()))));
 }
 
+Napi::Value getScreenSize(const Napi::CallbackInfo &info)
+{
+    Napi::Object screenSize = Napi::Object::New(info.Env());
+    screenSize["width"] = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+    screenSize["height"] = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+    return screenSize;
+}
+
 Napi::Value Workwindow::capture(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
@@ -98,9 +105,19 @@ Napi::Value Workwindow::capture(const Napi::CallbackInfo &info)
     int16_t width, height;
     if (info.Length() == 0)
     {
-        GetClientRect(hWnd, &rect);
-        width = rect.right - rect.left;
-        height = rect.bottom - rect.top;
+        if (hWnd != NULL)
+        {
+            GetClientRect(hWnd, &rect);
+            width = rect.right - rect.left;
+            height = rect.bottom - rect.top;
+        }
+        else
+        {
+            rect.left = 0;
+            rect.top = 0;
+            width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+            height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+        }
     }
     else if (info.Length() != 4 || !info[0].IsNumber() || !info[1].IsNumber() || !info[2].IsNumber() || !info[3].IsNumber())
         Napi::Error::New(env, "Expected 4 arguments: Number, Number, Number, Number")
@@ -119,8 +136,6 @@ Napi::Value Workwindow::capture(const Napi::CallbackInfo &info)
         if ((height = info[3].As<Napi::Number>().Int32Value()) <= 0)
             Napi::Error::New(env, "height should be > 0")
                 .ThrowAsJavaScriptException();
-        rect.right = rect.left + width;
-        rect.bottom = rect.top + height;
     }
     const uint32_t size = width * height * 4;
     HDC context = GetDC(hWnd);
@@ -164,7 +179,7 @@ void Workwindow::setWorkwindow(const Napi::CallbackInfo &info, const Napi::Value
 Napi::Value Workwindow::getWorkwindow(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
-    return windowGetter(hWnd, &env);
+    return windowGetter(hWnd, env);
 }
 
 void Workwindow::setWindowInfo(const Napi::CallbackInfo &info, const Napi::Value &value)

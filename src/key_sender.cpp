@@ -19,6 +19,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports)
     exports["_sleep"] = Napi::Function::New(env, sleep);
     exports["_getWindow"] = Napi::Function::New(env, getWindow);
     exports["_getWindowChild"] = Napi::Function::New(env, getWindowChild);
+    exports["getScreenSize"] = Napi::Function::New(env, getScreenSize);
     return exports;
 }
 

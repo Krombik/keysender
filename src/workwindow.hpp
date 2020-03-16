@@ -8,6 +8,7 @@
 
 Napi::Value getWindow(const Napi::CallbackInfo &info);
 Napi::Value getWindowChild(const Napi::CallbackInfo &info);
+Napi::Value getScreenSize(const Napi::CallbackInfo &info);
 
 class Workwindow
 {

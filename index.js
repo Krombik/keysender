@@ -1,23 +1,24 @@
-const { Virtual, Hardware, _getWindow, _getWindowChild, _sleep } = require('./build/Release/key_sender.node');
+const { Virtual, Hardware, getScreenSize, _getWindow, _getWindowChild, _sleep } = require('./build/Release/key_sender.node');
 const { Buffer } = require("buffer");
 const random = (min, max) => min < max ? Math.floor(Math.random() * (max + 1 - min)) + min : min;
 const sleepAsync = ms => new Promise(_ => setTimeout(_, Array.isArray(ms) ? random(...ms) : ms));
 
-const getWindow = (title, className = null) => arguments.length === 0 ?
+const getWindow = (title, className) => title === undefined && className === undefined ?
     _getWindow().map(item => {
-        if (item.className !== 0) item.className = item.className.toString('ucs2');
-        if (item.title !== 0) item.title = item.title.toString('ucs2');
+        if (item.className !== '') item.className = item.className.toString('ucs2');
+        if (item.title !== '') item.title = item.title.toString('ucs2');
         return item;
-    }) :
-    _getWindow(Buffer.from(title, "ucs2"), className !== null ? Buffer.from(className, "ucs2") : null);
+    })
+    :
+    _getWindow(Buffer.from(title, "ucs2"), className !== undefined ? Buffer.from(className, "ucs2") : null);
 
-const getWindowChild = (parentHandle, className, title = null) => arguments.length === 1 ?
+const getWindowChild = (parentHandle, className, title) => title === undefined && className === undefined ?
     _getWindowChild(parentHandle).map(item => {
-        if (item.className !== 0) item.className = item.className.toString('ucs2');
-        if (item.title !== 0) item.title = item.title.toString('ucs2');
+        if (item.className !== '') item.className = item.className.toString('ucs2');
+        if (item.title !== '') item.title = item.title.toString('ucs2');
         return item;
     }) :
-    _getWindowChild(parentHandle, className, title !== null ? Buffer.from(title, "ucs2") : null);
+    _getWindowChild(parentHandle, className, title !== undefined ? Buffer.from(title, "ucs2") : null);
 
 const sleep = arg => {
     const ms = !Array.isArray(arg) ? arg : random(...arg);
@@ -263,8 +264,8 @@ const Workwindow = ClassName => class extends ClassName {
                 },
                 get is() {
                     const workwindow = { ...self._workwindow };
-                    if (workwindow.className !== 0) workwindow.className = workwindow.className.toString('ucs2');
-                    if (workwindow.title !== 0) workwindow.title = workwindow.title.toString('ucs2');
+                    if (workwindow.className !== '') workwindow.className = workwindow.className.toString('ucs2');
+                    if (workwindow.title !== '') workwindow.title = workwindow.title.toString('ucs2');
                     return workwindow;
                 },
                 set info(info) {
@@ -298,6 +299,7 @@ const Workwindow = ClassName => class extends ClassName {
 }
 
 module.exports = {
+    getScreenSize,
     getWindow,
     getWindowChild,
     sleep,
