@@ -9,7 +9,11 @@ void Keyboard::toogleKey(const CallbackInfo &info)
     if (info.Length() != 2 || !info[0].IsString() || !info[1].IsBoolean())
         Error::New(info.Env(), "Expected 2 arguments: String, Boolean")
             .ThrowAsJavaScriptException();
-    keyToogler(keysDef.at(info[0].As<String>()), info[1].As<Boolean>());
+    std::string keyName = info[0].As<String>();
+    if (keysDef.count(keyName) == 0)
+        Error::New(info.Env(), "Wrong key name")
+            .ThrowAsJavaScriptException();
+    keyToogler(keysDef.at(keyName), info[1].As<Boolean>());
 }
 
 void Keyboard::printChar(const CallbackInfo &info)

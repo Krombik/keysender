@@ -56,9 +56,13 @@ void Mouse::setLastCoords(const Napi::CallbackInfo &info, const Napi::Value &val
     if (!info[0].IsArray())
         Napi::Error::New(info.Env(), "Expected an Array")
             .ThrowAsJavaScriptException();
-    Napi::Array coords = info[0].As<Napi::Array>();
-    lastCoords.x = coords.Get((uint32_t)0).As<Number>().Int64Value();
-    lastCoords.y = coords.Get(1).As<Number>().Int64Value();
+    Napi::Array coords(info.Env(), info[0]);
+    if ((lastCoords.x = coords.Get((uint32_t)0).As<Number>().Int64Value()) < 0)
+        Napi::Error::New(info.Env(), "x should be >= 0")
+            .ThrowAsJavaScriptException();
+    if ((lastCoords.y = coords.Get(1).As<Number>().Int64Value()) < 0)
+        Napi::Error::New(info.Env(), "x should be >= 0")
+            .ThrowAsJavaScriptException();
 };
 
 Napi::Value Mouse::getLastCoords(const Napi::CallbackInfo &info)

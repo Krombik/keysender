@@ -3,6 +3,15 @@
 #include "hardware.hpp"
 #include "virtual.hpp"
 
+void sleep(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+    if (info.Length() != 1 || !info[0].IsNumber())
+        Napi::Error::New(env, "Expected 1 argument: Number")
+            .ThrowAsJavaScriptException();
+    std::this_thread::sleep_for(std::chrono::milliseconds(info[0].As<Napi::Number>().Int32Value()));
+}
+
 Napi::Object Init(Napi::Env env, Napi::Object exports)
 {
     Hardware::Init(env, exports);

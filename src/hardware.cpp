@@ -191,6 +191,7 @@ Napi::Object Hardware::Init(Napi::Env env, Napi::Object exports)
                              InstanceAccessor("_workwindow", &Hardware::getWorkwindow, &Hardware::setWorkwindow),
                              InstanceAccessor("_lastCoords", &Hardware::getLastCoords, &Hardware::setLastCoords),
                              InstanceAccessor("_saveMod", &Hardware::getSaveMod, &Hardware::setSaveMod),
+                             InstanceAccessor("_windowInfo", &Hardware::getWindowInfo, &Hardware::setWindowInfo),
                          });
     constructor = Napi::Persistent(func);
     constructor.SuppressDestruct();

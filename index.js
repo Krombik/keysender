@@ -4,11 +4,19 @@ const random = (min, max) => min < max ? Math.floor(Math.random() * (max + 1 - m
 const sleepAsync = ms => new Promise(_ => setTimeout(_, Array.isArray(ms) ? random(...ms) : ms));
 
 const getWindow = (title, className = null) => arguments.length === 0 ?
-    _getWindow().map(item => ({ handle: item.handle, className: item.className.toString('ucs2'), title: item.title.toString('ucs2') })) :
+    _getWindow().map(item => {
+        if (item.className !== 0) item.className = item.className.toString('ucs2');
+        if (item.title !== 0) item.title = item.title.toString('ucs2');
+        return item;
+    }) :
     _getWindow(Buffer.from(title, "ucs2"), className !== null ? Buffer.from(className, "ucs2") : null);
 
 const getWindowChild = (parentHandle, className, title = null) => arguments.length === 1 ?
-    _getWindowChild(parentHandle).map(item => ({ handle: item.handle, className: item.className.toString('ucs2'), title: item.title.toString('ucs2') })) :
+    _getWindowChild(parentHandle).map(item => {
+        if (item.className !== 0) item.className = item.className.toString('ucs2');
+        if (item.title !== 0) item.title = item.title.toString('ucs2');
+        return item;
+    }) :
     _getWindowChild(parentHandle, className, title !== null ? Buffer.from(title, "ucs2") : null);
 
 const sleep = arg => {
@@ -162,11 +170,17 @@ const Mouse = ClassName => class extends ClassName {
         Object.defineProperty(this, "mouse", {
             value: {
                 buttonTooglerDelay: 35,
+                set saveMod(bool) {
+                    self._saveMod = bool;
+                },
                 get saveMod() {
                     return self._saveMod;
                 },
-                set saveMod(bool) {
-                    self._saveMod = bool;
+                set lastCoords(coords) {
+                    self._lastCoords = coords;
+                },
+                get lastCoords() {
+                    return self._lastCoords;
                 },
                 getPos() {
                     return self._getPos();
@@ -249,9 +263,15 @@ const Workwindow = ClassName => class extends ClassName {
                 },
                 get is() {
                     const workwindow = { ...self._workwindow };
-                    workwindow.className = workwindow.className.toString('ucs2');
-                    workwindow.title = workwindow.title.toString('ucs2');
+                    if (workwindow.className !== 0) workwindow.className = workwindow.className.toString('ucs2');
+                    if (workwindow.title !== 0) workwindow.title = workwindow.title.toString('ucs2');
                     return workwindow;
+                },
+                set info(info) {
+                    self._windowInfo = info;
+                },
+                get info() {
+                    return self._windowInfo;
                 },
                 setForeground() {
                     self._setForeground();

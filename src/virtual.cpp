@@ -71,6 +71,7 @@ Napi::Object Virtual::Init(Napi::Env env, Napi::Object exports)
                             InstanceAccessor("_workwindow", &Virtual::getWorkwindow, &Virtual::setWorkwindow),
                             InstanceAccessor("_lastCoords", &Virtual::getLastCoords, &Virtual::setLastCoords),
                             InstanceAccessor("_saveMod", &Virtual::getSaveMod, &Virtual::setSaveMod),
+                            InstanceAccessor("_windowInfo", &Virtual::getWindowInfo, &Virtual::setWindowInfo),
                         });
     constructor = Napi::Persistent(func);
     constructor.SuppressDestruct();

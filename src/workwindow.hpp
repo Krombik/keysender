@@ -7,9 +7,7 @@
 #include <iostream>
 
 Napi::Value getWindow(const Napi::CallbackInfo &info);
-Napi::Value CaptureAnImage(const Napi::CallbackInfo &info);
 Napi::Value getWindowChild(const Napi::CallbackInfo &info);
-void sleep(const Napi::CallbackInfo &info);
 
 class Workwindow
 {
@@ -23,6 +21,8 @@ protected:
     HWND hWnd = NULL;
     void setWorkwindow(const Napi::CallbackInfo &info, const Napi::Value &value);
     Napi::Value getWorkwindow(const Napi::CallbackInfo &info);
+    void setWindowInfo(const Napi::CallbackInfo &info, const Napi::Value &value);
+    Napi::Value getWindowInfo(const Napi::CallbackInfo &info);
 };
 
 #endif
