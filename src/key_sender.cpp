@@ -2,14 +2,16 @@
 #include <windows.h>
 #include "hardware.hpp"
 #include "virtual.hpp"
+#include <chrono>
+#include <thread>
 
 void sleep(const Napi::CallbackInfo &info)
 {
-    Napi::Env env = info.Env();
     if (info.Length() != 1 || !info[0].IsNumber())
-        Napi::Error::New(env, "Expected 1 argument: Number")
+        Napi::Error::New(info.Env(), "Expected 1 argument: Number")
             .ThrowAsJavaScriptException();
-    std::this_thread::sleep_for(std::chrono::milliseconds(info[0].As<Napi::Number>().Int32Value()));
+    else
+        std::this_thread::sleep_for(std::chrono::milliseconds(info[0].As<Napi::Number>().Int32Value()));
 }
 
 Napi::Object Init(Napi::Env env, Napi::Object exports)

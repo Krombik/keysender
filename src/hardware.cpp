@@ -71,17 +71,17 @@ const UINT Hardware::extendKeys[] = {VK_RCONTROL,
                                      VK_BROWSER_HOME,
                                      VK_LAUNCH_MAIL};
 
-const map<string, array<UINT, 2>> Hardware::buttonsDef = {
-    {"left", {MOUSEEVENTF_LEFTUP, MOUSEEVENTF_LEFTDOWN}},
-    {"right", {MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_RIGHTDOWN}},
-    {"wheel", {MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_MIDDLEDOWN}}};
+const map<int8_t, array<UINT, 2>> Hardware::buttonsDef = {
+    {0, {MOUSEEVENTF_LEFTUP, MOUSEEVENTF_LEFTDOWN}},
+    {1, {MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_RIGHTDOWN}},
+    {2, {MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_MIDDLEDOWN}}};
 
 void Hardware::mousePosGetter(POINT *coords)
 {
     GetCursorPos(coords);
 }
 
-void Hardware::mbToogler(std::string button, bool isButtonDown)
+void Hardware::mbToogler(int8_t button, bool isButtonDown)
 {
     INPUT ip;
     ip.type = INPUT_MOUSE;

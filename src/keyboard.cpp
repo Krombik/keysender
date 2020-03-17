@@ -1,30 +1,32 @@
 #include <windows.h>
 #include "keyboard.hpp"
 
-using namespace Napi;
-using namespace std;
-
-void Keyboard::toogleKey(const CallbackInfo &info)
+void Keyboard::toogleKey(const Napi::CallbackInfo &info)
 {
     if (info.Length() != 2 || !info[0].IsString() || !info[1].IsBoolean())
-        Error::New(info.Env(), "Expected 2 arguments: String, Boolean")
+        Napi::Error::New(info.Env(), "Expected 2 arguments: String, Boolean")
             .ThrowAsJavaScriptException();
-    std::string keyName = info[0].As<String>();
-    if (keysDef.count(keyName) == 0)
-        Error::New(info.Env(), "Wrong key name")
-            .ThrowAsJavaScriptException();
-    keyToogler(keysDef.at(keyName), info[1].As<Boolean>());
+    else
+    {
+        std::string keyName = info[0].As<Napi::String>();
+        if (keysDef.count(keyName) != 0)
+            keyToogler(keysDef.at(keyName), info[1].As<Napi::Boolean>());
+        else
+            Napi::Error::New(info.Env(), "Wrong key name")
+                .ThrowAsJavaScriptException();
+    }
 }
 
-void Keyboard::printChar(const CallbackInfo &info)
+void Keyboard::printChar(const Napi::CallbackInfo &info)
 {
     if (info.Length() != 1 || !info[0].IsNumber())
-        Error::New(info.Env(), "Expected 1 argument: Number")
+        Napi::Error::New(info.Env(), "Expected 1 argument: Number")
             .ThrowAsJavaScriptException();
-    charPrinter(info[0].As<Number>().Int32Value());
+    else
+        charPrinter(info[0].As<Napi::Number>().Int32Value());
 };
 
-const map<string, UINT> Keyboard::keysDef = {
+const std::map<std::string, UINT> Keyboard::keysDef = {
     {"0", 0x30},
     {"1", 0x31},
     {"2", 0x32},

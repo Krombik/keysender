@@ -6,10 +6,10 @@
 
 using namespace std;
 
-const map<string, array<UINT, 2>> Virtual::msgs = {
-    {"left", {WM_LBUTTONUP, WM_LBUTTONDOWN}},
-    {"right", {WM_RBUTTONUP, WM_RBUTTONDOWN}},
-    {"wheel", {WM_MBUTTONUP, WM_MBUTTONDOWN}}};
+const map<int8_t, array<UINT, 2>> Virtual::msgs = {
+    {0, {WM_LBUTTONUP, WM_LBUTTONDOWN}},
+    {1, {WM_RBUTTONUP, WM_RBUTTONDOWN}},
+    {2, {WM_MBUTTONUP, WM_MBUTTONDOWN}}};
 const map<UINT, UINT> Virtual::wParams = {{WM_LBUTTONDOWN, MK_LBUTTON},
                                           {WM_RBUTTONDOWN, MK_RBUTTON},
                                           {WM_MBUTTONDOWN, MK_MBUTTON},
@@ -23,7 +23,7 @@ void Virtual::mousePosGetter(POINT *coords)
     ScreenToClient(hWnd, coords);
 }
 
-void Virtual::mbToogler(std::string button, bool isButtonDown)
+void Virtual::mbToogler(int8_t button, bool isButtonDown)
 {
     const UINT action = msgs.at(button)[(int)isButtonDown];
     PostMessageA(hWnd, action, wParams.at(action), MAKELPARAM(lastCoords.x, lastCoords.y));
