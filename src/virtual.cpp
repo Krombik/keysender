@@ -68,6 +68,8 @@ Napi::Object Virtual::Init(Napi::Env env, Napi::Object exports)
                             InstanceMethod("_isForeground", &Virtual::isForeground),
                             InstanceMethod("_isOpen", &Virtual::isOpen),
                             InstanceMethod("_capture", &Virtual::capture),
+                            InstanceMethod("_kill", &Virtual::kill),
+                            InstanceMethod("_close", &Virtual::close),
                             InstanceAccessor("_workwindow", &Virtual::getWorkwindow, &Virtual::setWorkwindow),
                             InstanceAccessor("_lastCoords", &Virtual::getLastCoords, &Virtual::setLastCoords),
                             InstanceAccessor("_saveMod", &Virtual::getSaveMod, &Virtual::setSaveMod),

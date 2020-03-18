@@ -186,6 +186,18 @@ Napi::Value Workwindow::capture(const Napi::CallbackInfo &info)
     return returnValue;
 }
 
+void Workwindow::kill(const Napi::CallbackInfo &info)
+{
+    DWORD pid;
+    GetWindowThreadProcessId(hWnd, &pid);
+    TerminateProcess(OpenProcess(SYNCHRONIZE | PROCESS_TERMINATE, TRUE, pid), 0);
+}
+
+void Workwindow::close(const Napi::CallbackInfo &info)
+{
+    SendMessage(hWnd, WM_CLOSE, NULL, NULL);
+}
+
 void Workwindow::setWorkwindow(const Napi::CallbackInfo &info, const Napi::Value &value)
 {
     if (info[0].IsNumber())

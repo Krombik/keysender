@@ -4,13 +4,6 @@ const EventEmitter = require('events');
 const random = (min, max) => min < max ? Math.floor(Math.random() * (max + 1 - min)) + min : min;
 const sleepAsync = ms => new Promise(_ => setTimeout(_, Array.isArray(ms) ? random(...ms) : ms));
 
-class Debil extends EventEmitter {
-    darowa() {
-        console.log('privet');
-        this.emit('kek');
-    }
-}
-
 const getWindow = (title, className) => title === undefined && className === undefined ?
     _getWindow().map(item => {
         if (item.className !== '') item.className = item.className.toString('ucs2');
@@ -126,7 +119,7 @@ const Keyboard = ClassName => class extends ClassName {
                     });
                     for (; i >= 0; i--) {
                         self._toogleKey(keys[i], false);
-                        sleep(index !== 0 ? microSleep : keyTooglerDelay);
+                        sleep(index !== 0 ? microSleep : keySenderDelay);
                     }
                     this.emit('sendKeyCombo', false, ...arguments);
                 },
@@ -363,6 +356,12 @@ const Workwindow = ClassName => class extends ClassName {
                             return ((this.data[i] << 16) | (this.data[i + 1] << 8) | this.data[i + 2]).toString(16);
                         }
                     });
+                },
+                kill() {
+                    self._kill();
+                },
+                close() {
+                    self._close();
                 }
             }
         });
@@ -375,7 +374,6 @@ module.exports = {
     getWindow,
     getWindowChild,
     sleep,
-    Debil,
     Virtual: Mouse(Keyboard(Workwindow(Virtual))),
     Hardware: Mouse(Keyboard(Workwindow(Hardware)))
 }

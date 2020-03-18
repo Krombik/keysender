@@ -17,6 +17,8 @@ public:
     Napi::Value isForeground(const Napi::CallbackInfo &info);
     Napi::Value isOpen(const Napi::CallbackInfo &info);
     void setForeground(const Napi::CallbackInfo &info);
+    void kill(const Napi::CallbackInfo &info);
+    void close(const Napi::CallbackInfo &info);
 
 protected:
     HWND hWnd = NULL;
