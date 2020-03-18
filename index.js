@@ -35,13 +35,13 @@ const Keyboard = ClassName => class extends ClassName {
                 keyTooglerDelay: 35,
                 keySenderDelay: 35,
                 before(event, func) {
-                    this.on(event, (isBefore, ...args) => {
-                        if (isBefore) func(...args)
+                    this.on(event, function (isBefore, ...args) {
+                        if (isBefore) func.apply(this, args)
                     });
                 },
                 after(event, func) {
                     this.on(event, (isBefore, ...args) => {
-                        if (!isBefore) func(...args)
+                        if (!isBefore) func.apply(this, args)
                     });
                 },
                 printText(text, keySenderDelay = 0) {
@@ -215,13 +215,13 @@ const Mouse = ClassName => class extends ClassName {
                     return self._lastCoords;
                 },
                 before(event, func) {
-                    this.on(event, (isBefore, ...args) => {
-                        if (isBefore) func(...args)
+                    this.on(event, function (isBefore, ...args) {
+                        if (isBefore) func.apply(this, args)
                     });
                 },
                 after(event, func) {
                     this.on(event, (isBefore, ...args) => {
-                        if (!isBefore) func(...args)
+                        if (!isBefore) func.apply(this, args)
                     });
                 },
                 getPos() {
@@ -323,7 +323,7 @@ const Workwindow = ClassName => class extends ClassName {
     get workwindow() {
         const self = this;
         Object.defineProperty(this, "workwindow", {
-            value: {
+            value: Object.assign(new EventEmitter, {
                 set is(workwindow) {
                     self._workwindow = workwindow;
                 },
@@ -349,8 +349,10 @@ const Workwindow = ClassName => class extends ClassName {
                     return self._isOpen();
                 },
                 capture(...args) {
+                    const img = self._capture(...args)
+                    this.emit('capture', img);
                     return ({
-                        ...self._capture(...args),
+                        ...img,
                         colorAt(x, y) {
                             const i = this.width * y + x << 2;
                             return ((this.data[i] << 16) | (this.data[i + 1] << 8) | this.data[i + 2]).toString(16);
@@ -363,7 +365,7 @@ const Workwindow = ClassName => class extends ClassName {
                 close() {
                     self._close();
                 }
-            }
+            })
         });
         return this.workwindow;
     }
