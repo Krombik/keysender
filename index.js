@@ -1,7 +1,15 @@
 const { Virtual, Hardware, getScreenSize, _getWindow, _getWindowChild, _sleep } = require('./build/Release/key_sender.node');
 const { Buffer } = require("buffer");
+const EventEmitter = require('events');
 const random = (min, max) => min < max ? Math.floor(Math.random() * (max + 1 - min)) + min : min;
 const sleepAsync = ms => new Promise(_ => setTimeout(_, Array.isArray(ms) ? random(...ms) : ms));
+
+class Debil extends EventEmitter {
+    darowa() {
+        console.log('privet');
+        this.emit('kek');
+    }
+}
 
 const getWindow = (title, className) => title === undefined && className === undefined ?
     _getWindow().map(item => {
@@ -12,7 +20,7 @@ const getWindow = (title, className) => title === undefined && className === und
     :
     _getWindow(Buffer.from(title, "ucs2"), className !== undefined ? Buffer.from(className, "ucs2") : null);
 
-const getWindowChild = (parentHandle, className, title) => title === undefined && className === undefined ?
+const getWindowChild = (parentHandle, className, title) => className === undefined && title === undefined ?
     _getWindowChild(parentHandle).map(item => {
         if (item.className !== '') item.className = item.className.toString('ucs2');
         if (item.title !== '') item.title = item.title.toString('ucs2');
@@ -30,60 +38,87 @@ const Keyboard = ClassName => class extends ClassName {
         const self = this;
         const microSleep = 3;
         Object.defineProperty(this, "keyboard", {
-            value: {
+            value: Object.assign(new EventEmitter, {
                 keyTooglerDelay: 35,
                 keySenderDelay: 35,
+                before(event, func) {
+                    this.on(event, (isBefore, ...args) => {
+                        if (isBefore) func(...args)
+                    });
+                },
+                after(event, func) {
+                    this.on(event, (isBefore, ...args) => {
+                        if (!isBefore) func(...args)
+                    });
+                },
                 printText(text, keySenderDelay = 0) {
+                    this.emit('printText', true, ...arguments);
                     for (var i = 0; i < text.length - 1; i++) {
                         self._printChar(text.codePointAt(i));
                         sleep(keySenderDelay);
                     }
                     self._printChar(text.codePointAt(i));
+                    this.emit('printText', false, ...arguments);
                 },
                 async printTextAsync(text, keySenderDelay = 0) {
+                    this.emit('printText', true, ...arguments);
                     for (var i = 0; i < text.length - 1; i++) {
                         self._printChar(text.codePointAt(i));
                         await sleepAsync(keySenderDelay);
                     }
                     self._printChar(text.codePointAt(i));
+                    this.emit('printText', false, ...arguments);
                 },
                 toogleKey(key, isKeyDown = true, delay = this.keyTooglerDelay) {
+                    this.emit('toogleKey', true, ...arguments);
                     self._toogleKey(key, isKeyDown);
                     sleep(delay);
+                    this.emit('toogleKey', false, ...arguments);
                 },
                 async toogleKeyAsync(key, isKeyDown = true, delay = this.keyTooglerDelay) {
+                    this.emit('toogleKey', true, ...arguments);
                     self._toogleKey(key, isKeyDown);
                     await sleepAsync(delay);
+                    this.emit('toogleKey', false, ...arguments);
                 },
                 sendKey(key, keyTooglerDelay = this.keyTooglerDelay, keySenderDelay = 0) {
+                    this.emit('sendKey', true, ...arguments);
                     self._toogleKey(key, true);
                     sleep(keyTooglerDelay);
                     self._toogleKey(key, false);
                     sleep(keySenderDelay);
+                    this.emit('sendKey', false, ...arguments);
                 },
                 async sendKeyAsync(key, keyTooglerDelay = this.keyTooglerDelay, keySenderDelay = 0) {
+                    this.emit('sendKey', true, ...arguments);
                     self._toogleKey(key, true);
                     await sleepAsync(keyTooglerDelay);
                     self._toogleKey(key, false);
                     await sleepAsync(keySenderDelay);
+                    this.emit('sendKey', false, ...arguments);
                 },
                 sendKeys(keys, keyTooglerDelay = this.keyTooglerDelay, keySenderDelay = keyTooglerDelay === undefined ? this.keySenderDelay : keyTooglerDelay) {
+                    this.emit('sendKeys', true, ...arguments);
                     keys.forEach((key, index) => {
                         self._toogleKey(key, true);
                         sleep(keyTooglerDelay);
                         self._toogleKey(key, false);
                         if (index !== keys.length - 1) sleep(keySenderDelay);
                     });
+                    this.emit('sendKeys', false, ...arguments);
                 },
                 async sendKeysAsync(keys, keyTooglerDelay = this.keyTooglerDelay, keySenderDelay = keyTooglerDelay === undefined ? this.keySenderDelay : keyTooglerDelay) {
+                    this.emit('sendKeys', true, ...arguments);
                     for (let i = 0; i < keys.length; i++) {
                         self._toogleKey(keys[i], true);
                         await sleepAsync(keyTooglerDelay);
                         self._toogleKey(keys[i], false);
                         if (i !== keys.length - 1) await sleepAsync(keySenderDelay);
                     }
+                    this.emit('sendKeys', false, ...arguments);
                 },
                 sendKeyCombo(keys, keyTooglerDelay = this.keyTooglerDelay, keySenderDelay = 0) {
+                    this.emit('sendKeyCombo', true, ...arguments);
                     let i = keys.length - 1;
                     keys.forEach((key, index) => {
                         self._toogleKey(key, true);
@@ -93,8 +128,10 @@ const Keyboard = ClassName => class extends ClassName {
                         self._toogleKey(keys[i], false);
                         sleep(index !== 0 ? microSleep : keyTooglerDelay);
                     }
+                    this.emit('sendKeyCombo', false, ...arguments);
                 },
                 async sendKeyComboAsync(keys, keyTooglerDelay = this.keyTooglerDelay, keySenderDelay = 0) {
+                    this.emit('sendKeyCombo', true, ...arguments);
                     for (var i = 0; i < keys.length; i++) {
                         self._toogleKey(keys[i], true);
                         await sleepAsync(i !== 0 ? microSleep : keyTooglerDelay);
@@ -103,10 +140,11 @@ const Keyboard = ClassName => class extends ClassName {
                         self._toogleKey(keys[i], false);
                         await sleepAsync(i !== 0 ? microSleep : keySenderDelay);
                     }
+                    this.emit('sendKeyCombo', false, ...arguments);
                 }
-            }
+            })
         });
-        return this.keyboard
+        return this.keyboard;
     }
 }
 
@@ -169,7 +207,7 @@ const Mouse = ClassName => class extends ClassName {
             return path.map((item, index) => index !== path.length - 1 ? [item[0], item[1] + tremor(speed / 15)] : [xE, yE]);
         }
         Object.defineProperty(this, "mouse", {
-            value: {
+            value: Object.assign(new EventEmitter, {
                 buttonTooglerDelay: 35,
                 set saveMod(bool) {
                     self._saveMod = bool;
@@ -183,68 +221,102 @@ const Mouse = ClassName => class extends ClassName {
                 get lastCoords() {
                     return self._lastCoords;
                 },
+                before(event, func) {
+                    this.on(event, (isBefore, ...args) => {
+                        if (isBefore) func(...args)
+                    });
+                },
+                after(event, func) {
+                    this.on(event, (isBefore, ...args) => {
+                        if (!isBefore) func(...args)
+                    });
+                },
                 getPos() {
                     return self._getPos();
                 },
                 toogle(isButtonDown, button = "left", buttonTooglerDelay = this.buttonTooglerDelay) {
+                    this.emit('toogle', true, ...arguments);
                     self._toogleMb(button, isButtonDown);
                     sleep(buttonTooglerDelay);
+                    this.emit('toogle', false, ...arguments);
                 },
                 async toogleAsync(isButtonDown, button = "left", buttonTooglerDelay = this.buttonTooglerDelay) {
+                    this.emit('toogle', true, ...arguments);
                     self._toogleMb(button, isButtonDown);
                     await sleepAsync(buttonTooglerDelay);
+                    this.emit('toogle', false, ...arguments);
                 },
                 click(button = "left", buttonTooglerDelay = this.buttonTooglerDelay, buttonSenderDelay = 0) {
+                    this.emit('click', true, ...arguments);
                     self._toogleMb(button, true);
                     sleep(buttonTooglerDelay);
                     self._toogleMb(button, false);
                     sleep(buttonSenderDelay);
+                    this.emit('click', false, ...arguments);
                 },
                 async clickAsync(button = "left", buttonTooglerDelay = this.buttonTooglerDelay, buttonSenderDelay = 0) {
+                    this.emit('click', true, ...arguments);
                     self._toogleMb(button, true);
                     await sleepAsync(buttonTooglerDelay);
                     self._toogleMb(button, false);
                     await sleepAsync(buttonSenderDelay);
+                    this.emit('click', false, ...arguments);
                 },
                 moveTo(x, y, delay = 0) {
+                    this.emit('moveTo', true, ...arguments);
                     self._move(x, y, true);
                     sleep(delay);
+                    this.emit('moveTo', false, ...arguments);
                 },
                 async moveToAsync(x, y, delay = 0) {
+                    this.emit('moveTo', true, ...arguments);
                     self._move(x, y, true);
                     await sleepAsync(delay);
+                    this.emit('moveTo', false, ...arguments);
                 },
                 moveCurveTo(x, y, speed = 5, deviation = 30) {
+                    this.emit('moveCurveTo', true, ...arguments);
                     const sleepTime = speed >= 1 ? 1 : speed !== "max" ? Math.round(1 / speed) : 0;
                     humanCurv(x, y, ...self._lastCoords, speed, deviation).forEach(dot => {
                         self._move(dot[0], dot[1], true);
                         sleep(sleepTime);
                     });
+                    this.emit('moveCurveTo', false, ...arguments);
                 },
                 async moveCurveToAsync(x, y, speed = 5, deviation = 30) {
+                    this.emit('moveCurveTo', true, ...arguments);
                     const sleepTime = speed >= 1 ? 1 : speed !== "max" ? Math.round(1 / speed) : 0;
                     for (const dot of humanCurv(x, y, ...self._lastCoords, speed, deviation)) {
                         self._move(dot[0], dot[1], true);
                         await sleepAsync(sleepTime);
                     }
+                    this.emit('moveCurveTo', false, ...arguments);
                 },
                 move(x, y, delay = 0) {
+                    this.emit('move', true, ...arguments);
                     self._move(x, y, false);
                     sleep(delay);
+                    this.emit('move', false, ...arguments);
                 },
                 async moveAsync(x, y, delay = 0) {
+                    this.emit('move', true, ...arguments);
                     self._move(x, y, false);
                     await sleepAsync(delay);
+                    this.emit('move', false, ...arguments);
                 },
                 scrollWheel(count = 1, wheelTooglerDelay = 0) {
+                    this.emit('scrollWheel', true, ...arguments);
                     self._scrollWheel(count);
                     sleep(wheelTooglerDelay);
+                    this.emit('scrollWheel', false, ...arguments);
                 },
                 async scrollWheelAsync(count = 1, wheelTooglerDelay = 0) {
+                    this.emit('scrollWheel', true, ...arguments);
                     self._scrollWheel(count);
                     await sleepAsync(wheelTooglerDelay);
+                    this.emit('scrollWheel', false, ...arguments);
                 }
-            }
+            })
         });
         return this.mouse;
     }
@@ -303,6 +375,7 @@ module.exports = {
     getWindow,
     getWindowChild,
     sleep,
+    Debil,
     Virtual: Mouse(Keyboard(Workwindow(Virtual))),
     Hardware: Mouse(Keyboard(Workwindow(Hardware)))
-};
+}
