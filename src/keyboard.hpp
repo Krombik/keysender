@@ -11,9 +11,9 @@ class Keyboard
 public:
     void toogleKey(const Napi::CallbackInfo &info);
     void printChar(const Napi::CallbackInfo &info);
+    static const std::map<std::string, UINT> keysDef;
 
 private:
-    static const std::map<std::string, UINT> keysDef;
     virtual void keyToogler(UINT key, bool isKeyDown) = 0;
     virtual void charPrinter(int code) = 0;
 };
