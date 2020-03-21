@@ -5,77 +5,276 @@ declare type mouseEvents = "toogle" | "click" | "moveTo" | "moveCurveTo" | "move
 declare type windowInfo = { x?: number, y?: number, width?: number, height?: number };
 declare type img = { data: Buffer, height: number, width: number, colorAt(x: number, y: number): string };
 declare type windowData = { handle: number, className: string, title: string };
+
+/**
+ * Hardware class provide hardware inputs.
+ */
 export declare class Hardware {
     /**
-    @param hWnd - handle of workwindow
+    @param handle - handle of workwindow
     */
-    declare constructor(hWnd: number);
+    declare constructor(handle: number);
     declare keyboard = {
         keyTooglerDelay: 35,
         keySenderDelay: 35,
-        before(event: keyboardEvents, func: void): void { },
-        after(event: keyboardEvents, func: void): void { },
-        printText(text: string, keySenderDelay?: [number, number] | number = 0): void { },
-        async printTextAsync(text: string, keySenderDelay?: [number, number] | number = 0): void { },
-        toogleKey(key: keyboardButtons, isKeyDown?: boolean = true, delay?: [number, number] | number = this.keyTooglerDelay): void { },
-        async toogleKeyAsync(key: keyboardButtons, isKeyDown?: boolean = true, delay?: [number, number] | number = this.keyTooglerDelay): void { },
-        sendKey(keys: keyboardButtons, keyTooglerDelay?: [number, number] | number = this.keyTooglerDelay, keySenderDelay?: [number, number] | number = 0): void { },
-        async sendKeyAsync(keys: keyboardButtons, keyTooglerDelay?: [number, number] | number = this.keyTooglerDelay, keySenderDelay?: [number, number] | number = 0): void { },
-        sendKeys(keys: keyboardButtons[], keyTooglerDelay?: [number, number] | number = this.keyTooglerDelay, keySenderDelay?: [number, number] | number = keyTooglerDelay === undefined ? this.keySenderDelay : keyTooglerDelay): void { },
-        async sendKeysAsync(keys: keyboardButtons[], keyTooglerDelay?: [number, number] | number = this.keyTooglerDelay, keySenderDelay?: [number, number] | number = keyTooglerDelay === undefined ? this.keySenderDelay : keyTooglerDelay): void { }
+        /**
+         * Adds the {listener} before event {eventName}
+         */
+        before(eventName: keyboardEvents, listener: (...args: any[]) => void): void { },
+        /**
+         * Adds the {listener} after event {eventName}
+         */
+        after(eventName: keyboardEvents, listener: (...args: any[]) => void): void { },
+        /** Print text.
+         * @param text - string to print.
+         * @param keySenderDelay - delay in milliseconds to sleep after sending key,
+         * if not provided defaults 0.
+         */
+        printText(text: string, keySenderDelay?: [number, number] | number): void { },
+        /** Print text async.
+         * @param text - string to print.
+         * @param keySenderDelay - delay in milliseconds to await after sending key,
+         * if not provided defaults to 0.
+         */
+        async printTextAsync(text: string, keySenderDelay?: [number, number] | number): Promise { },
+        /**
+         * Switch key state.
+         * @param key - name of key.
+         * @param isKeyDown - key state selection: true for press, false for release.
+         * @param delay - delay in milliseconds to sleep after switching key state,
+         * if not provided defaults to this.keyTooglerDelay.
+         */
+        toogleKey(key: keyboardButtons, isKeyDown?: boolean, delay?: [number, number] | number): void { },
+        /**
+         * Switch key state async.
+         * @param key - name of key.
+         * @param isKeyDown - key state selection: true for press, false for release.
+         * @param delay - delay in milliseconds to await after switching key state,
+         * if not provided defaults to this.keyTooglerDelay.
+         */
+        async toogleKeyAsync(key: keyboardButtons, isKeyDown?: boolean, delay?: [number, number] | number): Promise { },
+        /**
+         * Press and release key.
+         * @param key - name of key.
+         * @param keyTooglerDelay - delay in milliseconds to sleep after press key,
+         * if not provided defaults to this.keyTooglerDelay.
+         * @param keySenderDelay - delay in milliseconds to sleep after release key,
+         * if not provided defaults to 0.
+         */
+        sendKey(keys: keyboardButtons, keyTooglerDelay?: [number, number] | number, keySenderDelay?: [number, number] | number): void { },
+        /**
+         * Press and release key async.
+         * @param key - name of key.
+         * @param keyTooglerDelay - delay in milliseconds to await after press key,
+         * if not provided defaults to this.keyTooglerDelay.
+         * @param keySenderDelay - delay in milliseconds to await after release key,
+         * if not provided defaults to 0.
+         */
+        async sendKeyAsync(keys: keyboardButtons, keyTooglerDelay?: [number, number] | number, keySenderDelay?: [number, number] | number): Promise { },
+        /**
+         * Press and release array of keys.
+         * @param keys - array with keys.
+         * @param keyTooglerDelay - delay in milliseconds to sleep after press key,
+         * if not provided defaults to this.keyTooglerDelay.
+         * @param keySenderDelay - delay in milliseconds to sleep after release key,
+         * if not provided defaults to {keyTooglerDelay}, if {keyTooglerDelay} not provided defaults to this.keySenderDelay.
+         */
+        sendKeys(keys: keyboardButtons[], keyTooglerDelay?: [number, number] | number, keySenderDelay?: [number, number] | number): void { },
+        /**
+         * Press and release array of keys async.
+         * @param keys - array with keys.
+         * @param keyTooglerDelay - delay in milliseconds to await after press key,
+         * if not provided defaults to this.keyTooglerDelay.
+         * @param keySenderDelay - delay in milliseconds to await after release key,
+         * if not provided defaults to {keyTooglerDelay}, if {keyTooglerDelay} not provided defaults to this.keySenderDelay.
+         */
+        async sendKeysAsync(keys: keyboardButtons[], keyTooglerDelay?: [number, number] | number, keySenderDelay?: [number, number] | number): Promise { }
     };
     declare mouse = {
         buttonTooglerDelay: 35,
+        /** If saveMod is true every mouse method first back to {lastCoords}, by default: false. */
         set saveMod(bool: boolean) { },
         get saveMod(): boolean { },
+        /** Last coordinates of mouse, change after every mouseMove method, by default: [0,0]. */
         set lastCoords(coords: [number, number]) { },
         get lastCoords(): [number, number] { },
-        before(event: mouseEvents, func: void): void { },
-        after(event: mouseEvents, func: void): void { },
+        /**
+         * Adds the {listener} before event {eventName}
+         */
+        before(eventName: mouseEvents, listener: (...args: any[]) => void): void { },
+        /**
+         * Adds the {listener} after event {eventName}
+         */
+        after(eventName: mouseEvents, listener: (...args: any[]) => void): void { },
+        /**
+         * Get current cursor position at screen for Hardware class or position at current workwindow.
+         */
         getPos(): [number, number] { },
-        toogle(isButtonDown: boolean, button?: mouseButtons = "left", buttonTooglerDelay?: [number, number] | number = this.buttonTooglerDelay): void { },
-        async toogleAsync(isButtonDown: boolean, button?: mouseButtons = "left", buttonTooglerDelay?: [number, number] | number = this.buttonTooglerDelay): void { },
-        click(button?: mouseButtons = "left", buttonTooglerDelay?: [number, number] | number = this.buttonTooglerDelay, buttonSenderDelay?: [number, number] | number = 0): void { },
-        async clickAsync(button?: mouseButtons = "left", buttonTooglerDelay?: [number, number] | number = this.buttonTooglerDelay, buttonSenderDelay?: [number, number] | number = 0): void { },
-        moveTo(x: number, y: number, delay?: [number, number] | number = 0): void { },
-        async moveToAsync(x: number, y: number, delay?: [number, number] | number = 0): void { },
-        moveCurveTo(x: number, y: number, speed?: number = 5, deviation?: number = 30): void { },
-        async moveCurveToAsync(x: number, y: number, speed?: number = 5, deviation?: number = 30): void { },
-        move(x: number, y: number, delay?: [number, number] | number = 0): void { },
-        async moveAsync(x: number, y: number, delay?: [number, number] | number = 0): void { },
-        scrollWheel(count?: number = 1, wheelTooglerDelay?: [number, number] | number = 0): void { },
-        async scrollWheelAsync(count?: number = 1, wheelTooglerDelay?: [number, number] | number = 0): void { }
+        /**
+         * Switch mouse button state.
+         * @param isButtonDown - key state selection: true for press, false for release.
+         * @param button - name of mouse button.
+         * @param buttonTooglerDelay - delay in milliseconds to sleep after switching mouse button state,
+         * if not provided defaults to this.buttonTooglerDelay.
+         */
+        toogle(isButtonDown: boolean, button?: mouseButtons, buttonTooglerDelay?: [number, number] | number): void { },
+        /**
+         * Switch mouse button state async.
+         * @param isButtonDown - key state selection: true for press, false for release.
+         * @param button - name of mouse button.
+         * @param buttonTooglerDelay - delay in milliseconds to await after switching mouse button state,
+         * if not provided defaults to this.buttonTooglerDelay.
+         */
+        async toogleAsync(isButtonDown: boolean, button?: mouseButtons, buttonTooglerDelay?: [number, number] | number): Promise { },
+        /**
+         * Click mouse button
+         * @param button - name of mouse button.
+         * @param buttonTooglerDelay - delay in milliseconds to sleep after press mouse button,
+         * if not provided defaults to this.buttonTooglerDelay.
+         * @param buttonSenderDelay - delay in milliseconds to sleep after release mouse button,
+         * if not provided defaults to 0.
+         */
+        click(button?: mouseButtons, buttonTooglerDelay?: [number, number] | number, buttonSenderDelay?: [number, number] | number): void { },
+        /**
+         * Click mouse button async
+         * @param button - name of mouse button.
+         * @param buttonTooglerDelay - delay in milliseconds to await after press mouse button,
+         * if not provided defaults to this.buttonTooglerDelay.
+         * @param buttonSenderDelay - delay in milliseconds to await after release mouse button,
+         * if not provided defaults to 0.
+         */
+        async clickAsync(button?: mouseButtons, buttonTooglerDelay?: [number, number] | number, buttonSenderDelay?: [number, number] | number): Promise { },
+        /**
+         * Move mouse to [x, y].
+         * @param delay - delay in milliseconds to sleep after move mouse,
+         * if not provided defaults to 0.
+         */
+        moveTo(x: number, y: number, delay?: [number, number] | number): void { },
+        /**
+         * Move mouse to [x, y] async.
+         * @param delay - delay in milliseconds to await after move mouse,
+         * if not provided defaults to 0.
+         */
+        async moveToAsync(x: number, y: number, delay?: [number, number] | number): Promise { },
+        /**
+         * Emitate human like mouse move from {lastCoords} to [x, y].
+         * @param speed - movespeed, if not provided defaults to 5.
+         * @param deviation - movement curvature, if not provided defaults to 30.
+         */
+        moveCurveTo(x: number, y: number, speed?: number, deviation?: number): void { },
+        /**
+         * Emitate human like mouse move from {lastCoords} to [x, y] async.
+         * @param speed - movespeed, if not provided defaults to 5.
+         * @param deviation - movement curvature, if not provided defaults to 30.
+         */
+        async moveCurveToAsync(x: number, y: number, speed?: number, deviation?: number): Promise { },
+        /**
+         * Move mouse relative to the current position by [x, y].
+         * @param delay - delay in milliseconds to sleep after move mouse,
+         * if not provided defaults to 0.
+         */
+        move(x: number, y: number, delay?: [number, number] | number): void { },
+        /**
+         * Move mouse relative to the current position by [x, y] async.
+         * @param delay - delay in milliseconds to await after move mouse,
+         * if not provided defaults to 0.
+         */
+        async moveAsync(x: number, y: number, delay?: [number, number] | number): Promise { },
+        /**
+         * Scroll mouse wheel for {count} times.
+         * @param wheelTooglerDelay - delay in milliseconds to sleep after wheel scroll,
+         * if not provided defaults to 0.
+         */
+        scrollWheel(count: number, wheelTooglerDelay?: [number, number] | number): void { },
+        /**
+         * Scroll mouse wheel for {count} times async.
+         * @param wheelTooglerDelay - delay in milliseconds to await after wheel scroll,
+         * if not provided defaults to 0.
+         */
+        async scrollWheelAsync(count: number, wheelTooglerDelay?: [number, number] | number): Promise { }
     }
     declare workwindow = {
+        /** set current worwindow */
         set is(workwindow: number) { },
+        /** @returns current workwindow handle, title and className */
         get is(): windowData { },
+        /** set window position and size */
         set info(info: windowInfo) { },
+        /** get window position and size */
         get info(): windowInfo { },
-        on(event: "capture", func: void): void { },
+        /**
+         * Adds the {listener} after event {eventName}
+         */
+        on(eventName: "capture", listener: (...args: any[]) => void): void { },
+        /** set current workwindow foreground */
         setForeground(): void { },
         isForeground(): boolean { },
         isOpen(): boolean { },
+        /**
+         * capture part of current workwindow from [x, y] to [x+width,y+height].
+         */
         capture(x: number, y: number, width: number, height: number): img { },
+        /**
+         * capture current workwindow.
+         */
         capture(): img { },
+        /**
+         * Terminate current workwindow.
+         */
         kill(): void { },
+        /**
+         * Close current workwindow by sending close message.
+         */
         close(): void { }
     }
 };
 
+/**
+ * Virtual class provide virtual inputs to workwindow.
+ */
 export declare class Virtual extends Hardware { }
 
 export declare class GlobalHotkey {
-    static register(key: keyboardButtons, func: void): void;
+    /**
+     * Register hotkey.
+     * @param key - hotkey name.
+     * @param func - function that calls after hotkey pressed.
+     * @param isHold - if true, {func} will repeat while hotkey is pressed.
+     * @param delay - set delay between {func} calls if {isHold} is true, by default = 0.
+     */
+    static register(key: keyboardButtons, func: () => void, isHold?: boolean, delay?: number): void;
+    /**
+     * Unregister hotkey.
+     * @param key - hotkey name.
+     */
     static unregister(key: keyboardButtons): void;
+    /**
+     * Unregister all hotkeys;
+     */
     static unregisterAll(): void;
 }
 
 export declare function getScreenSize(): [number, number];
 
+/**
+ * Get array with {handle, title, className} of all open windows.
+ */
 export declare function getWindow(): windowData[];
-export declare function getWindow(title: string, className?: string | null): number;
+/**
+ * Get window {handle} by {title} and(or) {className}.
+ */
+export declare function getWindow(title: string | null, className?: string | null): number;
 
+/**
+ * Get array with {handle, title, className} of all children.
+ */
 export declare function getWindowChild(parentHandle: number): windowData[];
-export declare function getWindowChild(parentHandle: number, className: string, title?: string | null): number;
+/**
+ * Get child handle of {parentHandle} by {className} and(or) {title}.
+ */
+export declare function getWindowChild(parentHandle: number, className: string | null, title?: string | null): number;
 
+/**
+ * Pause current thred for {ms} milliseconds.
+ */
 export declare function sleep(ms: number | [number, number]): void;

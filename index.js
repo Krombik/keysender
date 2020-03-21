@@ -297,13 +297,13 @@ const Mouse = ClassName => class extends ClassName {
                     await sleepAsync(delay);
                     this.emit('move', false, ...arguments);
                 },
-                scrollWheel(count = 1, wheelTooglerDelay = 0) {
+                scrollWheel(count, wheelTooglerDelay = 0) {
                     this.emit('scrollWheel', true, ...arguments);
                     self._scrollWheel(count);
                     sleep(wheelTooglerDelay);
                     this.emit('scrollWheel', false, ...arguments);
                 },
-                async scrollWheelAsync(count = 1, wheelTooglerDelay = 0) {
+                async scrollWheelAsync(count, wheelTooglerDelay = 0) {
                     this.emit('scrollWheel', true, ...arguments);
                     self._scrollWheel(count);
                     await sleepAsync(wheelTooglerDelay);
