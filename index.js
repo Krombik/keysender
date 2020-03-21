@@ -1,6 +1,6 @@
-const { Virtual, Hardware, getScreenSize, _getWindow, _getWindowChild, _sleep } = require('./build/Release/key_sender.node');
-const { Buffer } = require("buffer");
-const EventEmitter = require('events');
+const { Virtual, Hardware, getScreenSize, _getWindow, _getWindowChild, _sleep, GlobalHotkey } = require('./build/Release/key_sender.node');
+const { Buffer } = require('buffer');
+const { EventEmitter } = require('events');
 const random = (min, max) => min < max ? Math.floor(Math.random() * (max + 1 - min)) + min : min;
 const sleepAsync = ms => new Promise(_ => setTimeout(_, Array.isArray(ms) ? random(...ms) : ms));
 
@@ -372,10 +372,11 @@ const Workwindow = ClassName => class extends ClassName {
 }
 
 module.exports = {
+    GlobalHotkey,
     getScreenSize,
     getWindow,
     getWindowChild,
     sleep,
     Virtual: Mouse(Keyboard(Workwindow(Virtual))),
-    Hardware: Mouse(Keyboard(Workwindow(Hardware)))
+    Hardware: Mouse(Keyboard(Workwindow(Hardware))),
 }

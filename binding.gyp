@@ -8,7 +8,8 @@
                 "src/mouse.cpp",
                 "src/workwindow.cpp",
                 "src/hardware.cpp",
-                "src/virtual.cpp"
+                "src/virtual.cpp",
+                "src/hotkey.cpp"
             ],
             "cflags!": ["-fno-exceptions"],
             "cflags_cc!": ["-fno-exceptions"],
