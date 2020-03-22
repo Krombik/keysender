@@ -177,7 +177,11 @@ Napi::Value Workwindow::capture(const Napi::CallbackInfo &info)
     BitBlt(memDC, 0, 0, width, height, context, rect.left, rect.top, SRCCOPY);
     DeleteDC(memDC);
     for (uint32_t i = 0; i < size; i += 4)
+    {
         std::swap(pixels[i], pixels[i + 2]);
+        if (pixels[i + 3] != 255)
+            pixels[i + 3] = 255;
+    }
     Napi::Object returnValue = Napi::Object::New(env);
     returnValue["data"] = Napi::Buffer<uint8_t>::Copy(env, pixels, size);
     returnValue["width"] = width;
