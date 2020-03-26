@@ -16,7 +16,7 @@ struct TsfnContext
     UINT keyFlags = NULL;
     bool isHoldEnable = false;
     int32_t delay = 0;
-    std::string key;
+    UINT keyCode;
     std::string name;
     Napi::ThreadSafeFunction tsfn;
 };
@@ -35,6 +35,7 @@ public:
     static void registerHotkey(const Napi::CallbackInfo &info);
     static void unregisterHotkey(const Napi::CallbackInfo &info);
     static void unregisterAllHotkeys(const Napi::CallbackInfo &info);
+    static Napi::Value findHotkeyName(const Napi::CallbackInfo &info);
 
 private:
     static Napi::FunctionReference constructor;

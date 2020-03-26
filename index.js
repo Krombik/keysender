@@ -74,44 +74,42 @@ const Keyboard = ClassName => class extends ClassName {
                     await sleepAsync(delay);
                     this.emit('toogleKey', false, ...arguments);
                 },
-                sendKey(keys, keyTooglerDelay = this.keyTooglerDelay, keySenderDelay = 0) {
-                    keys = keys.split('&');
+                sendKey(key, keyTooglerDelay = this.keyTooglerDelay, keySenderDelay = 0) {
                     this.emit('sendKey', true, ...arguments);
-                    if (keys.length === 1) {
-                        self._toogleKey(keys[0], true);
-                        sleep(keyTooglerDelay);
-                        self._toogleKey(keys[0], false);
-                        sleep(keySenderDelay);
-                    } else {
-                        let i = keys.length - 1;
-                        keys.forEach((key, index) => {
+                    if (Array.isArray(key)) {
+                        let i = key.length - 1;
+                        key.forEach((key, index) => {
                             self._toogleKey(key, true);
                             sleep(index !== i ? microSleep : keyTooglerDelay);
                         });
                         for (; i >= 0; i--) {
-                            self._toogleKey(keys[i], false);
+                            self._toogleKey(key[i], false);
                             sleep(i !== 0 ? microSleep : keySenderDelay);
                         }
+                    } else {
+                        self._toogleKey(key, true);
+                        sleep(keyTooglerDelay);
+                        self._toogleKey(key, false);
+                        sleep(keySenderDelay);
                     }
                     this.emit('sendKey', false, ...arguments);
                 },
-                async sendKeyAsync(keys, keyTooglerDelay = this.keyTooglerDelay, keySenderDelay = 0) {
-                    keys = keys.split('&');
+                async sendKeyAsync(key, keyTooglerDelay = this.keyTooglerDelay, keySenderDelay = 0) {
                     this.emit('sendKey', true, ...arguments);
-                    if (keys.length === 1) {
-                        self._toogleKey(keys[0], true);
-                        await sleepAsync(keyTooglerDelay);
-                        self._toogleKey(keys[0], false);
-                        await sleepAsync(keySenderDelay);
-                    } else {
-                        for (var i = 0; i < keys.length; i++) {
-                            self._toogleKey(keys[i], true);
+                    if (Array.isArray(key)) {
+                        for (var i = 0; i < key.length; i++) {
+                            self._toogleKey(key[i], true);
                             await sleepAsync(i !== 0 ? microSleep : keyTooglerDelay);
                         }
                         for (i--; i >= 0; i--) {
-                            self._toogleKey(keys[i], false);
+                            self._toogleKey(key[i], false);
                             await sleepAsync(i !== 0 ? microSleep : keySenderDelay);
                         }
+                    } else {
+                        self._toogleKey(key, true);
+                        await sleepAsync(keyTooglerDelay);
+                        self._toogleKey(key, false);
+                        await sleepAsync(keySenderDelay);
                     }
                     this.emit('sendKey', false, ...arguments);
                 },
@@ -324,10 +322,10 @@ const Workwindow = ClassName => class extends ClassName {
         const self = this;
         Object.defineProperty(this, "workwindow", {
             value: Object.assign(new EventEmitter, {
-                set is(workwindow) {
+                set(workwindow) {
                     self._workwindow = workwindow;
                 },
-                get is() {
+                get() {
                     const workwindow = { ...self._workwindow };
                     if (workwindow.className !== '') workwindow.className = workwindow.className.toString('ucs2');
                     if (workwindow.title !== '') workwindow.title = workwindow.title.toString('ucs2');
