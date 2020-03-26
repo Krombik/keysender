@@ -1,6 +1,6 @@
 {
   "name": "keysender",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Node.js keyboard and mouse inputs emulator",
   "main": "index.js",
   "scripts": {
