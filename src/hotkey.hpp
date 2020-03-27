@@ -12,20 +12,21 @@
 
 struct TsfnContext
 {
-    HANDLE thread;
+    bool exist = true;
     UINT keyFlags = NULL;
-    bool isHoldEnable = false;
-    int32_t delay = 0;
+    uint8_t mode = 0;
+    int32_t delay = 1;
     UINT keyCode;
     std::string name;
     Napi::ThreadSafeFunction tsfn;
 };
 static std::vector<TsfnContext *> hotkeysRef;
-const std::map<std::string, UINT> flags = {
+static const std::map<std::string, UINT> flags = {
     {"alt", MOD_ALT},
     {"ctrl", MOD_CONTROL},
     {"shift", MOD_SHIFT},
 };
+static const std::vector<std::string> modes = {"once", "hold", "toogle"};
 
 class Hotkey : public Napi::ObjectWrap<Hotkey>
 {
