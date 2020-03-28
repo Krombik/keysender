@@ -81,7 +81,7 @@ void Hardware::mousePosGetter(POINT *coords)
     GetCursorPos(coords);
 }
 
-void Hardware::mbToogler(int8_t button, bool isButtonDown)
+void Hardware::mbToggler(int8_t button, bool isButtonDown)
 {
     INPUT ip;
     ip.type = INPUT_MOUSE;
@@ -140,7 +140,7 @@ void Hardware::wheelScroller(int x)
     SendInput(1, &ip, sizeof(INPUT));
 }
 
-void Hardware::keyToogler(UINT key, bool isKeyDown)
+void Hardware::keyToggler(UINT key, bool isKeyDown)
 {
     INPUT ip;
     DWORD dwFlags = KEYEVENTF_SCANCODE;
@@ -179,10 +179,10 @@ Napi::Object Hardware::Init(Napi::Env env, Napi::Object exports)
     Napi::Function func = DefineClass(
         env, "Hardware", {
                              InstanceMethod("_getPos", &Hardware::getMousePos),
-                             InstanceMethod("_toogleMb", &Hardware::toogleMb),
+                             InstanceMethod("_toggleMb", &Hardware::toggleMb),
                              InstanceMethod("_move", &Hardware::move),
                              InstanceMethod("_scrollWheel", &Hardware::scrollWheel),
-                             InstanceMethod("_toogleKey", &Hardware::toogleKey),
+                             InstanceMethod("_toggleKey", &Hardware::toggleKey),
                              InstanceMethod("_printChar", &Hardware::printChar),
                              InstanceMethod("_isOpen", &Hardware::isOpen),
                              InstanceMethod("_isForeground", &Hardware::isForeground),

@@ -19,7 +19,7 @@ void Hotkey::messagesGetter(TsfnContext *context)
         }
     };
     const uint8_t mode = context->mode;
-    const int32_t delay = context->delay;
+    const uint32_t delay = context->delay;
     if (mode == 0)
     {
         int8_t prevKeyStatus = 0;
@@ -87,6 +87,7 @@ void Hotkey::messagesGetter(TsfnContext *context)
         }
     UnregisterHotKey(NULL, 0);
     context->tsfn.Release();
+    delete timeToStop;
     delete context;
 }
 
@@ -96,7 +97,7 @@ void Hotkey::registerHotkey(const Napi::CallbackInfo &info)
     uint8_t mode;
     if (info.Length() < 3 || info.Length() > 5 || (!info[0].IsString() && !info[0].IsArray()) || !info[1].IsString() || !info[2].IsFunction() || (info.Length() > 3 && (!info[3].IsString() || (mode = std::distance(modes.begin(), std::find(modes.begin(), modes.end(), std::string(info[3].As<Napi::String>())))) == modes.size())) || (info.Length() > 4 && !info[4].IsNumber()))
     {
-        Napi::Error::New(env, "Expected 3-5 arguments: String || Array, String, Function, 'once' || 'hold' || 'toogle', Number")
+        Napi::Error::New(env, "Expected 3-5 arguments: String || Array, String, Function, 'once' || 'hold' || 'toggle', Number")
             .ThrowAsJavaScriptException();
         return;
     }
@@ -133,7 +134,16 @@ void Hotkey::registerHotkey(const Napi::CallbackInfo &info)
     {
         hotkeysRef.back()->mode = mode;
         if (info.Length() > 4)
-            hotkeysRef.back()->delay = info[4].As<Napi::Number>().Int32Value();
+        {
+            uint32_t delay;
+            if ((delay = info[4].As<Napi::Number>().Int32Value()) <= 0)
+            {
+                Napi::Error::New(env, "Delay should be > 0")
+                    .ThrowAsJavaScriptException();
+                return;
+            }
+            hotkeysRef.back()->delay = delay;
+        }
     }
     CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)messagesGetter, hotkeysRef.back(), NULL, NULL);
 }
@@ -188,7 +198,7 @@ Napi::Value Hotkey::findHotkeyName(const Napi::CallbackInfo &info)
                 std::string keyName(keys.Get(i).As<Napi::String>());
                 if (flags.count(keyName) == 0)
                 {
-                    Napi::Error::New(env, "Wrong key modefiicators")
+                    Napi::Error::New(env, "Wrong key modeficators")
                         .ThrowAsJavaScriptException();
                     return env.Undefined();
                 }

@@ -15,7 +15,7 @@ struct TsfnContext
     bool exist = true;
     UINT keyFlags = NULL;
     uint8_t mode = 0;
-    int32_t delay = 1;
+    uint32_t delay = 1;
     UINT keyCode;
     std::string name;
     Napi::ThreadSafeFunction tsfn;
@@ -26,7 +26,7 @@ static const std::map<std::string, UINT> flags = {
     {"ctrl", MOD_CONTROL},
     {"shift", MOD_SHIFT},
 };
-static const std::vector<std::string> modes = {"once", "hold", "toogle"};
+static const std::vector<std::string> modes = {"once", "hold", "toggle"};
 
 class Hotkey : public Napi::ObjectWrap<Hotkey>
 {

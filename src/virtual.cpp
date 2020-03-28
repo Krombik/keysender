@@ -23,7 +23,7 @@ void Virtual::mousePosGetter(POINT *coords)
     ScreenToClient(hWnd, coords);
 }
 
-void Virtual::mbToogler(int8_t button, bool isButtonDown)
+void Virtual::mbToggler(int8_t button, bool isButtonDown)
 {
     const UINT action = msgs.at(button)[(int)isButtonDown];
     PostMessageA(hWnd, action, wParams.at(action), MAKELPARAM(lastCoords.x, lastCoords.y));
@@ -41,7 +41,7 @@ void Virtual::wheelScroller(int x)
     SendMessageA(hWnd, WM_MOUSEWHEEL, MAKEWPARAM(x, MK_MBUTTON), MAKELPARAM(lastCoords.x, lastCoords.y));
 }
 
-void Virtual::keyToogler(UINT key, bool isKeyDown)
+void Virtual::keyToggler(UINT key, bool isKeyDown)
 {
     PostMessageA(hWnd, isKeyDown ? WM_KEYDOWN : WM_KEYUP, key, 0 | (key << 16) | (0 << 24) | (0 << 29) | ((UINT)!isKeyDown << 30) | ((UINT)!isKeyDown << 31));
 }
@@ -59,10 +59,10 @@ Napi::Object Virtual::Init(Napi::Env env, Napi::Object exports)
     Napi::Function func = DefineClass(
         env, "Virtual", {
                             InstanceMethod("_getPos", &Virtual::getMousePos),
-                            InstanceMethod("_toogleMb", &Virtual::toogleMb),
+                            InstanceMethod("_toggleMb", &Virtual::toggleMb),
                             InstanceMethod("_move", &Virtual::move),
                             InstanceMethod("_scrollWheel", &Virtual::scrollWheel),
-                            InstanceMethod("_toogleKey", &Virtual::toogleKey),
+                            InstanceMethod("_toggleKey", &Virtual::toggleKey),
                             InstanceMethod("_printChar", &Virtual::printChar),
                             InstanceMethod("_setForeground", &Virtual::setForeground),
                             InstanceMethod("_isForeground", &Virtual::isForeground),

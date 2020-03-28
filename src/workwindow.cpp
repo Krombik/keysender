@@ -30,10 +30,10 @@ Napi::Object windowGetter(HWND hWnd, Napi::Env env)
     window["className"] = "";
     if (hWnd != NULL)
     {
-        int titleLenght = GetWindowTextLengthA(hWnd);
-        if (titleLenght > 0)
+        int titleLength = GetWindowTextLengthA(hWnd);
+        if (titleLength > 0)
         {
-            std::vector<wchar_t> title(titleLenght + 1);
+            std::vector<wchar_t> title(titleLength + 1);
             GetWindowTextW(hWnd, &title[0], title.size());
             title.pop_back();
             window["title"] = Napi::Buffer<wchar_t>::Copy(env, title.data(), title.size());
@@ -204,11 +204,13 @@ void Workwindow::close(const Napi::CallbackInfo &info)
 
 void Workwindow::setWorkwindow(const Napi::CallbackInfo &info, const Napi::Value &value)
 {
-    if (info[0].IsNumber())
-        hWnd = (HWND)info[0].As<Napi::Number>().Int64Value();
-    else
+    if (!info[0].IsNumber())
+    {
         Napi::Error::New(info.Env(), "Expected a Number")
             .ThrowAsJavaScriptException();
+        return;
+    }
+    hWnd = (HWND)info[0].As<Napi::Number>().Int64Value();
 };
 
 Napi::Value Workwindow::getWorkwindow(const Napi::CallbackInfo &info)

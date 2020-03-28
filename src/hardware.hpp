@@ -19,10 +19,10 @@ private:
     static const UINT extendKeys[];
     static const std::map<int8_t, std::array<UINT, 2>> buttonsDef;
     void mousePosGetter(POINT *coords);
-    void mbToogler(int8_t button, bool isButtonDown);
+    void mbToggler(int8_t button, bool isButtonDown);
     void mover(int x, int y, bool isAbsolute);
     void wheelScroller(int x);
-    void keyToogler(UINT key, bool isKeyDown);
+    void keyToggler(UINT key, bool isKeyDown);
     void charPrinter(int code);
 };
 

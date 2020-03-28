@@ -1,29 +1,33 @@
 #include <windows.h>
 #include "keyboard.hpp"
 
-void Keyboard::toogleKey(const Napi::CallbackInfo &info)
+void Keyboard::toggleKey(const Napi::CallbackInfo &info)
 {
     if (info.Length() != 2 || !info[0].IsString() || !info[1].IsBoolean())
+    {
         Napi::Error::New(info.Env(), "Expected 2 arguments: String, Boolean")
             .ThrowAsJavaScriptException();
-    else
-    {
-        std::string keyName = info[0].As<Napi::String>();
-        if (keysDef.count(keyName) != 0)
-            keyToogler(keysDef.at(keyName), info[1].As<Napi::Boolean>());
-        else
-            Napi::Error::New(info.Env(), "Wrong key name")
-                .ThrowAsJavaScriptException();
+        return;
     }
+    const std::string keyName = info[0].As<Napi::String>();
+    if (keysDef.count(keyName) == 0)
+    {
+        Napi::Error::New(info.Env(), "Wrong key name")
+            .ThrowAsJavaScriptException();
+        return;
+    }
+    keyToggler(keysDef.at(keyName), info[1].As<Napi::Boolean>());
 }
 
 void Keyboard::printChar(const Napi::CallbackInfo &info)
 {
     if (info.Length() != 1 || !info[0].IsNumber())
+    {
         Napi::Error::New(info.Env(), "Expected 1 argument: Number")
             .ThrowAsJavaScriptException();
-    else
-        charPrinter(info[0].As<Napi::Number>().Int32Value());
+        return;
+    }
+    charPrinter(info[0].As<Napi::Number>().Int32Value());
 };
 
 const std::map<std::string, UINT> Keyboard::keysDef = {
