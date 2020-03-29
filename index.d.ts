@@ -69,26 +69,26 @@ declare interface keyboard extends EventEmitter<keyboardEvent> {
      */
     printTextAsync(text: string, afterTypeDelay?: number | randomFromRange): Promise<void>;
     /**
-     * Toggles key to provided state.
-     * @param key - name of key.
+     * Toggles key or combination of keys to provided state.
+     * @param key - key or array with combination of keys.
      * @param state - key state selection: true for press, false for release,
      * if not provided defaults to true.
      * @param delay - milliseconds to sleep after key toggled,
      * if not provided defaults to keyboard.keyTogglerDelay.
      */
-    toggleKey(key: keyboardButton, state?: boolean, delay?: number | randomFromRange): void;
+    toggleKey(key: keyboardButton | keyboardButton[], state?: boolean, delay?: number | randomFromRange): void;
     /**
-     * Toggles key to provided state async.
-     * @param key - name of key.
+     * Toggles key or combination of keys to provided state async.
+     * @param key - key or array with combination of keys.
      * @param state - key state selection: true for press, false for release,
      * if not provided defaults to true.
      * @param delay -milliseconds to await after key toggled,
      * if not provided defaults to keyboard.keyTogglerDelay.
      */
-    toggleKeyAsync(key: keyboardButton, state?: boolean, delay?: number | randomFromRange): Promise<void>,
+    toggleKeyAsync(key: keyboardButton | keyboardButton[], state?: boolean, delay?: number | randomFromRange): Promise<void>,
     /**
-     * Press and release key.
-     * @param key - Key or combination of keys.
+     * Press and release key or combination of keys.
+     * @param key - key or array with combination of keys.
      * @param afterPressDelay - milliseconds to sleep after key pressed,
      * if not provided defaults to keyboard.keyTogglerDelay.
      * @param afterReleaseDelay - milliseconds to sleep after key released,
@@ -96,8 +96,8 @@ declare interface keyboard extends EventEmitter<keyboardEvent> {
      */
     sendKey(key: keyboardButton | keyboardButton[], afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): void;
     /**
-     * Press and release key async.
-     * @param key - Key or combination of keys.
+     * Press and release key or combination of keys async.
+     * @param key - key or array with combination of keys.
      * @param afterPressDelay - milliseconds to await after key pressed,
      * if not provided defaults to keyboard.keyTogglerDelay.
      * @param afterReleaseDelay - milliseconds to await after key released,
@@ -258,10 +258,10 @@ declare class Worker {
     declare workwindow: workwindow;
 }
 
-/** Provides methods implementations on hardware level */
+/** Provides methods implementations on hardware level. */
 export declare class Hardware extends Worker { }
 
-/** Provides methods implementations on virtual level */
+/** Provides methods implementations on virtual level. */
 export declare class Virtual extends Worker { }
 
 export declare class GlobalHotkey {
@@ -280,15 +280,15 @@ export declare class GlobalHotkey {
     static findHotkeyName(hotkey: keyboardRegularButton | (keyboardSpecButton | keyboardRegularButton)[] | [keyboardRegularButton]): string | null
 }
 
-/** @returns screen size [width, height] */
+/** @returns object {width, height} with screen size. */
 export declare function getScreenSize(): screenSize;
 
-/** Get array with {handle, title, className} of all open windows. */
+/** Get array with objects {handle, title, className} of all open windows. */
 export declare function getWindow(): windowData[];
 /** Get window {handle} by {title} and(or) {className}. */
 export declare function getWindow(title: string | null, className?: string | null): number;
 
-/** Get array with {handle, title, className} of all children. */
+/** Get array with objects {handle, title, className} of all {parentHandle} children. */
 export declare function getWindowChild(parentHandle: number): windowData[];
 /** Get {handle} of {parentHandle} child by {className} and(or) {title}. */
 export declare function getWindowChild(parentHandle: number, className: string | null, title?: string | null): number;

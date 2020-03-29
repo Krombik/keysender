@@ -54,25 +54,49 @@ const Keyboard = ClassName => class extends ClassName {
                 },
                 toggleKey(key, isKeyDown = true, delay = this.keyTogglerDelay) {
                     this.emit('beforeToggleKey', ...arguments);
-                    self._toggleKey(key, isKeyDown);
-                    sleep(delay);
+                    if (Array.isArray(key)) {
+                        let last = key.length - 1;
+                        if (isKeyDown) key.forEach((key, index) => {
+                            self._toggleKey(key, true);
+                            sleep(index !== last ? microSleep : keyTogglerDelay);
+                        });
+                        else for (let i = last; i >= 0; i--) {
+                            self._toggleKey(key[i], false);
+                            sleep(i !== 0 ? microSleep : keySenderDelay);
+                        }
+                    } else {
+                        self._toggleKey(key, isKeyDown);
+                        sleep(delay);
+                    }
                     this.emit('afterToggleKey', ...arguments);
                 },
                 async toggleKeyAsync(key, isKeyDown = true, delay = this.keyTogglerDelay) {
                     this.emit('beforeToggleKey', ...arguments);
-                    self._toggleKey(key, isKeyDown);
-                    await sleepAsync(delay);
+                    if (Array.isArray(key)) {
+                        let last = key.length - 1;
+                        if (isKeyDown) for (let i = 0; i <= last; i++) {
+                            self._toggleKey(key[i], true);
+                            await sleepAsync(i !== last ? microSleep : keyTogglerDelay);
+                        }
+                        else for (let i = last; i >= 0; i--) {
+                            self._toggleKey(key[i], false);
+                            await sleepAsync(i !== 0 ? microSleep : keySenderDelay);
+                        }
+                    } else {
+                        self._toggleKey(key, isKeyDown);
+                        await sleepAsync(delay);
+                    }
                     this.emit('afterToggleKey', ...arguments);
                 },
                 sendKey(key, keyTogglerDelay = this.keyTogglerDelay, keySenderDelay = 0) {
                     this.emit('beforeSendKey', ...arguments);
                     if (Array.isArray(key)) {
-                        let i = key.length - 1;
+                        const last = key.length - 1;
                         key.forEach((key, index) => {
                             self._toggleKey(key, true);
-                            sleep(index !== i ? microSleep : keyTogglerDelay);
+                            sleep(index !== last ? microSleep : keyTogglerDelay);
                         });
-                        for (; i >= 0; i--) {
+                        for (let i = last; i >= 0; i--) {
                             self._toggleKey(key[i], false);
                             sleep(i !== 0 ? microSleep : keySenderDelay);
                         }
@@ -87,11 +111,12 @@ const Keyboard = ClassName => class extends ClassName {
                 async sendKeyAsync(key, keyTogglerDelay = this.keyTogglerDelay, keySenderDelay = 0) {
                     this.emit('beforeSendKey', ...arguments);
                     if (Array.isArray(key)) {
-                        for (var i = 0; i < key.length; i++) {
+                        const last = key.length - 1;
+                        for (let i = 0; i <= last; i++) {
                             self._toggleKey(key[i], true);
-                            await sleepAsync(i !== 0 ? microSleep : keyTogglerDelay);
+                            await sleepAsync(i !== last ? microSleep : keyTogglerDelay);
                         }
-                        for (i--; i >= 0; i--) {
+                        for (let i = last; i >= 0; i--) {
                             self._toggleKey(key[i], false);
                             await sleepAsync(i !== 0 ? microSleep : keySenderDelay);
                         }

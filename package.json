@@ -1,7 +1,20 @@
 {
   "name": "keysender",
-  "version": "0.0.5",
-  "description": "Node.js keyboard and mouse inputs emulator",
+  "version": "1.0.0",
+  "description": "Node.js keyboard and mouse inputs emulator for Windows",
+  "keywords": [
+    "automation",
+    "send inputs",
+    "keyboard",
+    "mouse",
+    "emulator",
+    "screenshot",
+    "screen",
+    "color recognition",
+    "autohotkey",
+    "ahk",
+    "uopilot"
+  ],
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
