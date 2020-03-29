@@ -1,190 +1,238 @@
+// import { EventEmitter } from "events";
 declare type keyboardRegularButton = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" | "+" | "-" | "." | "," | "?" | "~" | "[" | "]" | "|" | "'" | "backspace" | "delete" | "enter" | "tab" | "escape" | "up" | "down" | "right" | "left" | "home" | "end" | "pageup" | "pagedown" | "f1" | "f2" | "f3" | "f4" | "f5" | "f6" | "f7" | "f8" | "f9" | "f10" | "f11" | "f12" | "f13" | "f14" | "f15" | "f16" | "f17" | "f18" | "f19" | "f20" | "f21" | "f22" | "f23" | "f24" | "capslock" | "space" | "prntscrn" | "insert" | "numlock" | "num0" | "num0" | "num1" | "num2" | "num3" | "num4" | "num5" | "num6" | "num7" | "num8" | "num9" | "num+" | "num-" | "num*" | "num/" | "num.";
 declare type keyboardSpecButton = "alt" | "ctrl" | "shift";
 declare type keyboardSpecSideButton = "lshift" | "rshift" | "lctrl" | "rctrl" | "lalt" | "ralt";
 declare type keyboardButton = keyboardRegularButton | keyboardSpecButton | keyboardRegularButton;
 declare type mouseButton = "left" | "right" | "middle";
-declare type keyboardEvent = "printText" | "toggleKey" | "sendKey" | "sendKeys";
-declare type mouseEvent = "toggle" | "click" | "moveTo" | "moveCurveTo" | "move" | "scrollWheel";
-declare type windowInfo = { x?: number, y?: number, width?: number, height?: number };
-declare type img = { data: Buffer, height: number, width: number, colorAt(x: number, y: number): string };
-declare type windowData = { handle: number, className: string, title: string };
+declare type keyboardEvent = "beforePrintText" | "beforeToggleKey" | "beforeSendKey" | "beforeSendKeys" | "afterPrintText" | "afterToggleKey" | "afterSendKey" | "afterSendKeys";
+declare type mouseEvent = "beforeToggle" | "beforeClick" | "beforeMoveTo" | "beforeMoveCurveTo" | "beforeMove" | "beforeScrollWheel" | "afterToggle" | "afterClick" | "afterMoveTo" | "afterMoveCurveTo" | "afterMove" | "afterScrollWheel";
+declare interface windowInfo {
+    x: number;
+    y: number;
+    width: number;
+    eight: number;
+}
+declare type hex = string;
+declare interface img {
+    data: Buffer;
+    height: number;
+    width: number;
+    colorAt(x: number, y: number): hex;
+}
+declare interface windowData {
+    handle: number;
+    className: string;
+    title: string;
+}
 declare type hotkeyMode = "once" | "hold" | "toggle";
-declare interface keyboard {
-    keyTogglerDelay: number | [number, number];
-    keySenderDelay: number | [number, number];
-    /** Adds the {listener} before event {eventName}. */
-    before(eventName: keyboardEvent, listener: (...args: any[]) => void): void;
-    /** Adds the {listener} after event {eventName}. */
-    after(eventName: keyboardEvent, listener: (...args: any[]) => void): void;
-    /** Print text.
+declare type from = number;
+declare type to = number;
+declare type randomFromRange = [from, to];
+declare type screenSize = {
+    width: number;
+    height: number;
+}
+declare type coords = {
+    x: number;
+    y: number;
+}
+declare interface EventEmitter<event> {
+    addListener(event: event | string, listener: (...args: any[]) => void): this;
+    on(event: event | string, listener: (...args: any[]) => void): this;
+    once(event: event | string, listener: (...args: any[]) => void): this;
+    removeListener(event: event | string, listener: (...args: any[]) => void): this;
+    off(event: event | string, listener: (...args: any[]) => void): this;
+    removeAllListeners(event?: event | string): this;
+    setMaxListeners(n: number): this;
+    getMaxListeners(): number;
+    listeners(event: event | string): Function[];
+    rawListeners(event: event | string): Function[];
+    emit(event: event | string, ...args: any[]): boolean;
+    listenerCount(type: event | string): number;
+    prependListener(event: event | string, listener: (...args: any[]) => void): this;
+    prependOnceListener(event: event | string, listener: (...args: any[]) => void): this;
+    eventNames(): Array<event | string>;
+}
+declare interface keyboard extends EventEmitter<keyboardEvent> {
+    keyTogglerDelay: number | randomFromRange;
+    keySenderDelay: number | randomFromRange;
+    /** Prints text.
      * @param text - string to print.
-     * @param keySenderDelay - delay in milliseconds to sleep after sending key,
+     * @param afterTypeDelay - milliseconds to sleep after each char typed excluding last,
      * if not provided defaults to 0.
      */
-    printText(text: string, keySenderDelay?: [number, number] | number): void;
-    /** Print text async.
+    printText(text: string, afterTypeDelay?: number | randomFromRange): void;
+    /** Prints text async.
      * @param text - string to print.
-     * @param keySenderDelay - delay in milliseconds to await after sending key,
+     * @param afterTypeDelay - milliseconds to await after each char typed excluding last,
      * if not provided defaults to 0.
      */
-    async printTextAsync(text: string, keySenderDelay?: [number, number] | number): Promise<void>;
+    printTextAsync(text: string, afterTypeDelay?: number | randomFromRange): Promise<void>;
     /**
-     * Switch key state.
+     * Toggles key to provided state.
      * @param key - name of key.
-     * @param isKeyDown - key state selection: true for press, false for release.
-     * @param delay - delay in milliseconds to sleep after switching key state,
-     * if not provided defaults to this.keyTogglerDelay.
+     * @param state - key state selection: true for press, false for release,
+     * if not provided defaults to true.
+     * @param delay - milliseconds to sleep after key toggled,
+     * if not provided defaults to keyboard.keyTogglerDelay.
      */
-    toggleKey(key: keyboardButton, isKeyDown?: boolean, delay?: [number, number] | number): void;
+    toggleKey(key: keyboardButton, state?: boolean, delay?: number | randomFromRange): void;
     /**
-     * Switch key state async.
+     * Toggles key to provided state async.
      * @param key - name of key.
-     * @param isKeyDown - key state selection: true for press, false for release.
-     * @param delay - delay in milliseconds to await after switching key state,
-     * if not provided defaults to this.keyTogglerDelay.
+     * @param state - key state selection: true for press, false for release,
+     * if not provided defaults to true.
+     * @param delay -milliseconds to await after key toggled,
+     * if not provided defaults to keyboard.keyTogglerDelay.
      */
-    async toggleKeyAsync(key: keyboardButton, isKeyDown?: boolean, delay?: [number, number] | number): Promise<void>,
+    toggleKeyAsync(key: keyboardButton, state?: boolean, delay?: number | randomFromRange): Promise<void>,
     /**
      * Press and release key.
-     * @param key - name of key.
-     * @param keyTogglerDelay - delay in milliseconds to sleep after press key,
-     * if not provided defaults to this.keyTogglerDelay.
-     * @param keySenderDelay - delay in milliseconds to sleep after release key,
+     * @param key - Key or combination of keys.
+     * @param afterPressDelay - milliseconds to sleep after key pressed,
+     * if not provided defaults to keyboard.keyTogglerDelay.
+     * @param afterReleaseDelay - milliseconds to sleep after key released,
      * if not provided defaults to 0.
      */
-    sendKey(keys: keyboardButton | keyboardButton[], keyTogglerDelay?: [number, number] | number, keySenderDelay?: [number, number] | number): void;
+    sendKey(key: keyboardButton | keyboardButton[], afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): void;
     /**
      * Press and release key async.
-     * @param key - name of key.
-     * @param keyTogglerDelay - delay in milliseconds to await after press key,
-     * if not provided defaults to this.keyTogglerDelay.
-     * @param keySenderDelay - delay in milliseconds to await after release key,
+     * @param key - Key or combination of keys.
+     * @param afterPressDelay - milliseconds to await after key pressed,
+     * if not provided defaults to keyboard.keyTogglerDelay.
+     * @param afterReleaseDelay - milliseconds to await after key released,
      * if not provided defaults to 0.
      */
-    async sendKeyAsync(keys: keyboardButton | keyboardButton[], keyTogglerDelay?: [number, number] | number, keySenderDelay?: [number, number] | number): Promise<void>,
+    sendKeyAsync(key: keyboardButton | keyboardButton[], afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): Promise<void>,
     /**
      * Press and release array of keys.
      * @param keys - array with keys.
-     * @param keyTogglerDelay - delay in milliseconds to sleep after press key,
-     * if not provided defaults to this.keyTogglerDelay.
-     * @param keySenderDelay - delay in milliseconds to sleep after release key,
-     * if not provided defaults to {keyTogglerDelay}, if {keyTogglerDelay} not provided defaults to this.keySenderDelay.
+     * @param afterPressDelay - milliseconds to sleep after each key pressed,
+     * if not provided defaults to keyboard.keyTogglerDelay.
+     * @param afterReleaseDelay - delay in milliseconds to sleep after each key released excluding last,
+     * if not provided defaults to {afterPressDelay}, if {afterPressDelay} not provided defaults to keyboard.keySenderDelay.
      */
-    sendKeys(keys: keyboardButton[], keyTogglerDelay?: [number, number] | number, keySenderDelay?: [number, number] | number): void,
+    sendKeys(keys: keyboardButton[], afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): void,
     /**
      * Press and release array of keys async.
      * @param keys - array with keys.
-     * @param keyTogglerDelay - delay in milliseconds to await after press key,
-     * if not provided defaults to this.keyTogglerDelay.
-     * @param keySenderDelay - delay in milliseconds to await after release key,
-     * if not provided defaults to {keyTogglerDelay}, if {keyTogglerDelay} not provided defaults to this.keySenderDelay.
+     * @param afterPressDelay - milliseconds to await after each key pressed,
+     * if not provided defaults to keyboard.keyTogglerDelay.
+     * @param afterReleaseDelay - delay in milliseconds to await after each key released excluding last,
+     * if not provided defaults to {afterPressDelay}, if {afterPressDelay} not provided defaults to keyboard.keySenderDelay.
      */
-    async sendKeysAsync(keys: keyboardButton[], keyTogglerDelay?: [number, number] | number, keySenderDelay?: [number, number] | number): Promise<void>
+    sendKeysAsync(keys: keyboardButton[], afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): Promise<void>
 }
-declare interface mouse {
-    buttonTogglerDelay: number | [number, number];
-    /** If saveMod is true every mouse method first back to {lastCoords}, by default: false. */
+declare interface mouse extends EventEmitter<mouseEvent> {
+    buttonTogglerDelay: number | randomFromRange;
+    /** If saveMod is true every mouse method first back to mouse.lastCoords, by default to false. */
     saveMod: boolean;
-    /** Last coordinates of mouse, change after every mouseMove method, by default: [0,0]. */
-    lastCoords: [number, number];
-    /** Adds the {listener} before event {eventName}. */
-    before(eventName: mouseEvent, listener: (...args: any[]) => void): void;
-    /** Adds the {listener} after event {eventName}. */
-    after(eventName: mouseEvent, listener: (...args: any[]) => void): void;
-    /** Get current cursor position at screen for Hardware class or position at current workwindow. */
-    getPos(): [number, number];
+    /** Last coordinates of mouse, this value changes after every mouse move method execution, by default to {x: 0, y: 0}. */
+    lastCoords: coords;
+    /** Get current cursor position at screen for Hardware class or position at current workwindow for Virtual class. */
+    getPos(): coords;
     /**
      * Switch mouse button state.
-     * @param isButtonDown - key state selection: true for press, false for release.
+     * @param state - key state selection: true for press, false for release.
      * @param button - name of mouse button.
-     * @param buttonTogglerDelay - delay in milliseconds to sleep after switching mouse button state,
-     * if not provided defaults to this.buttonTogglerDelay.
+     * @param delay - milliseconds to sleep after switching mouse button state,
+     * if not provided defaults to mouse.buttonTogglerDelay.
      */
-    toggle(isButtonDown: boolean, button?: mouseButton, buttonTogglerDelay?: [number, number] | number): void;
+    toggle(state: boolean, button?: mouseButton, delay?: number | randomFromRange): void;
     /**
      * Switch mouse button state async.
-     * @param isButtonDown - key state selection: true for press, false for release.
+     * @param state - key state selection: true for press, false for release.
      * @param button - name of mouse button.
-     * @param buttonTogglerDelay - delay in milliseconds to await after switching mouse button state,
-     * if not provided defaults to this.buttonTogglerDelay.
+     * @param delay - milliseconds to await after switching mouse button state,
+     * if not provided defaults to mouse.buttonTogglerDelay.
      */
-    async toggleAsync(isButtonDown: boolean, button?: mouseButton, buttonTogglerDelay?: [number, number] | number): Promise<void>;
+    toggleAsync(state: boolean, button?: mouseButton, delay?: number | randomFromRange): Promise<void>;
     /**
      * Click mouse button
      * @param button - name of mouse button.
-     * @param buttonTogglerDelay - delay in milliseconds to sleep after press mouse button,
-     * if not provided defaults to this.buttonTogglerDelay.
-     * @param buttonSenderDelay - delay in milliseconds to sleep after release mouse button,
+     * @param afterPressDelay - milliseconds to sleep after mouse button pressed,
+     * if not provided defaults to mouse.buttonTogglerDelay.
+     * @param afterReleaseDelay - milliseconds to sleep after mouse button released,
      * if not provided defaults to 0.
      */
-    click(button?: mouseButton, buttonTogglerDelay?: [number, number] | number, buttonSenderDelay?: [number, number] | number): void;
+    click(button?: mouseButton, afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): void;
     /**
      * Click mouse button async
      * @param button - name of mouse button.
-     * @param buttonTogglerDelay - delay in milliseconds to await after press mouse button,
-     * if not provided defaults to this.buttonTogglerDelay.
-     * @param buttonSenderDelay - delay in milliseconds to await after release mouse button,
+     * @param afterPressDelay - milliseconds to await after mouse button pressed,
+     * if not provided defaults to mouse.buttonTogglerDelay.
+     * @param afterReleaseDelay - milliseconds to await after mouse button released,
      * if not provided defaults to 0.
      */
-    async clickAsync(button?: mouseButton, buttonTogglerDelay?: [number, number] | number, buttonSenderDelay?: [number, number] | number): Promise<void>;
+    clickAsync(button?: mouseButton, afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): Promise<void>;
     /**
      * Move mouse to [x, y].
-     * @param delay - delay in milliseconds to sleep after move mouse,
+     * @param delay - milliseconds to sleep after mouse movement,
      * if not provided defaults to 0.
      */
-    moveTo(x: number, y: number, delay?: [number, number] | number): void;
+    moveTo(x: number, y: number, delay?: number | randomFromRange): void;
     /**
      * Move mouse to [x, y] async.
-     * @param delay - delay in milliseconds to await after move mouse,
+     * @param delay - milliseconds to await after mouse movement,
      * if not provided defaults to 0.
      */
-    async moveToAsync(x: number, y: number, delay?: [number, number] | number): Promise<void>;
+    moveToAsync(x: number, y: number, delay?: number | randomFromRange): Promise<void>;
     /**
-     * Imitate human like mouse move from {lastCoords} to [x, y].
-     * @param speed - move speed, if not provided defaults to 5.
+     * Simulate human similar mouse movement from {lastCoords} to [x, y].
+     * @param speed - move speed, if not provided defaults to 5,
+     * if speed equals to "max" - immediate movement.
      * @param deviation - movement curvature, if not provided defaults to 30.
      */
-    moveCurveTo(x: number, y: number, speed?: number, deviation?: number): void;
+    moveCurveTo(x: number, y: number, speed?: number | "max", deviation?: number): void;
     /**
-     * Imitate human like mouse move from {lastCoords} to [x, y] async.
-     * @param speed - move speed, if not provided defaults to 5.
+     * Simulate human similar mouse movement from {lastCoords} to [x, y] async.
+     * @param speed - move speed, if not provided defaults to 5,
+     * if speed equals to "max" - immediate movement.
      * @param deviation - movement curvature, if not provided defaults to 30.
      */
-    async moveCurveToAsync(x: number, y: number, speed?: number, deviation?: number): Promise<void>;
+    moveCurveToAsync(x: number, y: number, speed?: number | "max", deviation?: number): Promise<void>;
     /**
-     * Move mouse relative to the current position by [x, y].
-     * @param delay - delay in milliseconds to sleep after move mouse,
+     * Move mouse from current position by [x, y] relatively.
+     * @param delay - milliseconds to sleep after mouse movement,
      * if not provided defaults to 0.
      */
-    move(x: number, y: number, delay?: [number, number] | number): void;
+    move(x: number, y: number, delay?: number | randomFromRange): void;
     /**
-     * Move mouse relative to the current position by [x, y] async.
-     * @param delay - delay in milliseconds to await after move mouse,
+     * Move mouse from current position by [x, y] relatively async.
+     * @param delay - milliseconds to await after mouse movement,
      * if not provided defaults to 0.
      */
-    async moveAsync(x: number, y: number, delay?: [number, number] | number): Promise<void>;
+    moveAsync(x: number, y: number, delay?: number | randomFromRange): Promise<void>;
     /**
-     * Scroll mouse wheel for {count} times.
+     * Scroll mouse wheel.
+     * @param amount - the amount of wheel movement. A positive value indicates that the wheel was rotated forward, away from the user,
+     * a negative value indicates that the wheel was rotated backward, toward the user.
      * @param wheelTogglerDelay - delay in milliseconds to sleep after wheel scroll,
      * if not provided defaults to 0.
      */
-    scrollWheel(count: number, wheelTogglerDelay?: [number, number] | number): void;
+    scrollWheel(amount: number, wheelTogglerDelay?: number | randomFromRange): void;
     /**
-     * Scroll mouse wheel for {count} times async.
+     * Scroll mouse wheel async.
+     * @param amount - the amount of wheel movement. A positive value indicates that the wheel was rotated forward, away from the user,
+     * a negative value indicates that the wheel was rotated backward, toward the user.
      * @param wheelTogglerDelay - delay in milliseconds to await after wheel scroll,
      * if not provided defaults to 0.
      */
-    async scrollWheelAsync(count: number, wheelTogglerDelay?: [number, number] | number): Promise<void>
+    scrollWheelAsync(count: number, wheelTogglerDelay?: number | randomFromRange): Promise<void>
 }
-declare interface workwindow {
+declare interface workwindow extends EventEmitter<"capture"> {
     /** Set current workwindow by {handle}. */
     set(handle: number): void;
     /** @returns object with {handle}, {title} and {className} of workwindow. */
     get(): windowData;
-    /** Get or set workwindow position and size. */
-    info: windowInfo;
+    /** Set workwindow position and(or) size.
+     * @param info - object {x, y, width, height}
+     */
+    setInfo(info: Partial<windowInfo>): void;
+    /** @returns object {x, y, width, height} */
+    getInfo(): windowInfo;
     /** Adds the {listener} after event {eventName}. */
-    on(eventName: "capture", listener: (...args: any[]) => void): void;
+    on(eventName: "capture", listener: (...args: any[]) => void): this;
     /** Set current workwindow foreground. */
     setForeground(): void;
     isForeground(): boolean;
@@ -193,33 +241,35 @@ declare interface workwindow {
     capture(x: number, y: number, width: number, height: number): img;
     /** capture current workwindow. */
     capture(): img;
-    /** Terminate current workwindow. */
+    /** Terminate current workwindow by killing it's thread.*/
     kill(): void;
     /** Close current workwindow by sending close message. */
-    close(): void
-};
+    close(): void;
+}
 
-/** Hardware class provide methods to synthesize hardware keystrokes, mouse motions, button clicks, make screenshot of workwindow and other manipulations. */
-export declare class Hardware {
+declare class Worker {
     /** @param handle - handle of workwindow. */
-    declare constructor(handle: number);
-    /** Module with methods to synthesize keystrokes */
+    constructor(handle: number);
+    /** Provides methods to synthesize keystrokes */
     declare keyboard: keyboard;
-    /** Module with methods to synthesize mouse motions, and button clicks */
+    /** Provides methods to synthesize mouse motions, and button clicks */
     declare mouse: mouse;
-    /** Module with methods to work with workwindow */
+    /** Provides methods to work with workwindow */
     declare workwindow: workwindow;
-};
+}
 
-/** Virtual class provide methods to synthesize virtual keystrokes, mouse motions, button clicks to workwindow, make screenshot of workwindow and other manipulations. */
-export declare class Virtual extends Hardware { };
+/** Provides methods implementations on hardware level */
+export declare class Hardware extends Worker { }
+
+/** Provides methods implementations on virtual level */
+export declare class Virtual extends Worker { }
 
 export declare class GlobalHotkey {
     /**
      * Register hotkey.
      * @param func - function that calls after hotkey pressed.
      * @param mode - if "once" - {func} will repeat one time for each {hotkey} press, if "hold" - {func} will repeat while {hotkey} is pressed, if "toggle" - {func} start repeat after {hotkey} first time pressing and end repeat after {hotkey} second time pressing, by default = "once".
-     * @param delay - if {mode} is "hold" or "toggle" - set delay between {func} calls, by default = 0.
+     * @param delay - if {mode} is "hold" or "toggle" - set delay between {func} calls, by default = 1.
      */
     static register(hotkey: keyboardRegularButton | (keyboardSpecButton | keyboardRegularButton)[] | [keyboardRegularButton], hotkeyName: string, func: () => void, mode?: hotkeyMode, delay?: number): void;
     /** Unregister hotkey by name. */
@@ -228,10 +278,10 @@ export declare class GlobalHotkey {
     static unregisterAll(): void;
     /** @returns name of {hotkey} or null if {hotkey} is not registered. */
     static findHotkeyName(hotkey: keyboardRegularButton | (keyboardSpecButton | keyboardRegularButton)[] | [keyboardRegularButton]): string | null
-};
+}
 
 /** @returns screen size [width, height] */
-export declare function getScreenSize(): [number, number];
+export declare function getScreenSize(): screenSize;
 
 /** Get array with {handle, title, className} of all open windows. */
 export declare function getWindow(): windowData[];
@@ -244,4 +294,4 @@ export declare function getWindowChild(parentHandle: number): windowData[];
 export declare function getWindowChild(parentHandle: number, className: string | null, title?: string | null): number;
 
 /** Pause current thread for {ms} milliseconds. */
-export declare function sleep(ms: number | [number, number]): void;
+export declare function sleep(ms: number | randomFromRange): void;

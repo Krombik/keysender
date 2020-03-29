@@ -3,11 +3,11 @@
 
 Napi::Value Mouse::getMousePos(const Napi::CallbackInfo &info)
 {
-    Napi::Array pos = Napi::Array::New(info.Env());
+    Napi::Object pos = Napi::Object::New(info.Env());
     POINT coords;
     mousePosGetter(&coords);
-    pos[(uint32_t)0] = coords.x;
-    pos[1] = coords.y;
+    pos["x"] = coords.x;
+    pos["y"] = coords.y;
     return pos;
 }
 
@@ -83,15 +83,15 @@ void Mouse::setLastCoords(const Napi::CallbackInfo &info, const Napi::Value &val
             .ThrowAsJavaScriptException();
         return;
     }
-    Napi::Array coords(info.Env(), info[0]);
+    Napi::Object coords(info.Env(), info[0]);
     int x, y;
-    if ((x = coords.Get((uint32_t)0).As<Napi::Number>().Int32Value()) <= 0)
+    if ((x = coords.Get("x").As<Napi::Number>().Int32Value()) <= 0)
     {
         Napi::Error::New(info.Env(), "x should be > 0")
             .ThrowAsJavaScriptException();
         return;
     }
-    if ((y = coords.Get(1).As<Napi::Number>().Int32Value()) <= 0)
+    if ((y = coords.Get("y").As<Napi::Number>().Int32Value()) <= 0)
     {
         Napi::Error::New(info.Env(), "y should be > 0")
             .ThrowAsJavaScriptException();
@@ -103,9 +103,9 @@ void Mouse::setLastCoords(const Napi::CallbackInfo &info, const Napi::Value &val
 
 Napi::Value Mouse::getLastCoords(const Napi::CallbackInfo &info)
 {
-    Napi::Array coords = Napi::Array::New(info.Env());
-    coords[(uint32_t)0] = lastCoords.x;
-    coords[1] = lastCoords.y;
+    Napi::Object coords = Napi::Object::New(info.Env());
+    coords["x"] = lastCoords.x;
+    coords["y"] = lastCoords.y;
     return coords;
 };
 

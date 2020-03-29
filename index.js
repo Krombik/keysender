@@ -34,48 +34,38 @@ const Keyboard = ClassName => class extends ClassName {
             value: Object.assign(new EventEmitter, {
                 keyTogglerDelay: 35,
                 keySenderDelay: 35,
-                before(event, func) {
-                    this.on(event, function (isBefore, ...args) {
-                        if (isBefore) func.apply(this, args)
-                    });
-                },
-                after(event, func) {
-                    this.on(event, (isBefore, ...args) => {
-                        if (!isBefore) func.apply(this, args)
-                    });
-                },
                 printText(text, keySenderDelay = 0) {
-                    this.emit('printText', true, ...arguments);
+                    this.emit('beforePrintText', ...arguments);
                     for (var i = 0; i < text.length - 1; i++) {
                         self._printChar(text.codePointAt(i));
                         sleep(keySenderDelay);
                     }
                     self._printChar(text.codePointAt(i));
-                    this.emit('printText', false, ...arguments);
+                    this.emit('afterPrintText', ...arguments);
                 },
                 async printTextAsync(text, keySenderDelay = 0) {
-                    this.emit('printText', true, ...arguments);
+                    this.emit('beforePrintText', ...arguments);
                     for (var i = 0; i < text.length - 1; i++) {
                         self._printChar(text.codePointAt(i));
                         await sleepAsync(keySenderDelay);
                     }
                     self._printChar(text.codePointAt(i));
-                    this.emit('printText', false, ...arguments);
+                    this.emit('afterPrintText', ...arguments);
                 },
                 toggleKey(key, isKeyDown = true, delay = this.keyTogglerDelay) {
-                    this.emit('toggleKey', true, ...arguments);
+                    this.emit('beforeToggleKey', ...arguments);
                     self._toggleKey(key, isKeyDown);
                     sleep(delay);
-                    this.emit('toggleKey', false, ...arguments);
+                    this.emit('afterToggleKey', ...arguments);
                 },
                 async toggleKeyAsync(key, isKeyDown = true, delay = this.keyTogglerDelay) {
-                    this.emit('toggleKey', true, ...arguments);
+                    this.emit('beforeToggleKey', ...arguments);
                     self._toggleKey(key, isKeyDown);
                     await sleepAsync(delay);
-                    this.emit('toggleKey', false, ...arguments);
+                    this.emit('afterToggleKey', ...arguments);
                 },
                 sendKey(key, keyTogglerDelay = this.keyTogglerDelay, keySenderDelay = 0) {
-                    this.emit('sendKey', true, ...arguments);
+                    this.emit('beforeSendKey', ...arguments);
                     if (Array.isArray(key)) {
                         let i = key.length - 1;
                         key.forEach((key, index) => {
@@ -92,10 +82,10 @@ const Keyboard = ClassName => class extends ClassName {
                         self._toggleKey(key, false);
                         sleep(keySenderDelay);
                     }
-                    this.emit('sendKey', false, ...arguments);
+                    this.emit('afterSendKey', ...arguments);
                 },
                 async sendKeyAsync(key, keyTogglerDelay = this.keyTogglerDelay, keySenderDelay = 0) {
-                    this.emit('sendKey', true, ...arguments);
+                    this.emit('beforeSendKey', ...arguments);
                     if (Array.isArray(key)) {
                         for (var i = 0; i < key.length; i++) {
                             self._toggleKey(key[i], true);
@@ -111,27 +101,27 @@ const Keyboard = ClassName => class extends ClassName {
                         self._toggleKey(key, false);
                         await sleepAsync(keySenderDelay);
                     }
-                    this.emit('sendKey', false, ...arguments);
+                    this.emit('afterSendKey', ...arguments);
                 },
                 sendKeys(keys, keyTogglerDelay = this.keyTogglerDelay, keySenderDelay = keyTogglerDelay === undefined ? this.keySenderDelay : keyTogglerDelay) {
-                    this.emit('sendKeys', true, ...arguments);
+                    this.emit('beforeSendKeys', ...arguments);
                     keys.forEach((key, index) => {
                         self._toggleKey(key, true);
                         sleep(keyTogglerDelay);
                         self._toggleKey(key, false);
                         if (index !== keys.length - 1) sleep(keySenderDelay);
                     });
-                    this.emit('sendKeys', false, ...arguments);
+                    this.emit('afterSendKeys', ...arguments);
                 },
                 async sendKeysAsync(keys, keyTogglerDelay = this.keyTogglerDelay, keySenderDelay = keyTogglerDelay === undefined ? this.keySenderDelay : keyTogglerDelay) {
-                    this.emit('sendKeys', true, ...arguments);
+                    this.emit('beforeSendKeys', ...arguments);
                     for (let i = 0; i < keys.length; i++) {
                         self._toggleKey(keys[i], true);
                         await sleepAsync(keyTogglerDelay);
                         self._toggleKey(keys[i], false);
                         if (i !== keys.length - 1) await sleepAsync(keySenderDelay);
                     }
-                    this.emit('sendKeys', false, ...arguments);
+                    this.emit('afterSendKeys', ...arguments);
                 }
             })
         });
@@ -212,100 +202,90 @@ const Mouse = ClassName => class extends ClassName {
                 get lastCoords() {
                     return self._lastCoords;
                 },
-                before(event, func) {
-                    this.on(event, function (isBefore, ...args) {
-                        if (isBefore) func.apply(this, args)
-                    });
-                },
-                after(event, func) {
-                    this.on(event, (isBefore, ...args) => {
-                        if (!isBefore) func.apply(this, args)
-                    });
-                },
                 getPos() {
                     return self._getPos();
                 },
                 toggle(isButtonDown, button = "left", buttonTogglerDelay = this.buttonTogglerDelay) {
-                    this.emit('toggle', true, ...arguments);
+                    this.emit('beforeToggle', ...arguments);
                     self._toggleMb(button, isButtonDown);
                     sleep(buttonTogglerDelay);
-                    this.emit('toggle', false, ...arguments);
+                    this.emit('afterToggle', ...arguments);
                 },
                 async toggleAsync(isButtonDown, button = "left", buttonTogglerDelay = this.buttonTogglerDelay) {
-                    this.emit('toggle', true, ...arguments);
+                    this.emit('beforeToggle', ...arguments);
                     self._toggleMb(button, isButtonDown);
                     await sleepAsync(buttonTogglerDelay);
-                    this.emit('toggle', false, ...arguments);
+                    this.emit('afterToggle', ...arguments);
                 },
                 click(button = "left", buttonTogglerDelay = this.buttonTogglerDelay, buttonSenderDelay = 0) {
-                    this.emit('click', true, ...arguments);
+                    this.emit('beforeClick', ...arguments);
                     self._toggleMb(button, true);
                     sleep(buttonTogglerDelay);
                     self._toggleMb(button, false);
                     sleep(buttonSenderDelay);
-                    this.emit('click', false, ...arguments);
+                    this.emit('afterClick', ...arguments);
                 },
                 async clickAsync(button = "left", buttonTogglerDelay = this.buttonTogglerDelay, buttonSenderDelay = 0) {
-                    this.emit('click', true, ...arguments);
+                    this.emit('beforeClick', ...arguments);
                     self._toggleMb(button, true);
                     await sleepAsync(buttonTogglerDelay);
                     self._toggleMb(button, false);
                     await sleepAsync(buttonSenderDelay);
-                    this.emit('click', false, ...arguments);
+                    this.emit('afterClick', ...arguments);
                 },
                 moveTo(x, y, delay = 0) {
-                    this.emit('moveTo', true, ...arguments);
+                    this.emit('beforeMoveTo', ...arguments);
                     self._move(x, y, true);
                     sleep(delay);
-                    this.emit('moveTo', false, ...arguments);
+                    this.emit('afterMoveTo', ...arguments);
                 },
                 async moveToAsync(x, y, delay = 0) {
-                    this.emit('moveTo', true, ...arguments);
+                    this.emit('beforeMoveTo', ...arguments);
                     self._move(x, y, true);
                     await sleepAsync(delay);
-                    this.emit('moveTo', false, ...arguments);
+                    this.emit('afterMoveTo', ...arguments);
                 },
                 moveCurveTo(x, y, speed = 5, deviation = 30) {
-                    this.emit('moveCurveTo', true, ...arguments);
+                    this.emit('beforeMoveCurveTo', ...arguments);
                     const sleepTime = speed >= 1 ? 1 : speed !== "max" ? Math.round(1 / speed) : 0;
                     humanCurv(x, y, ...self._lastCoords, speed, deviation).forEach(dot => {
                         self._move(dot[0], dot[1], true);
                         sleep(sleepTime);
                     });
-                    this.emit('moveCurveTo', false, ...arguments);
+                    this.emit('afterMoveCurveTo', ...arguments);
                 },
                 async moveCurveToAsync(x, y, speed = 5, deviation = 30) {
-                    this.emit('moveCurveTo', true, ...arguments);
+                    this.emit('beforeMoveCurveTo', ...arguments);
                     const sleepTime = speed >= 1 ? 1 : speed !== "max" ? Math.round(1 / speed) : 0;
                     for (const dot of humanCurv(x, y, ...self._lastCoords, speed, deviation)) {
                         self._move(dot[0], dot[1], true);
                         await sleepAsync(sleepTime);
                     }
-                    this.emit('moveCurveTo', false, ...arguments);
+                    this.emit('afterMoveCurveTo', ...arguments);
                 },
                 move(x, y, delay = 0) {
-                    this.emit('move', true, ...arguments);
+                    this.emit('beforeMove', ...arguments);
                     self._move(x, y, false);
                     sleep(delay);
-                    this.emit('move', false, ...arguments);
+                    this.emit('afterMove', ...arguments);
                 },
                 async moveAsync(x, y, delay = 0) {
-                    this.emit('move', true, ...arguments);
+                    this.emit('beforeMove', ...arguments);
                     self._move(x, y, false);
                     await sleepAsync(delay);
-                    this.emit('move', false, ...arguments);
+                    this.emit('afterMove', ...arguments);
                 },
                 scrollWheel(count, wheelTogglerDelay = 0) {
-                    this.emit('scrollWheel', true, ...arguments);
+                    this.emit('beforeScrollWheel', ...arguments);
                     self._scrollWheel(count);
                     sleep(wheelTogglerDelay);
-                    this.emit('scrollWheel', false, ...arguments);
+                    this.emit('afterScrollWheel', ...arguments);
                 },
                 async scrollWheelAsync(count, wheelTogglerDelay = 0) {
-                    this.emit('scrollWheel', true, ...arguments);
+                    this.emit('beforeScrollWheel', ...arguments);
                     self._scrollWheel(count);
                     await sleepAsync(wheelTogglerDelay);
-                    this.emit('scrollWheel', false, ...arguments);
+                    this.emit('afterScrollWheel', ...arguments);
                 }
             })
         });
@@ -331,10 +311,10 @@ const Workwindow = ClassName => class extends ClassName {
                     if (workwindow.title !== '') workwindow.title = workwindow.title.toString('ucs2');
                     return workwindow;
                 },
-                set info(info) {
+                setInfo(info) {
                     self._windowInfo = info;
                 },
-                get info() {
+                getInfo() {
                     return self._windowInfo;
                 },
                 setForeground() {
