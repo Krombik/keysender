@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <iostream>
+#include <sstream>
 #include "workwindow.hpp"
 
 BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
@@ -188,6 +189,31 @@ Napi::Value Workwindow::capture(const Napi::CallbackInfo &info)
     returnValue["height"] = height;
     DeleteObject(section);
     return returnValue;
+}
+
+Napi::Value Workwindow::getColor(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+    if (info.Length() != 2 || !info[0].IsNumber() || !info[1].IsNumber())
+    {
+        Napi::Error::New(env, "Expected 2 arguments: Number, Number")
+            .ThrowAsJavaScriptException();
+        return env.Undefined();
+    }
+    int x, y;
+    if ((x = info[0].As<Napi::Number>().Int32Value()) <= 0)
+    {
+        Napi::Error::New(info.Env(), "x should be > 0")
+            .ThrowAsJavaScriptException();
+        return env.Undefined();
+    }
+    if ((y = info[1].As<Napi::Number>().Int32Value()) <= 0)
+    {
+        Napi::Error::New(info.Env(), "y should be > 0")
+            .ThrowAsJavaScriptException();
+        return env.Undefined();
+    }
+    return Napi::Number::New(env, GetPixel(GetDC(hWnd), x, y));
 }
 
 void Workwindow::kill(const Napi::CallbackInfo &info)

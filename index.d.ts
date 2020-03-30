@@ -17,6 +17,7 @@ declare interface img {
     data: Buffer;
     height: number;
     width: number;
+    /** @returns pixel color in [x, y] from captured image. */
     colorAt(x: number, y: number): hex;
 }
 declare interface windowData {
@@ -237,10 +238,12 @@ declare interface workwindow extends EventEmitter<"capture"> {
     setForeground(): void;
     isForeground(): boolean;
     isOpen(): boolean;
-    /** capture part of current workwindow from [x, y] to [x+width,y+height]. */
+    /** capture part of current workwindow (or screen if {handle} is 0) from [x, y] to [x+width,y+height]. */
     capture(x: number, y: number, width: number, height: number): img;
-    /** capture current workwindow. */
+    /** capture current workwindow (or screen if {handle} is 0). */
     capture(): img;
+    /** @returns pixel color in [x, y] from current workwindow (or screen if {handle} is 0). */
+    colorAt(x: number, y: number): hex;
     /** Terminate current workwindow by killing it's thread.*/
     kill(): void;
     /** Close current workwindow by sending close message. */

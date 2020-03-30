@@ -82,7 +82,7 @@ someName.keyboard.keySenderDelay=[25, 50]; //sets random value in range [25, 50]
 
 ### toggleKey
 ```ts
-toggleKey(key: keyboardButton| keyboardButton[], state?: boolean, delay?: number | randomFromRange): void;
+toggleKey(key: keyboardButton | keyboardButton[], state?: boolean, delay?: number | randomFromRange): void;
 toggleKeyAsync(key: keyboardButton | keyboardButton[], state?: boolean, delay?: number | randomFromRange): Promise<void>;
 ```
 Toggles key or combination of keys to provided state.

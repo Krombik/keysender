@@ -14,6 +14,7 @@ class Workwindow
 {
 public:
     Napi::Value capture(const Napi::CallbackInfo &info);
+    Napi::Value getColor(const Napi::CallbackInfo &info);
     Napi::Value isForeground(const Napi::CallbackInfo &info);
     Napi::Value isOpen(const Napi::CallbackInfo &info);
     void setForeground(const Napi::CallbackInfo &info);

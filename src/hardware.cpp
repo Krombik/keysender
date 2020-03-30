@@ -188,6 +188,7 @@ Napi::Object Hardware::Init(Napi::Env env, Napi::Object exports)
                              InstanceMethod("_isForeground", &Hardware::isForeground),
                              InstanceMethod("_setForeground", &Hardware::setForeground),
                              InstanceMethod("_capture", &Hardware::capture),
+                             InstanceMethod("_getColor", &Hardware::getColor),
                              InstanceMethod("_kill", &Hardware::kill),
                              InstanceMethod("_close", &Hardware::close),
                              InstanceAccessor("_workwindow", &Hardware::getWorkwindow, &Hardware::setWorkwindow),

@@ -325,6 +325,8 @@ const Workwindow = ClassName => class extends ClassName {
     }
     get workwindow() {
         const self = this;
+        const add0 = item => item.length > 1 ? item : '0' + item;
+        const hex = (...rgb) => rgb.reduce((hex, color) => hex + add0(color.toString(16)), '');
         Object.defineProperty(this, "workwindow", {
             value: Object.assign(new EventEmitter, {
                 set(workwindow) {
@@ -358,9 +360,13 @@ const Workwindow = ClassName => class extends ClassName {
                         ...img,
                         colorAt(x, y) {
                             const i = this.width * y + x << 2;
-                            return ((this.data[i] << 16) | (this.data[i + 1] << 8) | this.data[i + 2]).toString(16);
+                            return hex(this.data[i], this.data[i + 1], this.data[i + 2]);
                         }
                     });
+                },
+                colorAt(x, y) {
+                    const bgr = self._getColor(x, y);
+                    return hex(bgr & 0xff, (bgr >> 8) & 0xff, (bgr >> 16) & 0xff);
                 },
                 kill() {
                     self._kill();
