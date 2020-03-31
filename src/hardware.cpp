@@ -4,8 +4,6 @@
 #include <algorithm>
 #include <iterator>
 
-using namespace std;
-
 const UINT Hardware::extendKeys[] = {VK_RCONTROL,
                                      VK_SNAPSHOT,
                                      VK_RMENU,
@@ -71,7 +69,7 @@ const UINT Hardware::extendKeys[] = {VK_RCONTROL,
                                      VK_BROWSER_HOME,
                                      VK_LAUNCH_MAIL};
 
-const map<int8_t, array<UINT, 2>> Hardware::buttonsDef = {
+const std::map<uint8_t, std::array<UINT, 2>> Hardware::buttonsDef = {
     {0, {MOUSEEVENTF_LEFTUP, MOUSEEVENTF_LEFTDOWN}},
     {1, {MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_RIGHTDOWN}},
     {2, {MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_MIDDLEDOWN}}};
@@ -81,7 +79,25 @@ void Hardware::mousePosGetter(POINT *coords)
     GetCursorPos(coords);
 }
 
-void Hardware::mbToggler(int8_t button, bool isButtonDown)
+Napi::Value Hardware::getLastCoords(const Napi::CallbackInfo &info)
+{
+    Napi::Object coords = Napi::Object::New(info.Env());
+    if (saveMod)
+    {
+        coords["x"] = lastCoords.x;
+        coords["y"] = lastCoords.y;
+    }
+    else
+    {
+        POINT curr;
+        GetCursorPos(&curr);
+        coords["x"] = curr.x;
+        coords["y"] = curr.y;
+    }
+    return coords;
+};
+
+void Hardware::mbToggler(uint8_t button, bool isButtonDown)
 {
     INPUT ip;
     ip.type = INPUT_MOUSE;
@@ -102,7 +118,7 @@ void Hardware::mover(int x, int y, bool isAbsolute)
     ip.mi.dwExtraInfo = 0;
     ip.mi.time = 0;
     ip.mi.dwFlags = MOUSEEVENTF_MOVE;
-    if (saveMod && lastCoords.x != -1 && lastCoords.y != -1)
+    if (saveMod)
     {
         POINT currCoords;
         GetCursorPos(&currCoords);
@@ -112,11 +128,21 @@ void Hardware::mover(int x, int y, bool isAbsolute)
             ip.mi.dy = lastCoords.y - currCoords.y;
             SendInput(1, &ip, sizeof(INPUT));
         }
+        if (isAbsolute)
+        {
+            lastCoords.x = x;
+            lastCoords.y = y;
+        }
+        else
+        {
+            lastCoords.x = ip.mi.dx + x;
+            lastCoords.y = ip.mi.dy + y;
+        }
     }
     if (isAbsolute)
     {
-        ip.mi.dx = (x + 1) * 65536 / GetSystemMetrics(SM_CXSCREEN);
-        ip.mi.dy = (y + 1) * 65536 / GetSystemMetrics(SM_CYSCREEN);
+        ip.mi.dx = ((x + 1) << 16) / GetSystemMetrics(SM_CXSCREEN);
+        ip.mi.dy = ((y + 1) << 16) / GetSystemMetrics(SM_CYSCREEN);
         ip.mi.dwFlags |= MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESK;
     }
     else
@@ -146,7 +172,7 @@ void Hardware::keyToggler(UINT key, bool isKeyDown)
     DWORD dwFlags = KEYEVENTF_SCANCODE;
     if (!isKeyDown)
         dwFlags |= KEYEVENTF_KEYUP;
-    if (find(begin(extendKeys), end(extendKeys), key) != end(extendKeys))
+    if (std::find(std::begin(extendKeys), std::end(extendKeys), key) != std::end(extendKeys))
         dwFlags |= KEYEVENTF_EXTENDEDKEY;
     ip.ki.time = 0;
     ip.ki.wVk = 0;
@@ -192,7 +218,7 @@ Napi::Object Hardware::Init(Napi::Env env, Napi::Object exports)
                              InstanceMethod("_kill", &Hardware::kill),
                              InstanceMethod("_close", &Hardware::close),
                              InstanceAccessor("_workwindow", &Hardware::getWorkwindow, &Hardware::setWorkwindow),
-                             InstanceAccessor("_lastCoords", &Hardware::getLastCoords, &Hardware::setLastCoords),
+                             InstanceAccessor("_lastCoords", &Hardware::getLastCoords, NULL),
                              InstanceAccessor("_saveMod", &Hardware::getSaveMod, &Hardware::setSaveMod),
                              InstanceAccessor("_windowInfo", &Hardware::getWindowInfo, &Hardware::setWindowInfo),
                          });

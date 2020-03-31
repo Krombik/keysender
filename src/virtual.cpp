@@ -4,18 +4,16 @@
 #include <algorithm>
 #include <iterator>
 
-using namespace std;
-
-const map<int8_t, array<UINT, 2>> Virtual::msgs = {
+const std::map<uint8_t, std::array<UINT, 2>> Virtual::msgs = {
     {0, {WM_LBUTTONUP, WM_LBUTTONDOWN}},
     {1, {WM_RBUTTONUP, WM_RBUTTONDOWN}},
     {2, {WM_MBUTTONUP, WM_MBUTTONDOWN}}};
-const map<UINT, UINT> Virtual::wParams = {{WM_LBUTTONDOWN, MK_LBUTTON},
-                                          {WM_RBUTTONDOWN, MK_RBUTTON},
-                                          {WM_MBUTTONDOWN, MK_MBUTTON},
-                                          {WM_LBUTTONUP, 0},
-                                          {WM_RBUTTONUP, 0},
-                                          {WM_MBUTTONUP, 0}};
+const std::map<UINT, UINT> Virtual::wParams = {{WM_LBUTTONDOWN, MK_LBUTTON},
+                                               {WM_RBUTTONDOWN, MK_RBUTTON},
+                                               {WM_MBUTTONDOWN, MK_MBUTTON},
+                                               {WM_LBUTTONUP, 0},
+                                               {WM_RBUTTONUP, 0},
+                                               {WM_MBUTTONUP, 0}};
 
 void Virtual::mousePosGetter(POINT *coords)
 {
@@ -23,7 +21,15 @@ void Virtual::mousePosGetter(POINT *coords)
     ScreenToClient(hWnd, coords);
 }
 
-void Virtual::mbToggler(int8_t button, bool isButtonDown)
+Napi::Value Virtual::getLastCoords(const Napi::CallbackInfo &info)
+{
+    Napi::Object coords = Napi::Object::New(info.Env());
+    coords["x"] = lastCoords.x;
+    coords["y"] = lastCoords.y;
+    return coords;
+};
+
+void Virtual::mbToggler(uint8_t button, bool isButtonDown)
 {
     const UINT action = msgs.at(button)[(int)isButtonDown];
     PostMessageA(hWnd, action, wParams.at(action), MAKELPARAM(lastCoords.x, lastCoords.y));
@@ -34,6 +40,16 @@ void Virtual::mover(int x, int y, bool isAbsolute)
     if (saveMod)
         PostMessageA(hWnd, WM_MOUSEMOVE, 1, MAKELPARAM(lastCoords.x, lastCoords.y));
     PostMessageA(hWnd, WM_MOUSEMOVE, 1, isAbsolute ? MAKELPARAM(x, y) : MAKELPARAM(lastCoords.x + x, lastCoords.y + y));
+    if (isAbsolute)
+    {
+        lastCoords.x = x;
+        lastCoords.y = y;
+    }
+    else
+    {
+        lastCoords.x += x;
+        lastCoords.y += y;
+    }
 }
 
 void Virtual::wheelScroller(int x)
@@ -72,7 +88,7 @@ Napi::Object Virtual::Init(Napi::Env env, Napi::Object exports)
                             InstanceMethod("_kill", &Virtual::kill),
                             InstanceMethod("_close", &Virtual::close),
                             InstanceAccessor("_workwindow", &Virtual::getWorkwindow, &Virtual::setWorkwindow),
-                            InstanceAccessor("_lastCoords", &Virtual::getLastCoords, &Virtual::setLastCoords),
+                            InstanceAccessor("_lastCoords", &Virtual::getLastCoords, NULL),
                             InstanceAccessor("_saveMod", &Virtual::getSaveMod, &Virtual::setSaveMod),
                             InstanceAccessor("_windowInfo", &Virtual::getWindowInfo, &Virtual::setWindowInfo),
                         });

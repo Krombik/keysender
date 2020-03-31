@@ -19,8 +19,8 @@ void Mouse::toggleMb(const Napi::CallbackInfo &info)
             .ThrowAsJavaScriptException();
         return;
     }
-    const int button = std::distance(buttonsName.begin(), std::find(buttonsName.begin(), buttonsName.end(), std::string(info[0].As<Napi::String>())));
-    if (button == (int)buttonsName.size())
+    const uint8_t button = std::distance(buttonsName.begin(), std::find(buttonsName.begin(), buttonsName.end(), std::string(info[0].As<Napi::String>())));
+    if (button == buttonsName.size())
     {
         Napi::Error::New(info.Env(), "Wrong button name")
             .ThrowAsJavaScriptException();
@@ -49,65 +49,21 @@ void Mouse::move(const Napi::CallbackInfo &info)
         return;
     }
     int x, y;
-    if ((x = info[0].As<Napi::Number>().Int32Value()) <= 0)
+    if ((x = info[0].As<Napi::Number>().Int32Value()) < 0)
     {
-        Napi::Error::New(info.Env(), "x should be > 0")
+        Napi::Error::New(info.Env(), "x should be >= 0")
             .ThrowAsJavaScriptException();
         return;
     }
-    if ((y = info[1].As<Napi::Number>().Int32Value()) <= 0)
+    if ((y = info[1].As<Napi::Number>().Int32Value()) < 0)
     {
-        Napi::Error::New(info.Env(), "y should be > 0")
+        Napi::Error::New(info.Env(), "y should be >= 0")
             .ThrowAsJavaScriptException();
         return;
     }
     bool isAbsolute = info[2].As<Napi::Boolean>();
     mover(x, y, isAbsolute);
-    if (isAbsolute)
-    {
-        lastCoords.x = x;
-        lastCoords.y = y;
-    }
-    else
-    {
-        lastCoords.x += x;
-        lastCoords.y += y;
-    }
 }
-
-void Mouse::setLastCoords(const Napi::CallbackInfo &info, const Napi::Value &value)
-{
-    if (!info[0].IsArray())
-    {
-        Napi::Error::New(info.Env(), "Expected an Array")
-            .ThrowAsJavaScriptException();
-        return;
-    }
-    Napi::Object coords(info.Env(), info[0]);
-    int x, y;
-    if ((x = coords.Get("x").As<Napi::Number>().Int32Value()) <= 0)
-    {
-        Napi::Error::New(info.Env(), "x should be > 0")
-            .ThrowAsJavaScriptException();
-        return;
-    }
-    if ((y = coords.Get("y").As<Napi::Number>().Int32Value()) <= 0)
-    {
-        Napi::Error::New(info.Env(), "y should be > 0")
-            .ThrowAsJavaScriptException();
-        return;
-    }
-    lastCoords.x = x;
-    lastCoords.y = y;
-};
-
-Napi::Value Mouse::getLastCoords(const Napi::CallbackInfo &info)
-{
-    Napi::Object coords = Napi::Object::New(info.Env());
-    coords["x"] = lastCoords.x;
-    coords["y"] = lastCoords.y;
-    return coords;
-};
 
 void Mouse::setSaveMod(const Napi::CallbackInfo &info, const Napi::Value &value)
 {

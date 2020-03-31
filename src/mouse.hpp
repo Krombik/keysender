@@ -21,12 +21,10 @@ private:
 protected:
     POINT lastCoords = {0, 0};
     bool saveMod = false;
-    void setLastCoords(const Napi::CallbackInfo &info, const Napi::Value &value);
-    Napi::Value getLastCoords(const Napi::CallbackInfo &info);
     void setSaveMod(const Napi::CallbackInfo &info, const Napi::Value &value);
     Napi::Value getSaveMod(const Napi::CallbackInfo &info);
     virtual void mousePosGetter(POINT *coords) = 0;
-    virtual void mbToggler(int8_t button, bool isButtonDown) = 0;
+    virtual void mbToggler(uint8_t button, bool isButtonDown) = 0;
     virtual void mover(int x, int y, bool isAbsolute) = 0;
     virtual void wheelScroller(int x) = 0;
 };

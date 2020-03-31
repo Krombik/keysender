@@ -17,9 +17,10 @@ public:
 private:
     static Napi::FunctionReference constructor;
     static const UINT extendKeys[];
-    static const std::map<int8_t, std::array<UINT, 2>> buttonsDef;
+    static const std::map<uint8_t, std::array<UINT, 2>> buttonsDef;
+    Napi::Value getLastCoords(const Napi::CallbackInfo &info);
     void mousePosGetter(POINT *coords);
-    void mbToggler(int8_t button, bool isButtonDown);
+    void mbToggler(uint8_t button, bool isButtonDown);
     void mover(int x, int y, bool isAbsolute);
     void wheelScroller(int x);
     void keyToggler(UINT key, bool isKeyDown);

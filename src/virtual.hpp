@@ -16,10 +16,11 @@ public:
 
 private:
     static Napi::FunctionReference constructor;
-    static const std::map<int8_t, std::array<UINT, 2>> msgs;
+    static const std::map<uint8_t, std::array<UINT, 2>> msgs;
     static const std::map<UINT, UINT> wParams;
+    Napi::Value Virtual::getLastCoords(const Napi::CallbackInfo &info);
     void mousePosGetter(POINT *coords);
-    void mbToggler(int8_t button, bool isButtonDown);
+    void mbToggler(uint8_t button, bool isButtonDown);
     void mover(int x, int y, bool isAbsolute);
     void wheelScroller(int x);
     void keyToggler(UINT key, bool isKeyDown);
