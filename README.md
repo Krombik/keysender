@@ -134,7 +134,8 @@ Toggles key or combination of keys to provided state.
 | --- | --- | --- |
 | key | key or array with keys |  |
 | state | key state selection: **true** for press, **false** for release | true |
-| delay | milliseconds to sleep/await after key toggled | [keyTogglerDelay](#keyTogglerDelay) |
+| delay | milliseconds to sleep/await after key toggled | [keyTogglerDelay](#keytogglerdelay) |
+
 ```js
 const { Virtual, Hardware } = require("keysender");
 const obj = new Hardware(handle); // or Virtual
@@ -161,8 +162,9 @@ Press and release key or combination of keys.
 | Argument | Description | Default Value |
 | --- | --- | --- |
 | key | key or array with keys |  |
-| afterPressDelay | milliseconds to sleep/await after key pressed | [keyTogglerDelay](#keyTogglerDelay) |
+| afterPressDelay | milliseconds to sleep/await after key pressed | [keyTogglerDelay](#keytogglerdelay) |
 | afterReleaseDelay | milliseconds to sleep/await after key released | 0 |
+
 ```js
 const { Virtual, Hardware } = require("keysender");
 const obj = new Hardware(handle); // or Virtual
@@ -190,8 +192,9 @@ Press and release array of keys.
 | Argument | Description | Default Value |
 | --- | --- | --- |
 | keys | array with keys |  |
-| afterPressDelay | milliseconds to sleep/await after key pressed | [keyTogglerDelay](#keyTogglerDelay) |
-| afterReleaseDelay | milliseconds to sleep/await after key released excluding last | {afterPressDelay}, or [keySenderDelay](#keySenderDelay) if {afterPressDelay} not provided |
+| afterPressDelay | milliseconds to sleep/await after key pressed | [keyTogglerDelay](#keytogglerdelay) |
+| afterReleaseDelay | milliseconds to sleep/await after key released excluding last | {afterPressDelay}, or [keySenderDelay](#keysenderdelay) if {afterPressDelay} not provided |
+
 ```js
 const { Virtual, Hardware } = require("keysender");
 const obj = new Hardware(handle); // or Virtual
@@ -220,6 +223,7 @@ Prints text.
 | --- | --- | --- |
 | text | string to print |  |
 | afterTypeDelay | milliseconds to sleep/await after each char typed excluding last | 0 |
+
 ```js
 const { Virtual, Hardware } = require("keysender");
 const obj = new Hardware(handle); // or Virtual
@@ -240,7 +244,7 @@ console.log("You will see this message without waiting for all previous actions"
 ## mouse
 Provides methods to synthesize mouse motions, and button clicks.
 
-### keyTogglerDelay
+### buttonTogglerDelay
 ```ts
 buttonTogglerDelay: number | randomFromRange = 35;
 ```
@@ -272,7 +276,8 @@ Switch mouse button state.
 | --- | --- | --- |
 | state | key state selection: **true** for press, **false** for release | true |
 | button | name of mouse button | "left" |
-| delay | milliseconds to sleep/await after switching mouse button state | [buttonTogglerDelay](#buttonTogglerDelay) |
+| delay | milliseconds to sleep/await after switching mouse button state | [buttonTogglerDelay](#buttontogglerdelay) |
+
 ```js
 const { Virtual, Hardware } = require("keysender");
 const obj = new Hardware(handle); // or Virtual
@@ -299,8 +304,9 @@ Click mouse button.
 | Argument | Description | Default Value |
 | --- | --- | --- |
 | button | name of mouse button | "left" |
-| afterPressDelay | milliseconds to sleep/await after mouse button pressed | [buttonTogglerDelay](#buttonTogglerDelay) |
+| afterPressDelay | milliseconds to sleep/await after mouse button pressed | [buttonTogglerDelay](#buttontogglerdelay) |
 | afterReleaseDelay | milliseconds to sleep/await after mouse button released | 0 |
+
 ```js
 const { Virtual, Hardware } = require("keysender");
 const obj = new Hardware(handle); // or Virtual
@@ -327,6 +333,7 @@ Move mouse to [x, y].
 | x |  |  |
 | y |  |  |
 | delay | milliseconds to sleep/await after mouse movement | 0 |
+
 ```js
 const { Virtual, Hardware } = require("keysender");
 const obj = new Hardware(handle); // or Virtual
@@ -353,6 +360,7 @@ Move mouse from current position by [x, y] relatively.
 | x |  |  |
 | y |  |  |
 | delay | milliseconds to sleep/await after mouse movement | 0 |
+
 ```js
 const { Virtual, Hardware } = require("keysender");
 const obj = new Hardware(handle); // or Virtual
@@ -380,6 +388,7 @@ Simulate human similar mouse movement to [x, y].
 | y |  |  |
 | speed | move speed, if speed equals to "max" - immediate movement | 5 |
 | deviation | movement curvature | 30 |
+
 ```js
 const { Virtual, Hardware } = require("keysender");
 const obj = new Hardware(handle); // or Virtual
@@ -404,6 +413,7 @@ Scroll mouse wheel.
 | --- | --- | --- |
 | amount | amount of wheel movement, positive value indicates that the wheel was rotated forward, away from the user, negative value indicates that the wheel was rotated backward, toward the user |  |
 | delay | milliseconds to sleep/await after wheel scroll | 0 |
+
 ```js
 const { Virtual, Hardware } = require("keysender");
 const obj = new Hardware(handle); // or Virtual
@@ -465,6 +475,7 @@ Set workwindow position and(or) size.
 | y | window y position |
 | width | window width |
 | height | window height |
+
 ```js
 const { Virtual, Hardware } = require("keysender");
 const obj = new Hardware(handle); // or Virtual
@@ -553,6 +564,7 @@ Returns object {data, width, height, colorAt}.
 | width | width of captured img |
 | height | height of captured img |
 | [colorAt](#colorAt) | method that returns the color of a specific pixel in hex |
+
 ```js
 const { Virtual, Hardware } = require("keysender");
 const obj = new Hardware(handle); // or Virtual
@@ -591,6 +603,7 @@ Register hotkey.
 | func | function that calls in new thread after hotkey pressed |  |
 | mode | if "once" - {func} will repeat one time for each {hotkey} press, if "hold" - {func} will repeat while {hotkey} is pressed, if "toggle" - {func} start repeat after {hotkey} first time pressing and end repeat after {hotkey} second time pressing | "once" |
 | delay | if {mode} is "hold" or "toggle" - set delay between {func} calls | 1 |
+
 ```js
 const { GlobalHotkey } = require("keysender");
 GlobalHotkey.register(["ctrl", "num+"], "first", () => {
@@ -647,6 +660,7 @@ Returns name of {hotkey} or null if {hotkey} is not registered.
 | Argument | Description | Default Value |
 | --- | --- | --- |
 | hotkey | key or array with keys |  |
+
 ```js
 const { GlobalHotkey } = require("keysender");
 GlobalHotkey.register(["ctrl", "a"], "first", () => {
