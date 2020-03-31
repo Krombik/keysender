@@ -2,6 +2,14 @@
 > Node.js Desktop Automation for Windows. Emulate the mouse and keyboard physical or hardware inputs, capture workwindow, register global hotkeys.
 
 # Installation
+Install Windows Build Tools:
+```
+npm install --global windows-build-tools
+``` 
+Install node-gyp:
+```
+npm install -g node-gyp
+```
 Install keysender using npm:
 ```
 npm install keysender
