@@ -108,8 +108,46 @@ Napi::Value Workwindow::capture(const Napi::CallbackInfo &info)
     Napi::Env env = info.Env();
     RECT rect;
     int16_t width, height;
-    if (info.Length() == 0)
+    std::string format = "rgba";
+    std::string returnType = "object";
+    if (info[0].IsObject())
     {
+        Napi::Object part(env, info[0]);
+        if ((rect.left = part.Get("x").As<Napi::Number>().Int32Value()) < 0)
+        {
+            Napi::Error::New(env, "x should be >= 0")
+                .ThrowAsJavaScriptException();
+            return env.Undefined();
+        }
+        if ((rect.top = part.Get("y").As<Napi::Number>().Int32Value()) < 0)
+        {
+            Napi::Error::New(env, "y should be >= 0")
+                .ThrowAsJavaScriptException();
+            return env.Undefined();
+        }
+        if ((width = part.Get("width").As<Napi::Number>().Int32Value()) <= 0)
+        {
+            Napi::Error::New(env, "width should be > 0")
+                .ThrowAsJavaScriptException();
+            return env.Undefined();
+        }
+        if ((height = part.Get("height").As<Napi::Number>().Int32Value()) <= 0)
+        {
+            Napi::Error::New(env, "height should be > 0")
+                .ThrowAsJavaScriptException();
+            return env.Undefined();
+        }
+        if (info[1].IsString())
+            format = info[1].As<Napi::String>();
+        if (info[2].IsString())
+            returnType = info[2].As<Napi::String>();
+    }
+    else
+    {
+        if (info[0].IsString())
+            format = info[0].As<Napi::String>();
+        if (info[1].IsString())
+            returnType = info[1].As<Napi::String>();
         if (hWnd != NULL)
         {
             GetClientRect(hWnd, &rect);
@@ -122,39 +160,6 @@ Napi::Value Workwindow::capture(const Napi::CallbackInfo &info)
             rect.top = 0;
             width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
             height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-        }
-    }
-    else if (info.Length() != 4 || !info[0].IsNumber() || !info[1].IsNumber() || !info[2].IsNumber() || !info[3].IsNumber())
-    {
-        Napi::Error::New(env, "Expected 4 arguments: Number, Number, Number, Number")
-            .ThrowAsJavaScriptException();
-        return env.Undefined();
-    }
-    else
-    {
-        if ((rect.left = info[0].As<Napi::Number>().Int32Value()) < 0)
-        {
-            Napi::Error::New(env, "x should be >= 0")
-                .ThrowAsJavaScriptException();
-            return env.Undefined();
-        }
-        if ((rect.top = info[1].As<Napi::Number>().Int32Value()) < 0)
-        {
-            Napi::Error::New(env, "y should be >= 0")
-                .ThrowAsJavaScriptException();
-            return env.Undefined();
-        }
-        if ((width = info[2].As<Napi::Number>().Int32Value()) <= 0)
-        {
-            Napi::Error::New(env, "width should be > 0")
-                .ThrowAsJavaScriptException();
-            return env.Undefined();
-        }
-        if ((height = info[3].As<Napi::Number>().Int32Value()) <= 0)
-        {
-            Napi::Error::New(env, "height should be > 0")
-                .ThrowAsJavaScriptException();
-            return env.Undefined();
         }
     }
     const uint32_t size = width * height * 4;
@@ -177,18 +182,59 @@ Napi::Value Workwindow::capture(const Napi::CallbackInfo &info)
     DeleteObject(SelectObject(memDC, section));
     BitBlt(memDC, 0, 0, width, height, context, rect.left, rect.top, SRCCOPY);
     DeleteDC(memDC);
-    for (uint32_t i = 0; i < size; i += 4)
+    Napi::Value data;
+    if (format == "grey")
     {
-        std::swap(pixels[i], pixels[i + 2]);
-        if (pixels[i + 3] != 255)
-            pixels[i + 3] = 255;
+        std::vector<uint8_t> monochrome;
+        for (size_t i = 0; i < size; i += 4)
+            monochrome.push_back(pixels[i] * 0.114 + pixels[i + 1] * 0.587 + pixels[i + 2] * 0.299);
+        data = Napi::Buffer<uint8_t>::Copy(env, monochrome.data(), monochrome.size());
     }
-    Napi::Object returnValue = Napi::Object::New(env);
-    returnValue["data"] = Napi::Buffer<uint8_t>::Copy(env, pixels, size);
-    returnValue["width"] = width;
-    returnValue["height"] = height;
+    else if (format == "rgba")
+    {
+        for (size_t i = 0; i < size; i += 4)
+        {
+            std::swap(pixels[i], pixels[i + 2]);
+            if (pixels[i + 3] != 255)
+                pixels[i + 3] = 255;
+        }
+        data = Napi::Buffer<uint8_t>::Copy(env, pixels, size);
+    }
+    else if (format == "bgra")
+    {
+        for (size_t i = 0; i < size; i += 4)
+            if (pixels[i + 3] != 255)
+                pixels[i + 3] = 255;
+        data = Napi::Buffer<uint8_t>::Copy(env, pixels, size);
+    }
+    else
+    {
+        Napi::Error::New(env, "Wrong color format")
+            .ThrowAsJavaScriptException();
+        return env.Undefined();
+    }
+    if (returnType == "object")
+    {
+        Napi::Object returnValue = Napi::Object::New(env);
+        returnValue["data"] = data;
+        returnValue["width"] = width;
+        returnValue["height"] = height;
+        DeleteObject(section);
+        return returnValue;
+    }
+    else if (returnType == "array")
+    {
+        Napi::Array returnValue = Napi::Array::New(env);
+        returnValue[(uint32_t)0] = data;
+        returnValue[1] = height;
+        returnValue[2] = width;
+        DeleteObject(section);
+        return returnValue;
+    }
+    Napi::Error::New(env, "Wrong return type")
+        .ThrowAsJavaScriptException();
     DeleteObject(section);
-    return returnValue;
+    return env.Undefined();
 }
 
 Napi::Value Workwindow::getColor(const Napi::CallbackInfo &info)

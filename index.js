@@ -353,13 +353,7 @@ const Workwindow = ClassName => class extends ClassName {
                 capture(...args) {
                     const img = self._capture(...args)
                     this.emit('capture', img);
-                    return ({
-                        ...img,
-                        colorAt(x, y) {
-                            const i = this.width * y + x << 2;
-                            return hex(this.data[i], this.data[i + 1], this.data[i + 2]);
-                        }
-                    });
+                    return img;
                 },
                 colorAt(x, y) {
                     const bgr = self._getColor(x, y);

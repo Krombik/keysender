@@ -430,7 +430,7 @@ console.log("You will see this message without waiting for all previous actions"
 
 ### getPos
 ```ts
-getPos(): coords;
+getPos(): pos;
 ```
 Returns current cursor position at screen for Hardware class or position at current workwindow for Virtual class.
 ```js
@@ -466,7 +466,7 @@ console.log(obj.workwindow.set(newHandle)); // object {handle, title, className}
 
 ### setInfo
 ```ts
-setInfo(info: Partial<windowInfo>): void;
+setInfo(info: Partial<posAndSize>): void;
 ```
 Set workwindow position and(or) size.
 | Object field | Description |
@@ -486,7 +486,7 @@ obj.workwindow.setInfo({x: 50, y: 25, width: 1200, height: 800});
 
 ### getInfo
 ```ts
-getInfo(): windowInfo;
+getInfo(): posAndSize;
 ```
 Returns object with workwindow position and size.
 ```js
@@ -552,27 +552,36 @@ obj.workwindow.close();
 
 ### capture
 ```ts
-/** capture part of current workwindow (or screen if {handle} is 0) from [x, y] to [x + width, y + height]. */
-capture(x: number, y: number, width: number, height: number): img;
-/** capture current workwindow (or screen if {handle} is 0). */
-capture(): img;
+/** Capture part of current workwindow (or screen if {handle} is 0). */
+capture(part: posAndSize, format?: format, returnType?: "object"): imgObj;
+capture(part: posAndSize, format: format, returnType: "array"): imgArray;
+/** Capture current workwindow (or screen if {handle} is 0). */
+capture(format?: format, returnType?: "object"): imgObj;
+capture(format: format, returnType: "array"): imgArray;
 ```
-Returns object {data, width, height, colorAt}.
-| Object field | Description |
+Capture screenshot of current workwindow or desktop. 
+| Argument | Description | Default Value |
+| --- | --- | --- |
+| part | object {x, y, height, width} with position and size to be captured |  |
+| format | color format of returned image, could be "rgba", "bgra" and "grey" | "rgba" |
+| returnType | type of returned value, could be "object" and "array" | "object" |
+Returns object {data, width, height} or array [data, height, width].
+| field | Description |
 | --- | --- |
 | data | Buffer with pixels |
 | width | width of captured img |
 | height | height of captured img |
-| [colorAt](#colorAt) | method that returns the color of a specific pixel in hex |
 
 ```js
 const { Virtual, Hardware } = require("keysender");
 const obj = new Hardware(handle); // or Virtual
 const desktop = new Hardware(0);
-obj.workwindow.capture(); // capture whole workwindow
-desktop.workwindow.capture(); // capture whole screen
-obj.workwindow.capture(25, 25, 500, 500); // capture workwindow from [25, 25] to [525, 525] 
-desktop.workwindow.capture(25, 25, 500, 500); // capture screen from [25, 25] to [525, 525]
+obj.workwindow.capture(); // returns {data: Buffer with captured image data in rgba color format, width: width of current workwindow, height: height of current workwindow}
+desktop.workwindow.capture(); // returns {data: Buffer with captured image data in rgba color format, width: width of screen, height: height of screen}
+obj.workwindow.capture({x: 25, y: 25, width: 500, height: 500}); // returns {data: Buffer with captured image data in rgba color format, width: 500, height: 500}
+desktop.workwindow.capture({x: 25, y: 25, width: 500, height: 500}); // returns {data: Buffer with captured image data in rgba color format, width: 500, height: 500}
+obj.workwindow.capture("grey","array"); // returns [Buffer with captured image data in grayscale color format, width of current workwindow, height of current workwindow]
+obj.workwindow.capture({x: 25, y: 25, width: 500, height: 500}, "bgra"); // returns {data: Buffer with captured image data in bgra color format, width: 500, height: 500}
 ```
 
 ### colorAt
@@ -676,7 +685,7 @@ console.log(GlobalHotkey.findHotkeyName("a")); // null
 
 ## getScreenSize
 ```ts
-getScreenSize(): screenSize;
+getScreenSize(): size;
 ```
 Returns object with screen size
 ```js

@@ -6,20 +6,13 @@ declare type keyboardButton = keyboardRegularButton | keyboardSpecButton | keybo
 declare type mouseButton = "left" | "right" | "middle";
 declare type keyboardEvent = "beforePrintText" | "beforeToggleKey" | "beforeSendKey" | "beforeSendKeys" | "afterPrintText" | "afterToggleKey" | "afterSendKey" | "afterSendKeys";
 declare type mouseEvent = "beforeToggle" | "beforeClick" | "beforeMoveTo" | "beforeMoveCurveTo" | "beforeMove" | "beforeScrollWheel" | "afterToggle" | "afterClick" | "afterMoveTo" | "afterMoveCurveTo" | "afterMove" | "afterScrollWheel";
-declare interface windowInfo {
-    x: number;
-    y: number;
-    width: number;
-    eight: number;
-}
 declare type hex = string;
-declare interface img {
+declare interface imgObj {
     data: Buffer;
     height: number;
     width: number;
-    /** @returns pixel color in [x, y] from captured image. */
-    colorAt(x: number, y: number): hex;
 }
+declare type imgArray = [Buffer, number, number]
 declare interface windowData {
     handle: number;
     className: string;
@@ -29,14 +22,15 @@ declare type hotkeyMode = "once" | "hold" | "toggle";
 declare type from = number;
 declare type to = number;
 declare type randomFromRange = [from, to];
-declare type screenSize = {
+declare interface size {
     width: number;
     height: number;
 }
-declare type coords = {
+declare interface pos {
     x: number;
     y: number;
 }
+declare interface posAndSize extends pos, size { }
 declare interface EventEmitter<event> {
     addListener(event: event | string, listener: (...args: any[]) => void): this;
     on(event: event | string, listener: (...args: any[]) => void): this;
@@ -54,6 +48,8 @@ declare interface EventEmitter<event> {
     prependOnceListener(event: event | string, listener: (...args: any[]) => void): this;
     eventNames(): Array<event | string>;
 }
+declare type format = "rgba" | "bgra" | "grey";
+declare type returnType = "array" | "object";
 declare interface keyboard extends EventEmitter<keyboardEvent> {
     keyTogglerDelay: number | randomFromRange;
     keySenderDelay: number | randomFromRange;
@@ -129,7 +125,7 @@ declare interface mouse extends EventEmitter<mouseEvent> {
     /** If saveMod is enable every mouse move method first back to last known coordinates ([0, 0] on first move), by default - disable. */
     enableSaveMod(bool: boolean): void;
     /** @returns current cursor position at screen for Hardware class or position at current workwindow for Virtual class. */
-    getPos(): coords;
+    getPos(): pos;
     /**
      * Switch mouse button state.
      * @param state - key state selection: true for press, false for release.
@@ -229,17 +225,49 @@ declare interface workwindow extends EventEmitter<"capture"> {
     /** Set workwindow position and(or) size.
      * @param info - object {x, y, width, height}
      */
-    setInfo(info: Partial<windowInfo>): void;
+    setInfo(info: Partial<posAndSize>): void;
     /** @returns object {x, y, width, height} */
-    getInfo(): windowInfo;
+    getInfo(): posAndSize;
     /** Set current workwindow foreground. */
     setForeground(): void;
     isForeground(): boolean;
     isOpen(): boolean;
-    /** capture part of current workwindow (or screen if {handle} is 0) from [x, y] to [x + width, y + height]. */
-    capture(x: number, y: number, width: number, height: number): img;
-    /** capture current workwindow (or screen if {handle} is 0). */
-    capture(): img;
+    /**
+     * Capture part of current workwindow (or screen if {handle} is 0).
+     * @param part - position of top left corner and size to be capture
+     * @param format - color format of return value, could be "rgba", "bgra" and "grey", 
+     * if not provided defaults to "rgba".
+     * @param returnType - type of return value, could be "object" or "array"
+     * if not provided defaults to "object".
+     * @returns object {data, width, height} or array [data, height, width].
+     */
+    capture(part: posAndSize, format?: format, returnType?: "object"): imgObj;
+    /**
+     * Capture part of current workwindow (or screen if {handle} is 0).
+     * @param part - position of top left corner and size to be capture
+     * @param format - color format of return value, could be "rgba", "bgra" and "grey",
+     * if not provided defaults to "rgba".
+     * @param returnType - type of return value, could be "object" or "array"
+     * if not provided defaults to "object".
+     * @returns object {data, width, height} or array [data, height, width].
+     */
+    capture(part: posAndSize, format: format, returnType: "array"): imgArray;
+    /** Capture current workwindow (or screen if {handle} is 0). 
+     * @param format - color format of return value, could be "rgba", "bgra" and "grey",
+     * if not provided defaults to "rgba".
+     * @param returnType - type of return value, could be "object" or "array"
+     * if not provided defaults to "object".
+     * @returns object {data, width, height} or array [data, height, width].
+    */
+    capture(format?: format, returnType?: "object"): imgObj;
+    /** Capture current workwindow (or screen if {handle} is 0).
+     * @param format - color format of return value, could be "rgba", "bgra" and "grey",
+     * if not provided defaults to "rgba".
+     * @param returnType - type of return value, could be "object" or "array"
+     * if not provided defaults to "object".
+     * @returns object {data, width, height} or array [data, height, width].
+    */
+    capture(format: format, returnType: "array"): imgArray;
     /** @returns pixel color in [x, y] from current workwindow (or screen if {handle} is 0). */
     colorAt(x: number, y: number): hex;
     /** Terminate current workwindow by killing it's thread.*/
@@ -282,7 +310,7 @@ export declare class GlobalHotkey {
 }
 
 /** @returns object {width, height} with screen size. */
-export declare function getScreenSize(): screenSize;
+export declare function getScreenSize(): size;
 
 /** Get array with objects {handle, title, className} of all open windows. */
 export declare function getWindow(): windowData[];
