@@ -297,7 +297,7 @@ void Workwindow::setWindowInfo(const Napi::CallbackInfo &info, const Napi::Value
     {
         uint16_t x, y, width, height;
         RECT rect;
-        GetWindowRect(hWnd, &rect);
+        GetClientRect(hWnd, &rect);
         Napi::Object windowInfo(env, info[0]);
         if (!windowInfo.Get("width").IsNumber())
             width = rect.right - rect.left;
@@ -346,7 +346,7 @@ Napi::Value Workwindow::getWindowInfo(const Napi::CallbackInfo &info)
     if (hWnd != NULL)
     {
         RECT rect;
-        GetWindowRect(hWnd, &rect);
+        GetClientRect(hWnd, &rect);
         windowInfo["x"] = rect.left;
         windowInfo["y"] = rect.top;
         windowInfo["width"] = rect.right - rect.left;
