@@ -5,147 +5,50 @@
 #include <chrono>
 #include <cmath>
 
+Napi::Value Hotkey::buttonIsPressed(const Napi::CallbackInfo &info)
+{
+    return Napi::Boolean::New(info.Env(), GetKeyState(Keyboard::keysDef.at(std::string(info[0].As<Napi::String>()))) < 0);
+}
+
 void Hotkey::messagesGetter(TsfnContext *context)
 {
     MSG msg = {0};
-    const UINT keyCode = context->keyCode;
-    RegisterHotKey(NULL, 0, context->keyFlags, keyCode);
-    bool *timeToStop = new bool(false);
-    auto callback = [](Napi::Env env, Napi::Function jsCallback, bool *timeToStop) {
-        if (jsCallback.Call({}).IsNull())
-        {
-            *timeToStop = true;
-            return;
-        }
+    const UINT keyCode = Keyboard::keysDef.at(context->key);
+    RegisterHotKey(NULL, 0, NULL, keyCode);
+    auto callback = [](Napi::Env env, Napi::Function jsCallback) {
+        jsCallback.Call({});
     };
-    const uint8_t mode = context->mode;
-    const uint32_t delay = context->delay;
-    if (mode == 0)
+    int8_t prevState = 5;
+    int8_t currState;
+    while (context->exist)
     {
-        int8_t prevKeyStatus = 0;
-        int8_t currKeyStatus;
-        while (context->exist)
+        if (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE) && msg.message == WM_HOTKEY && (currState = GetKeyState(keyCode)) != prevState)
         {
-            PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE);
-            if (msg.message == WM_HOTKEY && (currKeyStatus = GetKeyState(keyCode)) < 0 && currKeyStatus != prevKeyStatus)
-            {
-                prevKeyStatus = currKeyStatus;
-                context->tsfn.BlockingCall(timeToStop, callback);
-                if (*timeToStop)
-                    *timeToStop = false;
-            }
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            prevState = currState;
+            context->tsfn.BlockingCall(callback);
         }
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
-    else if (mode == 2)
-    {
-        bool isOn = false;
-        int8_t prevKeyStatus = 2;
-        while (context->exist)
-        {
-            PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE);
-            if (msg.message == WM_HOTKEY && std::abs(GetKeyState(keyCode) % 2) != prevKeyStatus)
-            {
-                prevKeyStatus = std::abs(GetKeyState(keyCode) % 2);
-                if (!isOn)
-                {
-                    isOn = true;
-                    while (std::abs(GetKeyState(keyCode) % 2) == prevKeyStatus)
-                    {
-                        context->tsfn.BlockingCall(timeToStop, callback);
-                        if (*timeToStop)
-                        {
-                            *timeToStop = false;
-                            isOn = false;
-                            break;
-                        }
-                        std::this_thread::sleep_for(std::chrono::milliseconds(delay));
-                    }
-                }
-                else
-                    isOn = false;
-            }
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        }
-    }
-    else
-        while (context->exist)
-        {
-            PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE);
-            if (msg.message == WM_HOTKEY)
-                if (GetAsyncKeyState(keyCode) < 0 && !(*timeToStop))
-                    while (GetAsyncKeyState(keyCode) < 0)
-                    {
-                        context->tsfn.BlockingCall(timeToStop, callback);
-                        if (*timeToStop)
-                            break;
-                        std::this_thread::sleep_for(std::chrono::milliseconds(delay));
-                    }
-                else if (GetAsyncKeyState(keyCode) >= 0)
-                    *timeToStop = false;
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        }
     UnregisterHotKey(NULL, 0);
     context->tsfn.Release();
-    delete timeToStop;
     delete context;
 }
 
 void Hotkey::registerHotkey(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
-    uint8_t mode;
-    if (info.Length() < 3 || info.Length() > 5 || (!info[0].IsString() && !info[0].IsArray()) || !info[1].IsString() || !info[2].IsFunction() || (info.Length() > 3 && (!info[3].IsString() || (mode = std::distance(modes.begin(), std::find(modes.begin(), modes.end(), std::string(info[3].As<Napi::String>())))) == modes.size())) || (info.Length() > 4 && !info[4].IsNumber()))
+    if (info.Length() != 3 || !info[0].IsString() || !info[1].IsString() || !info[2].IsFunction())
     {
-        Napi::Error::New(env, "Expected 3-5 arguments: String || Array, String, Function, 'once' || 'hold' || 'toggle', Number")
+        Napi::Error::New(env, "Expected 3 arguments: String || Array, String, Function")
             .ThrowAsJavaScriptException();
         return;
     }
-    hotkeysRef.push_back(new TsfnContext);
-    if (info[0].IsString())
-        hotkeysRef.back()->keyCode = Keyboard::keysDef.at(info[0].As<Napi::String>());
-    else
-    {
-        Napi::Array keys(env, info[0]);
-        std::string lastKey(keys.Get(keys.Length() - 1).As<Napi::String>());
-        if (keys.Length() > 1)
-            for (uint8_t i = 0; i < keys.Length() - 1; i++)
-            {
-                std::string keyName(keys.Get(i).As<Napi::String>());
-                if (flags.count(keyName) == 0)
-                {
-                    Napi::Error::New(env, "Wrong key modeificators")
-                        .ThrowAsJavaScriptException();
-                    return;
-                }
-                hotkeysRef.back()->keyFlags |= flags.at(keyName);
-            }
-        if (flags.count(lastKey) != 0 || Keyboard::keysDef.count(lastKey) == 0)
-        {
-            Napi::Error::New(env, "Wrong key")
-                .ThrowAsJavaScriptException();
-            return;
-        }
-        hotkeysRef.back()->keyCode = Keyboard::keysDef.at(lastKey);
-    }
-    hotkeysRef.back()->name = info[1].As<Napi::String>();
-    hotkeysRef.back()->tsfn = Napi::ThreadSafeFunction::New(env, info[2].As<Napi::Function>(), "F", 0, 1);
-    if (info.Length() > 3)
-    {
-        hotkeysRef.back()->mode = mode;
-        if (info.Length() > 4)
-        {
-            uint32_t delay;
-            if ((delay = info[4].As<Napi::Number>().Int32Value()) <= 0)
-            {
-                Napi::Error::New(env, "Delay should be > 0")
-                    .ThrowAsJavaScriptException();
-                return;
-            }
-            hotkeysRef.back()->delay = delay;
-        }
-    }
-    CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)messagesGetter, hotkeysRef.back(), NULL, NULL);
+    auto curr = new TsfnContext;
+    hotkeysRef.push_back(curr);
+    curr->key = std::string(info[0].As<Napi::String>());
+    curr->name = info[1].As<Napi::String>();
+    curr->tsfn = Napi::ThreadSafeFunction::New(env, info[2].As<Napi::Function>(), "F", 0, 1);
+    CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)messagesGetter, curr, NULL, NULL);
 }
 
 void Hotkey::unregisterHotkey(const Napi::CallbackInfo &info)
@@ -162,7 +65,7 @@ void Hotkey::unregisterHotkey(const Napi::CallbackInfo &info)
         {
             hotkeysRef[i]->exist = false;
             hotkeysRef.erase(hotkeysRef.begin() + i);
-            break;
+            i--;
         }
     hotkeysRef.shrink_to_fit();
 }
@@ -178,44 +81,17 @@ void Hotkey::unregisterAllHotkeys(const Napi::CallbackInfo &info)
 Napi::Value Hotkey::findHotkeyName(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
-    if (info.Length() != 1 || (!info[0].IsString() && !info[0].IsArray()))
+    if (info.Length() != 1 || !info[0].IsString())
     {
-        Napi::Error::New(env, "Expected 1 argument: String || Array")
+        Napi::Error::New(env, "Expected 1 argument: String")
             .ThrowAsJavaScriptException();
         return env.Undefined();
     }
-    UINT keyCode;
-    UINT keyFlags = NULL;
-    if (info[0].IsString())
-        keyCode = Keyboard::keysDef.at(info[0].As<Napi::String>());
-    else
-    {
-        Napi::Array keys(env, info[0]);
-        std::string lastKey(keys.Get(keys.Length() - 1).As<Napi::String>());
-        if (keys.Length() > 1)
-            for (uint8_t i = 0; i < keys.Length() - 1; i++)
-            {
-                std::string keyName(keys.Get(i).As<Napi::String>());
-                if (flags.count(keyName) == 0)
-                {
-                    Napi::Error::New(env, "Wrong key modeficators")
-                        .ThrowAsJavaScriptException();
-                    return env.Undefined();
-                }
-                keyFlags |= flags.at(keyName);
-            }
-        if (flags.count(lastKey) != 0 || Keyboard::keysDef.count(lastKey) == 0)
-        {
-            Napi::Error::New(env, "Wrong key")
-                .ThrowAsJavaScriptException();
-            return env.Undefined();
-        }
-        keyCode = Keyboard::keysDef.at(lastKey);
-    }
+    const std::string key(info[0].As<Napi::String>());
     for (uint8_t i = 0; i < hotkeysRef.size(); i++)
-        if (hotkeysRef[i]->keyCode == keyCode && hotkeysRef[i]->keyFlags == keyFlags)
+        if (hotkeysRef[i]->key == key)
             return Napi::String::New(env, hotkeysRef[i]->name);
-    return env.Null();
+    return env.Undefined();
 }
 
 Napi::FunctionReference Hotkey::constructor;
@@ -223,14 +99,15 @@ Napi::FunctionReference Hotkey::constructor;
 Napi::Object Hotkey::Init(Napi::Env env, Napi::Object exports)
 {
     Napi::HandleScope scope(env);
-    Napi::Function func = DefineClass(env, "GlobalHotkey", {
-                                                               StaticMethod("register", &Hotkey::registerHotkey),
-                                                               StaticMethod("unregister", &Hotkey::unregisterHotkey),
-                                                               StaticMethod("unregisterAll", &Hotkey::unregisterAllHotkeys),
-                                                               StaticMethod("findHotkeyName", &Hotkey::findHotkeyName),
-                                                           });
+    Napi::Function func = DefineClass(env, "_GlobalHotkey", {
+                                                                StaticMethod("_register", &Hotkey::registerHotkey),
+                                                                StaticMethod("unregister", &Hotkey::unregisterHotkey),
+                                                                StaticMethod("unregisterAll", &Hotkey::unregisterAllHotkeys),
+                                                                StaticMethod("findHotkeyName", &Hotkey::findHotkeyName),
+                                                                StaticMethod("_buttonIsPressed", &Hotkey::buttonIsPressed),
+                                                            });
     constructor = Napi::Persistent(func);
     constructor.SuppressDestruct();
-    exports.Set("GlobalHotkey", func);
+    exports.Set("_GlobalHotkey", func);
     return exports;
 }

@@ -23,7 +23,7 @@ yarn add keysender
 ```js
 const { Hardware, getWindow, GlobalHotkey } = require("keysender");
 const obj = new Hardware(getWindow(null, "Notepad")); // find Notepad handle by className and set it as workwindow
-GlobalHotkey.register("num+", "name", () => { // register hotkey
+GlobalHotkey.register("num+", "sync", () => { // register hotkey
     obj.workwindow.setInfo({ x: 0, y: 0, width: 500 }) // move workwindow to top left corner of the screen and change width to 500px
     obj.keyboard.printText("hello"); // instantly types "hello"
     obj.keyboard.sendKey("space", 50); // press key "space", sleep for 50 milliseconds, release key "space"
@@ -31,6 +31,16 @@ GlobalHotkey.register("num+", "name", () => { // register hotkey
     obj.keyboard.sendKey(["ctrl", "s"], 50); // press key combination "ctrl+s", sleep for 50 milliseconds, release key combination
     obj.mouse.moveCurveTo(480, 10); // makes human similar mouse movement from current cursor position to [480, 10]
     obj.mouse.click("left", 25); // press left mouse button, sleep for 25 milliseconds, release left mouse button
+});
+// or
+GlobalHotkey.register("num-", "async", async () => { // register hotkey
+    obj.workwindow.setInfo({ x: 0, y: 0, width: 500 }) // move workwindow to top left corner of the screen and change width to 500px
+    obj.keyboard.printTextAsync("hello"); // instantly types "hello"
+    await obj.keyboard.sendKeyAsync("space", 50); // press key "space", await for 50 milliseconds, release key "space"
+    await obj.keyboard.sendKeysAsync("world".split(''),[25, 50], 50); // press key "w", await for random from range [25, 50] milliseconds, release key "w", await for 50 milliseconds, press key "o", await for random from range [25, 50] milliseconds, release key "o", await for 50 milliseconds, ..., release key "d"
+    await obj.keyboard.sendKeyAsync(["ctrl", "s"], 50); // press key combination "ctrl+s", await for 50 milliseconds, release key combination
+    await obj.mouse.moveCurveToAsync(480, 10); // makes human similar mouse movement from current cursor position to [480, 10]
+    await obj.mouse.clickAsync("left", 25); // press left mouse button, await for 25 milliseconds, release left mouse button
 });
 ```
 
@@ -607,36 +617,37 @@ register(hotkey: keyboardRegularButton | (keyboardSpecButton | keyboardRegularBu
 Register hotkey.
 | Argument | Description | Default Value |
 | --- | --- | --- |
-| hotkey | key or array with keys |  |
-| hotkeyName |  |  |
-| func | function that calls in new thread after hotkey pressed |  |
-| mode | if "once" - {func} will repeat one time for each {hotkey} press, if "hold" - {func} will repeat while {hotkey} is pressed, if "toggle" - {func} start repeat after {hotkey} first time pressing and end repeat after {hotkey} second time pressing | "once" |
-| delay | if {mode} is "hold" or "toggle" - set delay between {func} calls | 1 |
+| func | function to be calling in new thread after hotkey was pressed |  |
+| mode | if "once" - {func} will repeat one time for each {hotkey} press, if "hold" - {func} will repeat while {hotkey} is pressed, if "toggle" - {func} starts repeat after {hotkey} first time pressed and end repeat after {hotkey} second time pressed | "once" |
+| delay | if {mode} is "hold" or "toggle" - set delay between {func} calls | 0 |
 
 ```js
 const { GlobalHotkey } = require("keysender");
-GlobalHotkey.register(["ctrl", "num+"], "first", () => {
-    console.log("hi")
-}); // logs "hi" every time "ctrl+num+" is pressed
-GlobalHotkey.register(["num-"], "second", () => {
-    console.log("hi")
-},"hold"); // logs "hi" every 1 millisecond while "num-" is pressed
-GlobalHotkey.register("num*", "third", () => {
-    console.log("hi")
-},"toggle", 50); // logs "hi" every 50 milliseconds after "num*" is pressed until "num*" be pressed again
+GlobalHotkey.register(["ctrl", "num+"], "first", () => { // logs "hi" every time "ctrl+num+" is pressed
+    console.log("hi");
+});
+GlobalHotkey.register(["num-"], "second", async () => { // logs "hi" while "num-" is pressed
+    console.log("hi");
+    return true;
+},"hold");
+GlobalHotkey.register("num*", "third", () => { // logs "hi" every 50 milliseconds after "num*" is pressed until "num*" be pressed again
+    console.log("hi");
+    return true;
+},"toggle", 50);
 let i = 0;
-GlobalHotkey.register("num/", "fourth", () => {
+GlobalHotkey.register("num/", "fourth", () => { // logs "hi" every 50 milliseconds after "num/" is pressed until "num/" be pressed again or i become > 50
     i++;
+    if (i>50) return false;
     console.log("hi")
-    if (i>50) return null;
-},"toggle", 50); // logs "hi" every 50 milliseconds after "num/" is pressed until "num/" be pressed again or i become > 50
+    return true
+},"toggle", 50); 
 ```
 
 ### unregister
 ```ts
 unregister(hotkeyName: string): void;
 ```
-Unregister hotkey by name.
+Unregister hotkeys by name.
 ```js
 const { GlobalHotkey } = require("keysender");
 GlobalHotkey.register("num+", "first", () => {
@@ -661,7 +672,7 @@ GlobalHotkey.register("num-", "second", () => {
 GlobalHotkey.unregisterAll();
 ```
 
-### unregisterAll
+### findHotkeyName
 ```ts
 findHotkeyName(hotkey: keyboardRegularButton | (keyboardSpecButton | keyboardRegularButton)[] | [keyboardRegularButton]): string | null;
 ```

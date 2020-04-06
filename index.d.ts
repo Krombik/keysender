@@ -1,8 +1,6 @@
-// import { EventEmitter } from "events";
-declare type keyboardRegularButton = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" | "+" | "-" | "." | "," | "?" | "~" | "[" | "]" | "|" | "'" | "backspace" | "delete" | "enter" | "tab" | "escape" | "up" | "down" | "right" | "left" | "home" | "end" | "pageup" | "pagedown" | "f1" | "f2" | "f3" | "f4" | "f5" | "f6" | "f7" | "f8" | "f9" | "f10" | "f11" | "f12" | "f13" | "f14" | "f15" | "f16" | "f17" | "f18" | "f19" | "f20" | "f21" | "f22" | "f23" | "f24" | "capslock" | "space" | "prntscrn" | "insert" | "numlock" | "num0" | "num0" | "num1" | "num2" | "num3" | "num4" | "num5" | "num6" | "num7" | "num8" | "num9" | "num+" | "num-" | "num*" | "num/" | "num.";
-declare type keyboardSpecButton = "alt" | "ctrl" | "shift";
-declare type keyboardSpecSideButton = "lshift" | "rshift" | "lctrl" | "rctrl" | "lalt" | "ralt";
-declare type keyboardButton = keyboardRegularButton | keyboardSpecButton | keyboardRegularButton;
+declare type keyboardRegularButton = "backspace" | "tab" | "enter" | "pause" | "capslock" | "escape" | "space" | "pageup" | "pagedown" | "end" | "home" | "left" | "up" | "right" | "down" | "prntscrn" | "insert" | "delete" | "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" | "num0" | "num0" | "num1" | "num2" | "num3" | "num4" | "num5" | "num6" | "num7" | "num8" | "num9" | "num*" | "num+" | "num," | "num-" | "num." | "num/" | "f1" | "f2" | "f3" | "f4" | "f5" | "f6" | "f7" | "f8" | "f9" | "f10" | "f11" | "f12" | "f13" | "f14" | "f15" | "f16" | "f17" | "f18" | "f19" | "f20" | "f21" | "f22" | "f23" | "f24" | "numlock" | "scrolllock" | ";" | "+" | "," | "-" | "." | "?" | "~" | "[" | "|" | "]" | "'";
+declare type keyboardSpecButton = "alt" | "ctrl" | "shift" | "lshift" | "rshift" | "lctrl" | "rctrl" | "lalt" | "ralt" | "lwin" | "rwin";
+declare type keyboardButton = keyboardRegularButton | keyboardSpecButton;
 declare type mouseButton = "left" | "right" | "middle";
 declare type keyboardEvent = "beforePrintText" | "beforeToggleKey" | "beforeSendKey" | "beforeSendKeys" | "afterPrintText" | "afterToggleKey" | "afterSendKey" | "afterSendKeys";
 declare type mouseEvent = "beforeToggle" | "beforeClick" | "beforeMoveTo" | "beforeMoveCurveTo" | "beforeMove" | "beforeScrollWheel" | "afterToggle" | "afterClick" | "afterMoveTo" | "afterMoveCurveTo" | "afterMove" | "afterScrollWheel";
@@ -296,17 +294,28 @@ export declare class Virtual extends Worker { }
 export declare class GlobalHotkey {
     /**
      * Register hotkey.
-     * @param func - function that calls after hotkey pressed.
-     * @param mode - if "once" - {func} will repeat one time for each {hotkey} press, if "hold" - {func} will repeat while {hotkey} is pressed, if "toggle" - {func} start repeat after {hotkey} first time pressing and end repeat after {hotkey} second time pressing, by default = "once".
-     * @param delay - if {mode} is "hold" or "toggle" - set delay between {func} calls, by default = 1.
+     * @param func - function to be calling in new thread after hotkey was pressed.
+     * @param mode - if "once" - {func} will repeat one time for each {hotkey} press, if "hold" - {func} will repeat while {hotkey} is pressed, if "toggle" - {func} starts repeat after {hotkey} first time pressed and end repeat after {hotkey} second time pressed,
+     * if not provided defaults to "once".
+     * @param delay - if {mode} is "hold" or "toggle" - sets delay between {func} calls,
+     * if not provided defaults to 0.
      */
-    static register(hotkey: keyboardRegularButton | (keyboardSpecButton | keyboardRegularButton)[] | [keyboardRegularButton], hotkeyName: string, func: () => void | null, mode?: hotkeyMode, delay?: number): void;
-    /** Unregister hotkey by name. */
+    static register(hotkey: keyboardRegularButton, hotkeyName: string, func: () => boolean | Promise<boolean>, mode: "hold" | "toggle", delay?: number): void;
+    /**
+     * Register hotkey.
+     * @param func - function to be calling in new thread after hotkey was pressed.
+     * @param mode - if "once" - {func} will repeat one time for each {hotkey} press, if "hold" - {func} will repeat while {hotkey} is pressed, if "toggle" - {func} starts repeat after {hotkey} first time pressed and end repeat after {hotkey} second time pressed,
+     * if not provided defaults to "once".
+     * @param delay - if {mode} is "hold" or "toggle" - sets delay between {func} calls,
+     * if not provided defaults to 0.
+     */
+    static register(hotkey: keyboardRegularButton, hotkeyName: string, func: () => void | Promise<void>, mode?: "once", delay?: number): void;
+    /** Unregister hotkeys by name. */
     static unregister(hotkeyName: string): void;
     /** Unregister all hotkeys. */
     static unregisterAll(): void;
-    /** @returns name of {hotkey} or null if {hotkey} is not registered. */
-    static findHotkeyName(hotkey: keyboardRegularButton | (keyboardSpecButton | keyboardRegularButton)[] | [keyboardRegularButton]): string | null;
+    /** @returns name of {hotkey} or undefined if {hotkey} is not registered. */
+    static findHotkeyName(hotkey: keyboardRegularButton): string | undefined;
 }
 
 /** @returns object {width, height} with screen size. */
