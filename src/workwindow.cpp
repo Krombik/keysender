@@ -109,7 +109,7 @@ Napi::Value Workwindow::capture(const Napi::CallbackInfo &info)
     RECT rect;
     int16_t width, height;
     std::string format = "rgba";
-    std::string returnType = "object";
+    uint8_t threshold = 127;
     if (info[0].IsObject())
     {
         Napi::Object part(env, info[0]);
@@ -139,15 +139,15 @@ Napi::Value Workwindow::capture(const Napi::CallbackInfo &info)
         }
         if (info[1].IsString())
             format = info[1].As<Napi::String>();
-        if (info[2].IsString())
-            returnType = info[2].As<Napi::String>();
+        if (info[2].IsNumber())
+            threshold = info[2].As<Napi::Number>().Int32Value();
     }
     else
     {
         if (info[0].IsString())
             format = info[0].As<Napi::String>();
-        if (info[1].IsString())
-            returnType = info[1].As<Napi::String>();
+        if (info[1].IsNumber())
+            threshold = info[1].As<Napi::Number>().Int32Value();
         if (hWnd != NULL)
         {
             GetClientRect(hWnd, &rect);
@@ -185,10 +185,10 @@ Napi::Value Workwindow::capture(const Napi::CallbackInfo &info)
     Napi::Value data;
     if (format == "grey")
     {
-        std::vector<uint8_t> monochrome;
+        std::vector<uint8_t> greyscale;
         for (size_t i = 0; i < size; i += 4)
-            monochrome.push_back(pixels[i] * 0.114 + pixels[i + 1] * 0.587 + pixels[i + 2] * 0.299);
-        data = Napi::Buffer<uint8_t>::Copy(env, monochrome.data(), monochrome.size());
+            greyscale.push_back(pixels[i] * 0.114 + pixels[i + 1] * 0.587 + pixels[i + 2] * 0.299);
+        data = Napi::Buffer<uint8_t>::Copy(env, greyscale.data(), greyscale.size());
     }
     else if (format == "rgba")
     {
@@ -207,34 +207,25 @@ Napi::Value Workwindow::capture(const Napi::CallbackInfo &info)
                 pixels[i + 3] = 255;
         data = Napi::Buffer<uint8_t>::Copy(env, pixels, size);
     }
+    else if (format == "monochrome")
+    {
+        std::vector<uint8_t> monochrome;
+        for (size_t i = 0; i < size; i += 4)
+            monochrome.push_back(pixels[i] * 0.114 + pixels[i + 1] * 0.587 + pixels[i + 2] * 0.299 < threshold ? 0 : 255);
+        data = Napi::Buffer<uint8_t>::Copy(env, monochrome.data(), monochrome.size());
+    }
     else
     {
         Napi::Error::New(env, "Wrong color format")
             .ThrowAsJavaScriptException();
         return env.Undefined();
     }
-    if (returnType == "object")
-    {
-        Napi::Object returnValue = Napi::Object::New(env);
-        returnValue["data"] = data;
-        returnValue["width"] = width;
-        returnValue["height"] = height;
-        DeleteObject(section);
-        return returnValue;
-    }
-    else if (returnType == "array")
-    {
-        Napi::Array returnValue = Napi::Array::New(env);
-        returnValue[(uint32_t)0] = data;
-        returnValue[1] = height;
-        returnValue[2] = width;
-        DeleteObject(section);
-        return returnValue;
-    }
-    Napi::Error::New(env, "Wrong return type")
-        .ThrowAsJavaScriptException();
+    Napi::Object returnValue = Napi::Object::New(env);
+    returnValue["data"] = data;
+    returnValue["width"] = width;
+    returnValue["height"] = height;
     DeleteObject(section);
-    return env.Undefined();
+    return returnValue;
 }
 
 Napi::Value Workwindow::getColor(const Napi::CallbackInfo &info)

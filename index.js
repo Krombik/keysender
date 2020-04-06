@@ -355,9 +355,15 @@ const Workwindow = ClassName => class extends ClassName {
                     this.emit('capture', img);
                     return img;
                 },
-                colorAt(x, y) {
-                    const bgr = self._getColor(x, y);
-                    return hex(bgr & 0xff, (bgr >> 8) & 0xff, (bgr >> 16) & 0xff);
+                colorAt(x, y, returnType = "string") {
+                    let color = self._getColor(x, y);
+                    color = [color & 0xff, (color >> 8) & 0xff, (color >> 16) & 0xff]
+                    if (returnType === "string")
+                        return hex(...color);
+                    if (returnType === "array")
+                        return color;
+                    if (returnType === "number")
+                        return color[0] << 16 | color[1] << 8 | color[2];
                 },
                 kill() {
                     self._kill();
@@ -375,9 +381,8 @@ class GlobalHotkey extends _GlobalHotkey {
     static register(hotkey, name, func, mode = "once", delay = 0) {
         let funcToSend;
         let isWorking = false;
-        if (mode === "once") {
+        if (mode === "once")
             funcToSend = func;
-        }
         else if (mode === "toggle") {
             let state = false;
             funcToSend = () => {
@@ -391,7 +396,7 @@ class GlobalHotkey extends _GlobalHotkey {
                     state = isWorking = false;
                 })();
             }
-        } else if (mode === "hold") {
+        } else if (mode === "hold")
             funcToSend = () => {
                 if (!isWorking) (async () => {
                     isWorking = true;
@@ -401,7 +406,6 @@ class GlobalHotkey extends _GlobalHotkey {
                     }
                 })();
             }
-        }
         this._register(hotkey, name, funcToSend)
     }
 }

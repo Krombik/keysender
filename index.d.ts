@@ -4,19 +4,22 @@ declare type keyboardButton = keyboardRegularButton | keyboardSpecButton;
 declare type mouseButton = "left" | "right" | "middle";
 declare type keyboardEvent = "beforePrintText" | "beforeToggleKey" | "beforeSendKey" | "beforeSendKeys" | "afterPrintText" | "afterToggleKey" | "afterSendKey" | "afterSendKeys";
 declare type mouseEvent = "beforeToggle" | "beforeClick" | "beforeMoveTo" | "beforeMoveCurveTo" | "beforeMove" | "beforeScrollWheel" | "afterToggle" | "afterClick" | "afterMoveTo" | "afterMoveCurveTo" | "afterMove" | "afterScrollWheel";
-declare type hex = string;
-declare interface imgObj {
+declare type hexString = string;
+declare type decimalNumber = number;
+declare type uint8 = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 | 50 | 51 | 52 | 53 | 54 | 55 | 56 | 57 | 58 | 59 | 60 | 61 | 62 | 63 | 64 | 65 | 66 | 67 | 68 | 69 | 70 | 71 | 72 | 73 | 74 | 75 | 76 | 77 | 78 | 79 | 80 | 81 | 82 | 83 | 84 | 85 | 86 | 87 | 88 | 89 | 90 | 91 | 92 | 93 | 94 | 95 | 96 | 97 | 98 | 99 | 100 | 101 | 102 | 103 | 104 | 105 | 106 | 107 | 108 | 109 | 110 | 111 | 112 | 113 | 114 | 115 | 116 | 117 | 118 | 119 | 120 | 121 | 122 | 123 | 124 | 125 | 126 | 127 | 128 | 129 | 130 | 131 | 132 | 133 | 134 | 135 | 136 | 137 | 138 | 139 | 140 | 141 | 142 | 143 | 144 | 145 | 146 | 147 | 148 | 149 | 150 | 151 | 152 | 153 | 154 | 155 | 156 | 157 | 158 | 159 | 160 | 161 | 162 | 163 | 164 | 165 | 166 | 167 | 168 | 169 | 170 | 171 | 172 | 173 | 174 | 175 | 176 | 177 | 178 | 179 | 180 | 181 | 182 | 183 | 184 | 185 | 186 | 187 | 188 | 189 | 190 | 191 | 192 | 193 | 194 | 195 | 196 | 197 | 198 | 199 | 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 209 | 210 | 211 | 212 | 213 | 214 | 215 | 216 | 217 | 218 | 219 | 220 | 221 | 222 | 223 | 224 | 225 | 226 | 227 | 228 | 229 | 230 | 231 | 232 | 233 | 234 | 235 | 236 | 237 | 238 | 239 | 240 | 241 | 242 | 243 | 244 | 245 | 246 | 247 | 248 | 249 | 250 | 251 | 252 | 253 | 254 | 255;
+declare type red = uint8;
+declare type green = uint8;
+declare type blue = uint8;
+declare interface img {
     data: Buffer;
     height: number;
     width: number;
 }
-declare type imgArray = [Buffer, number, number]
 declare interface windowData {
     handle: number;
     className: string;
     title: string;
 }
-declare type hotkeyMode = "once" | "hold" | "toggle";
 declare type from = number;
 declare type to = number;
 declare type randomFromRange = [from, to];
@@ -46,8 +49,6 @@ declare interface EventEmitter<event> {
     prependOnceListener(event: event | string, listener: (...args: any[]) => void): this;
     eventNames(): Array<event | string>;
 }
-declare type format = "rgba" | "bgra" | "grey";
-declare type returnType = "array" | "object";
 declare interface keyboard extends EventEmitter<keyboardEvent> {
     keyTogglerDelay: number | randomFromRange;
     keySenderDelay: number | randomFromRange;
@@ -233,41 +234,22 @@ declare interface workwindow extends EventEmitter<"capture"> {
     /**
      * Capture part of current workwindow (or screen if {handle} is 0).
      * @param part - position of top left corner and size to be capture
-     * @param format - color format of return value, could be "rgba", "bgra" and "grey", 
+     * @param format - color format of return data, could be "rgba", "bgra", "grey", "monochrome"
      * if not provided defaults to "rgba".
-     * @param returnType - type of return value, could be "object" or "array"
-     * if not provided defaults to "object".
-     * @returns object {data, width, height} or array [data, height, width].
+     * @param threshold - color limit for "monochrome" format, if the pixel value is smaller than the threshold, it is set to 0, otherwise it is set to 255
+     * if not provided defaults to 127.
+     * @returns object {data, width, height}.
      */
-    capture(part: posAndSize, format?: format, returnType?: "object"): imgObj;
-    /**
-     * Capture part of current workwindow (or screen if {handle} is 0).
-     * @param part - position of top left corner and size to be capture
-     * @param format - color format of return value, could be "rgba", "bgra" and "grey",
-     * if not provided defaults to "rgba".
-     * @param returnType - type of return value, could be "object" or "array"
-     * if not provided defaults to "object".
-     * @returns object {data, width, height} or array [data, height, width].
-     */
-    capture(part: posAndSize, format: format, returnType: "array"): imgArray;
-    /** Capture current workwindow (or screen if {handle} is 0). 
-     * @param format - color format of return value, could be "rgba", "bgra" and "grey",
-     * if not provided defaults to "rgba".
-     * @param returnType - type of return value, could be "object" or "array"
-     * if not provided defaults to "object".
-     * @returns object {data, width, height} or array [data, height, width].
-    */
-    capture(format?: format, returnType?: "object"): imgObj;
-    /** Capture current workwindow (or screen if {handle} is 0).
-     * @param format - color format of return value, could be "rgba", "bgra" and "grey",
-     * if not provided defaults to "rgba".
-     * @param returnType - type of return value, could be "object" or "array"
-     * if not provided defaults to "object".
-     * @returns object {data, width, height} or array [data, height, width].
-    */
-    capture(format: format, returnType: "array"): imgArray;
-    /** @returns pixel color in [x, y] from current workwindow (or screen if {handle} is 0). */
-    colorAt(x: number, y: number): hex;
+    capture(part: posAndSize, format?: "rgba" | "bgra" | "grey"): img;
+    capture(part: posAndSize, format: "monochrome", threshold?: uint8): img;
+    capture(format?: "rgba" | "bgra" | "grey"): img;
+    capture(format: "monochrome", threshold?: uint8): img;
+    /** @param returnType - type of return value, "string" for hexadecimal color representation "rrggbb", "array" for array representation of color [r,g,b], "number" for color representation in decimal
+     * if not provided defaults to "string".
+     * @returns pixel color in [x, y] from current workwindow (or screen if {handle} is 0). */
+    colorAt(x: number, y: number, returnType?: "string"): hexString;
+    colorAt(x: number, y: number, returnType: "array"): [red, green, blue];
+    colorAt(x: number, y: number, returnType: "number"): number;
     /** Terminate current workwindow by killing it's thread.*/
     kill(): void;
     /** Close current workwindow by sending close message. */
@@ -301,15 +283,8 @@ export declare class GlobalHotkey {
      * if not provided defaults to 0.
      */
     static register(hotkey: keyboardRegularButton, hotkeyName: string, func: () => boolean | Promise<boolean>, mode: "hold" | "toggle", delay?: number): void;
-    /**
-     * Register hotkey.
-     * @param func - function to be calling in new thread after hotkey was pressed.
-     * @param mode - if "once" - {func} will repeat one time for each {hotkey} press, if "hold" - {func} will repeat while {hotkey} is pressed, if "toggle" - {func} starts repeat after {hotkey} first time pressed and end repeat after {hotkey} second time pressed,
-     * if not provided defaults to "once".
-     * @param delay - if {mode} is "hold" or "toggle" - sets delay between {func} calls,
-     * if not provided defaults to 0.
-     */
-    static register(hotkey: keyboardRegularButton, hotkeyName: string, func: () => void | Promise<void>, mode?: "once", delay?: number): void;
+    static register(hotkey: keyboardRegularButton, hotkeyName: string, func: () => void | Promise<void>, mode: "once"): void;
+    static register(hotkey: keyboardRegularButton, hotkeyName: string, func: () => void | Promise<void>): void;
     /** Unregister hotkeys by name. */
     static unregister(hotkeyName: string): void;
     /** Unregister all hotkeys. */

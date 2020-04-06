@@ -51,8 +51,8 @@ Provides methods implementations on hardware level.
 ```js
 const { Hardware } = require("keysender");
 const obj = new Hardware(handle); // Create new instance of Hardware class with {handle} of initial working window.
-                                       // {handle} could be found with getWindow or getWindowChild methods
-                                       // pass 0 if initial working window is not required
+                                  // {handle} could be found with getWindow or getWindowChild methods
+                                  // pass 0 if initial working window is not required
 ```
 
 ## Virtual
@@ -60,7 +60,7 @@ Provides methods implementations on virtual level.
 ```js
 const { Virtual } = require("keysender");
 const obj = new Virtual(handle); // Create new instance of Virtual class with {handle} of initial working window.
-                                      // {handle} could be found with getWindow or getWindowChild methods
+                                 // {handle} could be found with getWindow or getWindowChild methods
 ```
 
 ## getWindow
@@ -340,8 +340,6 @@ moveToAsync(x: number, y: number, delay?: number | randomFromRange): Promise<voi
 Move mouse to [x, y].
 | Argument | Description | Default Value |
 | --- | --- | --- |
-| x |  |  |
-| y |  |  |
 | delay | milliseconds to sleep/await after mouse movement | 0 |
 
 ```js
@@ -367,8 +365,6 @@ moveAsync(x: number, y: number, delay?: number | randomFromRange): Promise<void>
 Move mouse from current position by [x, y] relatively.
 | Argument | Description | Default Value |
 | --- | --- | --- |
-| x |  |  |
-| y |  |  |
 | delay | milliseconds to sleep/await after mouse movement | 0 |
 
 ```js
@@ -394,8 +390,6 @@ moveCurveToAsync(x: number, y: number, speed?: number | "max", deviation?: numbe
 Simulate human similar mouse movement to [x, y].
 | Argument | Description | Default Value |
 | --- | --- | --- |
-| x |  |  |
-| y |  |  |
 | speed | move speed, if speed equals to "max" - immediate movement | 5 |
 | deviation | movement curvature | 30 |
 
@@ -562,20 +556,18 @@ obj.workwindow.close();
 
 ### capture
 ```ts
-/** Capture part of current workwindow (or screen if {handle} is 0). */
-capture(part: posAndSize, format?: format, returnType?: "object"): imgObj;
-capture(part: posAndSize, format: format, returnType: "array"): imgArray;
-/** Capture current workwindow (or screen if {handle} is 0). */
-capture(format?: format, returnType?: "object"): imgObj;
-capture(format: format, returnType: "array"): imgArray;
+capture(part: posAndSize, format?: "rgba" | "bgra" | "grey"): img;
+capture(part: posAndSize, format: "monochrome", threshold?: uint8): img;
+capture(format?: "rgba" | "bgra" | "grey"): img;
+capture(format: "monochrome", threshold?: uint8): img;
 ```
 Capture screenshot of current workwindow or desktop. 
 | Argument | Description | Default Value |
 | --- | --- | --- |
 | part | object {x, y, height, width} with position and size to be captured |  |
-| format | color format of returned image, could be "rgba", "bgra" and "grey" | "rgba" |
-| returnType | type of returned value, could be "object" and "array" | "object" |
-Returns object {data, width, height} or array [data, height, width].
+| format | color format of returned image, could be "rgba", "bgra", "grey" or "monochrome" | "rgba" |
+| threshold | color limit for "monochrome" format, if the pixel value is smaller than the threshold, it is set to 0, otherwise it is set to 255 | 127 |
+Returns object {data, width, height}.
 | field | Description |
 | --- | --- |
 | data | Buffer with pixels |
@@ -590,21 +582,25 @@ obj.workwindow.capture(); // returns {data: Buffer with captured image data in r
 desktop.workwindow.capture(); // returns {data: Buffer with captured image data in rgba color format, width: width of screen, height: height of screen}
 obj.workwindow.capture({x: 25, y: 25, width: 500, height: 500}); // returns {data: Buffer with captured image data in rgba color format, width: 500, height: 500}
 desktop.workwindow.capture({x: 25, y: 25, width: 500, height: 500}); // returns {data: Buffer with captured image data in rgba color format, width: 500, height: 500}
-obj.workwindow.capture("grey","array"); // returns [Buffer with captured image data in grayscale color format, width of current workwindow, height of current workwindow]
-obj.workwindow.capture({x: 25, y: 25, width: 500, height: 500}, "bgra"); // returns {data: Buffer with captured image data in bgra color format, width: 500, height: 500}
+obj.workwindow.capture("grey"); // returns {data: Buffer with captured image data in grayscale color format, width: width of current workwindow, height: height of current workwindow}
+obj.workwindow.capture({x: 25, y: 25, width: 500, height: 500}, "monochrome", 200); // returns {data: Buffer with captured image data in monochrome color format, width: 500, height: 500}
 ```
 
 ### colorAt
 ```ts
-colorAt(x: number, y: number): hex;
+colorAt(x: number, y: number, returnType?: "string"): hexString;
+colorAt(x: number, y: number, returnType: "array"): [red, green, blue];
+colorAt(x: number, y: number, returnType: "number"): number;
 ```
-Returns pixel color in [x, y] from current workwindow (or screen if {handle} is 0) in hex.
+Returns pixel color in [x, y] from current workwindow (or screen if {handle} is 0).
 ```js
 const { Virtual, Hardware } = require("keysender");
 const obj = new Hardware(handle); // or Virtual
 const desktop = new Hardware(0);
-obj.workwindow.colorAt(25, 25); // returns workwindow color in [25, 25]
-desktop.workwindow.colorAt(25, 25); // returns screen color in [25, 25]
+obj.workwindow.colorAt(25, 25); // returns workwindow color in [25, 25] in "rrggbb" format
+obj.workwindow.colorAt(25, 25, "array"); // returns workwindow color in [25, 25] in [r,g,b] format
+obj.workwindow.colorAt(25, 25, "number"); // returns workwindow color in [25, 25] in decimal format
+desktop.workwindow.colorAt(25, 25); // returns screen color in [25, 25] in "rrggbb" format
 ```
 
 ## GlobalHotkey
@@ -612,35 +608,32 @@ Register or unregister global hotkeys
 
 ### register
 ```ts
-register(hotkey: keyboardRegularButton | (keyboardSpecButton | keyboardRegularButton)[] | [keyboardRegularButton], hotkeyName: string, func: () => void, mode?:hotkeyMode, delay?: number): void;
+register(hotkey: keyboardRegularButton, hotkeyName: string, func: () => boolean | Promise<boolean>, mode: "hold" | "toggle", delay?: number): void;
+register(hotkey: keyboardRegularButton, hotkeyName: string, func: () => void | Promise<void>, mode?: "once"): void;
 ```
 Register hotkey.
 | Argument | Description | Default Value |
 | --- | --- | --- |
 | func | function to be calling in new thread after hotkey was pressed |  |
 | mode | if "once" - {func} will repeat one time for each {hotkey} press, if "hold" - {func} will repeat while {hotkey} is pressed, if "toggle" - {func} starts repeat after {hotkey} first time pressed and end repeat after {hotkey} second time pressed | "once" |
-| delay | if {mode} is "hold" or "toggle" - set delay between {func} calls | 0 |
+| delay | if {mode} is "hold" or "toggle" - sets delay between {func} calls | 0 |
 
 ```js
 const { GlobalHotkey } = require("keysender");
-GlobalHotkey.register(["ctrl", "num+"], "first", () => { // logs "hi" every time "ctrl+num+" is pressed
+GlobalHotkey.register("num+", "first", () => { // logs "hi" every time "ctrl+num+" is pressed
     console.log("hi");
 });
-GlobalHotkey.register(["num-"], "second", async () => { // logs "hi" while "num-" is pressed
+GlobalHotkey.register("num*", "second", () => { // logs "hi" every 50 milliseconds while "num*" is pressed
     console.log("hi");
     return true;
-},"hold");
-GlobalHotkey.register("num*", "third", () => { // logs "hi" every 50 milliseconds after "num*" is pressed until "num*" be pressed again
-    console.log("hi");
-    return true;
-},"toggle", 50);
+}, "hold", 50);
 let i = 0;
-GlobalHotkey.register("num/", "fourth", () => { // logs "hi" every 50 milliseconds after "num/" is pressed until "num/" be pressed again or i become > 50
+GlobalHotkey.register("num/", "second", () => { // logs "hi" every 50 milliseconds after "num/" is pressed until "num/" be pressed again or i become > 50
     i++;
     if (i>50) return false;
     console.log("hi")
     return true
-},"toggle", 50); 
+}, "toggle", 50); 
 ```
 
 ### unregister
@@ -674,24 +667,16 @@ GlobalHotkey.unregisterAll();
 
 ### findHotkeyName
 ```ts
-findHotkeyName(hotkey: keyboardRegularButton | (keyboardSpecButton | keyboardRegularButton)[] | [keyboardRegularButton]): string | null;
+findHotkeyName(hotkey: keyboardRegularButton): string | undefined;
 ```
 Returns name of {hotkey} or null if {hotkey} is not registered.
-| Argument | Description | Default Value |
-| --- | --- | --- |
-| hotkey | key or array with keys |  |
-
 ```js
 const { GlobalHotkey } = require("keysender");
-GlobalHotkey.register(["ctrl", "a"], "first", () => {
-    console.log("hi")
-});
 GlobalHotkey.register("num-", "second", () => {
     console.log("hi")
 });
 console.log(GlobalHotkey.findHotkeyName("num-")); // "second"
-console.log(GlobalHotkey.findHotkeyName(["ctrl", "a"])); // "first"
-console.log(GlobalHotkey.findHotkeyName("a")); // null
+console.log(GlobalHotkey.findHotkeyName("a")); // undefined
 ```
 
 ## getScreenSize
