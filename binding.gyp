@@ -3,13 +3,13 @@
         {
             "target_name": "key_sender",
             "sources": [
-                "src/key_sender.cpp",
-                "src/keyboard.cpp",
-                "src/mouse.cpp",
-                "src/workwindow.cpp",
-                "src/hardware.cpp",
-                "src/virtual.cpp",
-                "src/hotkey.cpp"
+                "src/cpp/key_sender.cpp",
+                "src/cpp/keyboard.cpp",
+                "src/cpp/mouse.cpp",
+                "src/cpp/workwindow.cpp",
+                "src/cpp/hardware.cpp",
+                "src/cpp/virtual.cpp",
+                "src/cpp/hotkey.cpp"
             ],
             "cflags!": ["-fno-exceptions"],
             "cflags_cc!": ["-fno-exceptions"],
