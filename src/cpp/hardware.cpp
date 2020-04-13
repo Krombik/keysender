@@ -77,6 +77,7 @@ const std::map<uint8_t, std::array<UINT, 2>> Hardware::buttonsDef = {
 void Hardware::mousePosGetter(POINT *coords)
 {
     GetCursorPos(coords);
+    ScreenToClient(hWnd, coords);
 }
 
 Napi::Value Hardware::getLastCoords(const Napi::CallbackInfo &info)
@@ -91,6 +92,7 @@ Napi::Value Hardware::getLastCoords(const Napi::CallbackInfo &info)
     {
         POINT curr;
         GetCursorPos(&curr);
+        ScreenToClient(hWnd, &curr);
         coords["x"] = curr.x;
         coords["y"] = curr.y;
     }
@@ -110,9 +112,11 @@ void Hardware::mbToggler(uint8_t button, bool isButtonDown)
     SendInput(1, &ip, sizeof(INPUT));
 }
 
-void Hardware::mover(int x, int y, bool isAbsolute)
+void Hardware::mover(POINT coords, bool isAbsolute)
 {
     INPUT ip;
+    if (isAbsolute)
+        ClientToScreen(hWnd, &coords);
     ip.type = INPUT_MOUSE;
     ip.mi.mouseData = 0;
     ip.mi.dwExtraInfo = 0;
@@ -122,6 +126,7 @@ void Hardware::mover(int x, int y, bool isAbsolute)
     {
         POINT currCoords;
         GetCursorPos(&currCoords);
+        ScreenToClient(hWnd, &currCoords);
         if (currCoords.x != lastCoords.x && currCoords.y != lastCoords.y)
         {
             ip.mi.dx = lastCoords.x - currCoords.x;
@@ -130,25 +135,25 @@ void Hardware::mover(int x, int y, bool isAbsolute)
         }
         if (isAbsolute)
         {
-            lastCoords.x = x;
-            lastCoords.y = y;
+            lastCoords.x = coords.x;
+            lastCoords.y = coords.y;
         }
         else
         {
-            lastCoords.x = ip.mi.dx + x;
-            lastCoords.y = ip.mi.dy + y;
+            lastCoords.x = ip.mi.dx + coords.x;
+            lastCoords.y = ip.mi.dy + coords.y;
         }
     }
     if (isAbsolute)
     {
-        ip.mi.dx = ((x + 1) << 16) / GetSystemMetrics(SM_CXSCREEN);
-        ip.mi.dy = ((y + 1) << 16) / GetSystemMetrics(SM_CYSCREEN);
+        ip.mi.dx = ((coords.x + 1) << 16) / GetSystemMetrics(SM_CXSCREEN);
+        ip.mi.dy = ((coords.y + 1) << 16) / GetSystemMetrics(SM_CYSCREEN);
         ip.mi.dwFlags |= MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESK;
     }
     else
     {
-        ip.mi.dx = x;
-        ip.mi.dy = y;
+        ip.mi.dx = coords.x;
+        ip.mi.dy = coords.y;
     }
     SendInput(1, &ip, sizeof(INPUT));
 }

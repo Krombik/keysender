@@ -35,20 +35,20 @@ void Virtual::mbToggler(uint8_t button, bool isButtonDown)
     PostMessageA(hWnd, action, wParams.at(action), MAKELPARAM(lastCoords.x, lastCoords.y));
 }
 
-void Virtual::mover(int x, int y, bool isAbsolute)
+void Virtual::mover(POINT coords, bool isAbsolute)
 {
     if (saveMod)
         PostMessageA(hWnd, WM_MOUSEMOVE, 1, MAKELPARAM(lastCoords.x, lastCoords.y));
-    PostMessageA(hWnd, WM_MOUSEMOVE, 1, isAbsolute ? MAKELPARAM(x, y) : MAKELPARAM(lastCoords.x + x, lastCoords.y + y));
+    PostMessageA(hWnd, WM_MOUSEMOVE, 1, isAbsolute ? MAKELPARAM(coords.x, coords.y) : MAKELPARAM(lastCoords.x + coords.x, lastCoords.y + coords.y));
     if (isAbsolute)
     {
-        lastCoords.x = x;
-        lastCoords.y = y;
+        lastCoords.x = coords.x;
+        lastCoords.y = coords.y;
     }
     else
     {
-        lastCoords.x += x;
-        lastCoords.y += y;
+        lastCoords.x += coords.x;
+        lastCoords.y += coords.y;
     }
 }
 

@@ -21,7 +21,7 @@ private:
     Napi::Value Virtual::getLastCoords(const Napi::CallbackInfo &info);
     void mousePosGetter(POINT *coords);
     void mbToggler(uint8_t button, bool isButtonDown);
-    void mover(int x, int y, bool isAbsolute);
+    void mover(POINT coords, bool isAbsolute);
     void wheelScroller(int x);
     void keyToggler(UINT key, bool isKeyDown);
     void charPrinter(int code);

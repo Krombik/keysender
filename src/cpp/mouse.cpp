@@ -61,8 +61,8 @@ void Mouse::move(const Napi::CallbackInfo &info)
             .ThrowAsJavaScriptException();
         return;
     }
-    bool isAbsolute = info[2].As<Napi::Boolean>();
-    mover(x, y, isAbsolute);
+    POINT coords = {x, y};
+    mover(coords, info[2].As<Napi::Boolean>());
 }
 
 void Mouse::setSaveMod(const Napi::CallbackInfo &info, const Napi::Value &value)

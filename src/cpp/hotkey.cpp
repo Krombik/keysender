@@ -43,12 +43,11 @@ void Hotkey::registerHotkey(const Napi::CallbackInfo &info)
             .ThrowAsJavaScriptException();
         return;
     }
-    auto curr = new TsfnContext;
-    hotkeysRef.push_back(curr);
-    curr->key = std::string(info[0].As<Napi::String>());
-    curr->name = info[1].As<Napi::String>();
-    curr->tsfn = Napi::ThreadSafeFunction::New(env, info[2].As<Napi::Function>(), "F", 0, 1);
-    CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)messagesGetter, curr, NULL, NULL);
+    hotkeysRef.push_back(new TsfnContext);
+    hotkeysRef.back()->key = std::string(info[0].As<Napi::String>());
+    hotkeysRef.back()->name = info[1].As<Napi::String>();
+    hotkeysRef.back()->tsfn = Napi::ThreadSafeFunction::New(env, info[2].As<Napi::Function>(), "F", 0, 1);
+    CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)messagesGetter, hotkeysRef.back(), NULL, NULL);
 }
 
 void Hotkey::unregisterHotkey(const Napi::CallbackInfo &info)
@@ -67,7 +66,6 @@ void Hotkey::unregisterHotkey(const Napi::CallbackInfo &info)
             hotkeysRef.erase(hotkeysRef.begin() + i);
             i--;
         }
-    hotkeysRef.shrink_to_fit();
 }
 
 void Hotkey::unregisterAllHotkeys(const Napi::CallbackInfo &info)
@@ -75,7 +73,6 @@ void Hotkey::unregisterAllHotkeys(const Napi::CallbackInfo &info)
     for (uint8_t i = 0; i < hotkeysRef.size(); i++)
         hotkeysRef[i]->exist = false;
     hotkeysRef.clear();
-    hotkeysRef.shrink_to_fit();
 }
 
 Napi::Value Hotkey::findHotkeyName(const Napi::CallbackInfo &info)

@@ -25,7 +25,7 @@ protected:
     Napi::Value getSaveMod(const Napi::CallbackInfo &info);
     virtual void mousePosGetter(POINT *coords) = 0;
     virtual void mbToggler(uint8_t button, bool isButtonDown) = 0;
-    virtual void mover(int x, int y, bool isAbsolute) = 0;
+    virtual void mover(POINT coords, bool isAbsolute) = 0;
     virtual void wheelScroller(int x) = 0;
 };
 #endif
