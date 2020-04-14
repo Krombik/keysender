@@ -10,7 +10,7 @@ Napi::Value Hotkey::buttonIsPressed(const Napi::CallbackInfo &info)
 void Hotkey::messagesGetter(TsfnContext *context)
 {
     MSG msg = {0};
-    const UINT keyCode = Keyboard::keysDef.at(context->key);
+    const UINT keyCode = context->keyCode;
     RegisterHotKey(NULL, 0, NULL, keyCode);
     auto callback = [](Napi::Env env, Napi::Function jsCallback) {
         jsCallback.Call({});
@@ -34,14 +34,28 @@ void Hotkey::messagesGetter(TsfnContext *context)
 void Hotkey::registerHotkey(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
-    if (info.Length() != 3 || !info[0].IsString() || !info[1].IsString() || !info[2].IsFunction())
+    if (info.Length() != 3 || (!info[0].IsString() && !info[0].IsNumber()) || !info[1].IsString() || !info[2].IsFunction())
     {
-        Napi::Error::New(env, "Expected 3 arguments: String || Array, String, Function")
+        Napi::Error::New(env, "Expected 3 arguments: String || Number, String, Function")
             .ThrowAsJavaScriptException();
         return;
     }
+    UINT keyCode;
+    if (info[0].IsNumber())
+        keyCode = info[0].As<Napi::Number>();
+    else
+    {
+        const std::string keyName = info[0].As<Napi::String>();
+        if (Keyboard::keysDef.count(keyName) == 0)
+        {
+            Napi::Error::New(info.Env(), "Wrong key name")
+                .ThrowAsJavaScriptException();
+            return;
+        }
+        keyCode = Keyboard::keysDef.at(keyName);
+    }
     hotkeysRef.push_back(new TsfnContext);
-    hotkeysRef.back()->key = std::string(info[0].As<Napi::String>());
+    hotkeysRef.back()->keyCode = keyCode;
     hotkeysRef.back()->name = info[1].As<Napi::String>();
     hotkeysRef.back()->tsfn = Napi::ThreadSafeFunction::New(env, info[2].As<Napi::Function>(), "F", 0, 1);
     CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)messagesGetter, hotkeysRef.back(), NULL, NULL);
@@ -75,15 +89,28 @@ void Hotkey::unregisterAllHotkeys(const Napi::CallbackInfo &info)
 Napi::Value Hotkey::findHotkeyName(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
-    if (info.Length() != 1 || !info[0].IsString())
+    if (info.Length() != 1 || (!info[0].IsString() && !info[0].IsNumber()))
     {
-        Napi::Error::New(env, "Expected 1 argument: String")
+        Napi::Error::New(env, "Expected 1 argument: String || Number")
             .ThrowAsJavaScriptException();
         return env.Undefined();
     }
-    const std::string key(info[0].As<Napi::String>());
+    UINT keyCode;
+    if (info[0].IsNumber())
+        keyCode = info[0].As<Napi::Number>();
+    else
+    {
+        const std::string keyName = info[0].As<Napi::String>();
+        if (Keyboard::keysDef.count(keyName) == 0)
+        {
+            Napi::Error::New(info.Env(), "Wrong key name")
+                .ThrowAsJavaScriptException();
+            return env.Undefined();
+        }
+        keyCode = Keyboard::keysDef.at(keyName);
+    }
     for (uint8_t i = 0; i < hotkeysRef.size(); i++)
-        if (hotkeysRef[i]->key == key)
+        if (hotkeysRef[i]->keyCode == keyCode)
             return Napi::String::New(env, hotkeysRef[i]->name);
     return env.Undefined();
 }

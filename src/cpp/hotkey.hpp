@@ -6,7 +6,7 @@
 struct TsfnContext
 {
     bool exist = true;
-    std::string key;
+    UINT keyCode;
     std::string name;
     Napi::ThreadSafeFunction tsfn;
 };

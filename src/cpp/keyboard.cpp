@@ -2,20 +2,27 @@
 
 void Keyboard::toggleKey(const Napi::CallbackInfo &info)
 {
-    if (info.Length() != 2 || !info[0].IsString() || !info[1].IsBoolean())
+    if (info.Length() != 2 || (!info[0].IsString() && !info[0].IsNumber()) || !info[1].IsBoolean())
     {
-        Napi::Error::New(info.Env(), "Expected 2 arguments: String, Boolean")
+        Napi::Error::New(info.Env(), "Expected 2 arguments: String || Number, Boolean")
             .ThrowAsJavaScriptException();
         return;
     }
-    const std::string keyName = info[0].As<Napi::String>();
-    if (keysDef.count(keyName) == 0)
+    UINT keyCode;
+    if (info[0].IsNumber())
+        keyCode = info[0].As<Napi::Number>();
+    else
     {
-        Napi::Error::New(info.Env(), "Wrong key name")
-            .ThrowAsJavaScriptException();
-        return;
+        const std::string keyName = info[0].As<Napi::String>();
+        if (keysDef.count(keyName) == 0)
+        {
+            Napi::Error::New(info.Env(), "Wrong key name")
+                .ThrowAsJavaScriptException();
+            return;
+        }
+        keyCode = keysDef.at(keyName);
     }
-    keyToggler(keysDef.at(keyName), info[1].As<Napi::Boolean>());
+    keyToggler(keyCode, info[1].As<Napi::Boolean>());
 }
 
 void Keyboard::printChar(const Napi::CallbackInfo &info)
@@ -143,7 +150,7 @@ const std::map<std::string, UINT> Keyboard::keysDef = {
     {",", VK_OEM_COMMA},
     {"-", VK_OEM_MINUS},
     {".", VK_OEM_PERIOD},
-    {"?", VK_OEM_2},
+    {"/", VK_OEM_2},
     {"~", VK_OEM_3},
     {"[", VK_OEM_4},
     {"|", VK_OEM_5},

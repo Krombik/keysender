@@ -22,7 +22,7 @@ export declare interface keyboard extends EventEmitter<keyboardEvent> {
      * @param delay - milliseconds to sleep after key toggled,
      * if not provided defaults to keyboard.keyTogglerDelay.
      */
-    toggleKey(key: keyboardButton | keyboardButton[], state?: boolean, delay?: number | randomFromRange): void;
+    toggleKey(key: keyboardButton | keyboardButton[] | number | number[], state?: boolean, delay?: number | randomFromRange): void;
     /**
      * Toggles key or combination of keys to provided state async.
      * @param key - key or array with combination of keys.
@@ -31,7 +31,7 @@ export declare interface keyboard extends EventEmitter<keyboardEvent> {
      * @param delay -milliseconds to await after key toggled,
      * if not provided defaults to keyboard.keyTogglerDelay.
      */
-    toggleKeyAsync(key: keyboardButton | keyboardButton[], state?: boolean, delay?: number | randomFromRange): Promise<void>;
+    toggleKeyAsync(key: keyboardButton | keyboardButton[] | number | number[], state?: boolean, delay?: number | randomFromRange): Promise<void>;
     /**
      * Press and release key or combination of keys.
      * @param key - key or array with combination of keys.
@@ -40,7 +40,7 @@ export declare interface keyboard extends EventEmitter<keyboardEvent> {
      * @param afterReleaseDelay - milliseconds to sleep after key released,
      * if not provided defaults to 0.
      */
-    sendKey(key: keyboardButton | keyboardButton[], afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): void;
+    sendKey(key: keyboardButton | keyboardButton[] | number | number[], afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): void;
     /**
      * Press and release key or combination of keys async.
      * @param key - key or array with combination of keys.
@@ -49,7 +49,7 @@ export declare interface keyboard extends EventEmitter<keyboardEvent> {
      * @param afterReleaseDelay - milliseconds to await after key released,
      * if not provided defaults to 0.
      */
-    sendKeyAsync(key: keyboardButton | keyboardButton[], afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): Promise<void>;
+    sendKeyAsync(key: keyboardButton | keyboardButton[] | number | number[], afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): Promise<void>;
     /**
      * Press and release array of keys.
      * @param keys - array with keys.
@@ -58,7 +58,7 @@ export declare interface keyboard extends EventEmitter<keyboardEvent> {
      * @param afterReleaseDelay - delay in milliseconds to sleep after each key released excluding last,
      * if not provided defaults to {afterPressDelay}, if {afterPressDelay} not provided defaults to keyboard.keySenderDelay.
      */
-    sendKeys(keys: keyboardButton[], afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): void;
+    sendKeys(keys: keyboardButton[] | number[], afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): void;
     /**
      * Press and release array of keys async.
      * @param keys - array with keys.
@@ -67,5 +67,5 @@ export declare interface keyboard extends EventEmitter<keyboardEvent> {
      * @param afterReleaseDelay - delay in milliseconds to await after each key released excluding last,
      * if not provided defaults to {afterPressDelay}, if {afterPressDelay} not provided defaults to keyboard.keySenderDelay.
      */
-    sendKeysAsync(keys: keyboardButton[], afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): Promise<void>;
+    sendKeysAsync(keys: keyboardButton[] | number[], afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): Promise<void>;
 }
