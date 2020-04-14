@@ -1,12 +1,10 @@
 #ifndef VIRTUAL_H
 #define VIRTUAL_H
 
+#include "includes.hpp"
 #include "keyboard.hpp"
 #include "mouse.hpp"
 #include "workwindow.hpp"
-#include <napi.h>
-#include <winuser.h>
-#include <array>
 
 class Virtual : public Keyboard, public Mouse, public Workwindow, public Napi::ObjectWrap<Virtual>
 {

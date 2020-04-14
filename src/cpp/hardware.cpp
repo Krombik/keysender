@@ -1,8 +1,4 @@
-#include <windows.h>
 #include "hardware.hpp"
-#include <iostream>
-#include <algorithm>
-#include <iterator>
 
 const UINT Hardware::extendKeys[] = {VK_RCONTROL,
                                      VK_SNAPSHOT,

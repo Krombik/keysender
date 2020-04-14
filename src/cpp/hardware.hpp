@@ -1,12 +1,10 @@
 #ifndef HARDWARE_H
 #define HARDWARE_H
 
+#include "includes.hpp"
 #include "keyboard.hpp"
 #include "mouse.hpp"
 #include "workwindow.hpp"
-#include <napi.h>
-#include <winuser.h>
-#include <array>
 
 class Hardware : public Keyboard, public Mouse, public Workwindow, public Napi::ObjectWrap<Hardware>
 {

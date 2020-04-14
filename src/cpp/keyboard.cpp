@@ -1,4 +1,3 @@
-#include <windows.h>
 #include "keyboard.hpp"
 
 void Keyboard::toggleKey(const Napi::CallbackInfo &info)

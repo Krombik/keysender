@@ -1,13 +1,7 @@
 #ifndef HOTKEY_H
 #define HOTKEY_H
 
-#include <napi.h>
-#include <winuser.h>
-#include <windows.h>
-#include <iostream>
-#include <map>
-#include <vector>
-#include <string>
+#include "includes.hpp"
 
 struct TsfnContext
 {

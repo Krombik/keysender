@@ -1,6 +1,3 @@
-#include <windows.h>
-#include <iostream>
-#include <sstream>
 #include "workwindow.hpp"
 
 BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)

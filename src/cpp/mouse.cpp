@@ -1,4 +1,3 @@
-#include <windows.h>
 #include "mouse.hpp"
 
 Napi::Value Mouse::getMousePos(const Napi::CallbackInfo &info)

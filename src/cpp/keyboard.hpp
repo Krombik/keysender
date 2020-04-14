@@ -1,10 +1,7 @@
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
 
-#include <napi.h>
-#include <iostream>
-#include <map>
-#include <winuser.h>
+#include "includes.hpp"
 
 class Keyboard
 {

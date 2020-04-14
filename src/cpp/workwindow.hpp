@@ -1,10 +1,7 @@
 #ifndef WORKWINDOW_H
 #define WORKWINDOW_H
 
-#include <napi.h>
-#include <winuser.h>
-#include <windows.h>
-#include <iostream>
+#include "includes.hpp"
 
 Napi::Value getWindow(const Napi::CallbackInfo &info);
 Napi::Value getWindowChild(const Napi::CallbackInfo &info);

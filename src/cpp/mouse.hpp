@@ -1,11 +1,7 @@
 #ifndef MOUSE_H
 #define MOUSE_H
 
-#include <napi.h>
-#include <iostream>
-#include <map>
-#include <array>
-#include <winuser.h>
+#include "includes.hpp"
 
 class Mouse
 {

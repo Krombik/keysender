@@ -1,8 +1,4 @@
-#include <windows.h>
 #include "virtual.hpp"
-#include <iostream>
-#include <algorithm>
-#include <iterator>
 
 const std::map<uint8_t, std::array<UINT, 2>> Virtual::msgs = {
     {0, {WM_LBUTTONUP, WM_LBUTTONDOWN}},

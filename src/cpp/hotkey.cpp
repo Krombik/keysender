@@ -1,9 +1,6 @@
-#include <windows.h>
+
 #include "hotkey.hpp"
 #include "keyboard.hpp"
-#include <thread>
-#include <chrono>
-#include <cmath>
 
 Napi::Value Hotkey::buttonIsPressed(const Napi::CallbackInfo &info)
 {

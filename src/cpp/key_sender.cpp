@@ -1,10 +1,8 @@
 
-#include <windows.h>
+#include "includes.hpp"
 #include "hardware.hpp"
 #include "virtual.hpp"
 #include "hotkey.hpp"
-#include <chrono>
-#include <thread>
 
 void sleep(const Napi::CallbackInfo &info)
 {
