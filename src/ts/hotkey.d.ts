@@ -13,8 +13,12 @@ export declare class GlobalHotkey {
     constructor(hotkey: keyboardRegularButton | number, func: () => void | Promise<void>, mode?: "once");
     /** Reassigns {hotkey} to {newHotkey}, if {newHotkey} already registered, re-registers it */
     reassignment(newHotkey: keyboardRegularButton | number): void;
-    /** Unregister hotkey. */
+    /** Unregister hotkey, hotkey can be re-register by {reassignment} method. */
     unregister(): void;
-    /** Unregister all hotkeys. */
+    /** Unregister all hotkeys, hotkeys can be re-register by {reassignment} method. */
     static unregisterAll(): void;
+    /** Delete hotkey. */
+    delete(): void;
+    /** Delete all hotkeys. */
+    static deleteAll(): void;
 }

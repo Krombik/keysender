@@ -4,25 +4,28 @@
 
 std::set<TsfnContext *> Hotkey::hotkeyPointers;
 
+void Hotkey::unregisterDuplicate(UINT keyCode)
+{
+    for (auto it = hotkeyPointers.begin(); it != hotkeyPointers.end(); ++it)
+        if ((*it)->keyCode == keyCode)
+        {
+            (*it)->keyCode = NONEXISTENT_VIRTUAL_KEY;
+            (*it)->state = HOTKEY_UNREGISTERED;
+            break;
+        }
+}
+
 void Hotkey::messagesGetter(TsfnContext *context)
 {
     MSG msg = {0};
     const UINT keyCode = context->keyCode;
-    if (!hotkeyPointers.empty())
-        for (auto it = hotkeyPointers.begin(); it != hotkeyPointers.end(); ++it)
-            if ((*it)->keyCode == keyCode && context != (*it))
-            {
-                (*it)->exist = false;
-                hotkeyPointers.erase(it);
-                break;
-            }
     RegisterHotKey(NULL, 0, NULL, keyCode);
     auto callback = [](Napi::Env env, Napi::Function jsCallback) {
         jsCallback.Call({});
     };
-    int8_t prevState = 5;
+    int8_t prevState = SOME_NUMBER;
     int8_t currState;
-    while (context->exist)
+    while (context->state == HOTKEY_REGISTERED)
     {
         if (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE) && msg.message == WM_HOTKEY && (currState = GetKeyState(keyCode)) != prevState)
         {
@@ -32,13 +35,12 @@ void Hotkey::messagesGetter(TsfnContext *context)
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     UnregisterHotKey(NULL, 0);
-    if (context->reassignment)
+    if (context->state == HOTKEY_REASSIGNMENT)
     {
-        context->reassignment = false;
-        context->exist = true;
+        context->state = HOTKEY_REGISTERED;
         messagesGetter(context);
     }
-    else
+    else if (context->state == HOTKEY_DELETED)
     {
         context->tsfn.Release();
         delete context;
@@ -61,6 +63,8 @@ Hotkey::Hotkey(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Hotkey>(info)
             .ThrowAsJavaScriptException();
         return;
     }
+    if (!hotkeyPointers.empty())
+        unregisterDuplicate(keyCode);
     it = hotkeyPointers.insert(hotkeyPointers.end(), new TsfnContext);
     (*it)->keyCode = keyCode;
     (*it)->tsfn = Napi::ThreadSafeFunction::New(env, info[1].As<Napi::Function>(), "F", 0, 1);
@@ -88,22 +92,44 @@ void Hotkey::reassignmentHotkey(const Napi::CallbackInfo &info)
             .ThrowAsJavaScriptException();
         return;
     }
-    (*it)->reassignment = true;
-    (*it)->exist = false;
+    if (hotkeyPointers.size() > 1)
+        unregisterDuplicate(keyCode);
     (*it)->keyCode = keyCode;
+    if ((*it)->state == HOTKEY_REGISTERED)
+        (*it)->state = HOTKEY_REASSIGNMENT;
+    else if ((*it)->state == HOTKEY_UNREGISTERED)
+    {
+        (*it)->state = HOTKEY_REGISTERED;
+        CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)messagesGetter, (*it), NULL, NULL);
+    }
 }
 
 void Hotkey::unregisterHotkey(const Napi::CallbackInfo &info)
 {
-    (*it)->exist = false;
-    hotkeyPointers.erase(it);
+    (*it)->keyCode = NONEXISTENT_VIRTUAL_KEY;
+    (*it)->state = HOTKEY_UNREGISTERED;
 }
 
 void Hotkey::unregisterAllHotkeys(const Napi::CallbackInfo &info)
 {
     std::for_each(hotkeyPointers.begin(), hotkeyPointers.end(),
                   [](TsfnContext *context) {
-                      context->exist = false;
+                      context->state = HOTKEY_UNREGISTERED;
+                      context->keyCode = NONEXISTENT_VIRTUAL_KEY;
+                  });
+}
+
+void Hotkey::deleteHotkey(const Napi::CallbackInfo &info)
+{
+    (*it)->state = HOTKEY_DELETED;
+    hotkeyPointers.erase(it);
+}
+
+void Hotkey::deleteAllHotkeys(const Napi::CallbackInfo &info)
+{
+    std::for_each(hotkeyPointers.begin(), hotkeyPointers.end(),
+                  [](TsfnContext *context) {
+                      context->state = HOTKEY_DELETED;
                   });
     hotkeyPointers.clear();
 }
@@ -115,9 +141,11 @@ Napi::Object Hotkey::Init(Napi::Env env, Napi::Object exports)
     Napi::HandleScope scope(env);
     Napi::Function func = DefineClass(env, "_GlobalHotkey", {
                                                                 InstanceMethod("unregister", &Hotkey::unregisterHotkey),
+                                                                InstanceMethod("delete", &Hotkey::deleteHotkey),
                                                                 InstanceMethod("reassignment", &Hotkey::reassignmentHotkey),
-                                                                StaticMethod("unregisterAll", &Hotkey::unregisterAllHotkeys),
                                                                 InstanceMethod("_isButtonPressed", &Hotkey::isButtonPressed),
+                                                                StaticMethod("unregisterAll", &Hotkey::unregisterAllHotkeys),
+                                                                StaticMethod("deleteAll", &Hotkey::deleteAllHotkeys),
                                                             });
     constructor = Napi::Persistent(func);
     constructor.SuppressDestruct();
