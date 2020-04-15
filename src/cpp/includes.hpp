@@ -1,3 +1,4 @@
+#pragma once
 #ifndef INCLUDES_H
 #define INCLUDES_H
 
@@ -12,5 +13,6 @@
 #include <array>
 #include <algorithm>
 #include <iterator>
+#include <set>
 
 #endif

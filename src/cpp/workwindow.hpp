@@ -1,3 +1,4 @@
+#pragma once
 #ifndef WORKWINDOW_H
 #define WORKWINDOW_H
 

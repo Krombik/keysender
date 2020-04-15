@@ -1,30 +1,31 @@
+#pragma once
 #ifndef HOTKEY_H
 #define HOTKEY_H
 
 #include "includes.hpp"
 
-struct TsfnContext
+typedef struct
 {
     bool exist = true;
+    bool reassignment = false;
     UINT keyCode;
-    std::string name;
     Napi::ThreadSafeFunction tsfn;
-};
-static std::vector<TsfnContext *> hotkeysRef;
+} TsfnContext;
 
 class Hotkey : public Napi::ObjectWrap<Hotkey>
 {
 public:
+    Hotkey(const Napi::CallbackInfo &info);
+    void unregisterHotkey(const Napi::CallbackInfo &info);
+    void reassignmentHotkey(const Napi::CallbackInfo &info);
+    Napi::Value isButtonPressed(const Napi::CallbackInfo &info);
     static Napi::Object Init(Napi::Env env, Napi::Object exports);
-    Hotkey(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Hotkey>(info){};
-    static void registerHotkey(const Napi::CallbackInfo &info);
-    static void unregisterHotkey(const Napi::CallbackInfo &info);
     static void unregisterAllHotkeys(const Napi::CallbackInfo &info);
-    static Napi::Value findHotkeyName(const Napi::CallbackInfo &info);
-    static Napi::Value buttonIsPressed(const Napi::CallbackInfo &info);
 
 private:
+    std::set<TsfnContext *>::iterator it;
     static Napi::FunctionReference constructor;
+    static std::set<TsfnContext *> hotkeyPointers;
     static void messagesGetter(TsfnContext *context);
 };
 

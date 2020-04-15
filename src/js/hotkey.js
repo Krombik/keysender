@@ -1,11 +1,11 @@
 const { _GlobalHotkey } = require('../../build/Release/key_sender.node');
 module.exports.GlobalHotkey = class extends _GlobalHotkey {
-    static register(hotkey, name, func, mode = "once", delay = 0) {
+    constructor(hotkey, func, mode = "once", delay = 0) {
         let funcToSend;
         let isWorking = false;
-        if (mode === "once")
+        if (mode === "once") {
             funcToSend = func;
-        else if (mode === "toggle") {
+        } else if (mode === "toggle") {
             let state = false;
             funcToSend = () => {
                 state = !state;
@@ -18,16 +18,17 @@ module.exports.GlobalHotkey = class extends _GlobalHotkey {
                     state = isWorking = false;
                 })();
             }
-        } else if (mode === "hold")
+        } else if (mode === "hold") {
             funcToSend = () => {
                 if (!isWorking) (async () => {
                     isWorking = true;
-                    while (isWorking && (isWorking = this._buttonIsPressed(hotkey))) {
+                    while (isWorking && (isWorking = this._isButtonPressed())) {
                         isWorking = await func();
                         await new Promise(_ => setTimeout(_, delay));
                     }
                 })();
             }
-        this._register(hotkey, name, funcToSend)
+        }
+        super(hotkey, funcToSend);
     }
 }
