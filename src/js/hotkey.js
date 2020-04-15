@@ -1,6 +1,6 @@
 const { _GlobalHotkey } = require('../../build/Release/key_sender.node');
 module.exports.GlobalHotkey = class extends _GlobalHotkey {
-    constructor(hotkey, func, mode = "once", delay = 0) {
+    constructor(hotkey, func, mode = "once", delay = 0, finalizerCallback) {
         let funcToSend;
         let isWorking = false;
         if (mode === "once") {
@@ -16,6 +16,7 @@ module.exports.GlobalHotkey = class extends _GlobalHotkey {
                         await new Promise(_ => setTimeout(_, delay));
                     }
                     state = isWorking = false;
+                    if (finalizerCallback !== undefined) await finalizerCallback();
                 })();
             }
         } else if (mode === "hold") {
@@ -26,6 +27,7 @@ module.exports.GlobalHotkey = class extends _GlobalHotkey {
                         isWorking = await func();
                         await new Promise(_ => setTimeout(_, delay));
                     }
+                    if (finalizerCallback !== undefined) await finalizerCallback();
                 })();
             }
         }
