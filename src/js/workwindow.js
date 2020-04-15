@@ -18,8 +18,8 @@ module.exports = {
                     },
                     get() {
                         const workwindow = { ...self._workwindow };
-                        if (workwindow.className !== '') workwindow.className = workwindow.className.toString('ucs2');
-                        if (workwindow.title !== '') workwindow.title = workwindow.title.toString('ucs2');
+                        workwindow.className = workwindow.className.toString('ucs2');
+                        workwindow.title = workwindow.title.toString('ucs2');
                         return workwindow;
                     },
                     setInfo(info) {
@@ -65,16 +65,16 @@ module.exports = {
     },
     getWindow: (title, className) => title === undefined && className === undefined ?
         _getWindow().map(item => {
-            if (item.className !== '') item.className = item.className.toString('ucs2');
-            if (item.title !== '') item.title = item.title.toString('ucs2');
+            item.className = item.className.toString('ucs2');
+            item.title = item.title.toString('ucs2');
             return item;
         })
         :
         _getWindow(title !== null ? Buffer.from(title, "ucs2") : null, className !== undefined ? Buffer.from(className, "ucs2") : null),
     getWindowChild: (parentHandle, className, title) => className === undefined && title === undefined ?
         _getWindowChild(parentHandle).map(item => {
-            if (item.className !== '') item.className = item.className.toString('ucs2');
-            if (item.title !== '') item.title = item.title.toString('ucs2');
+            item.className = item.className.toString('ucs2');
+            item.title = item.title.toString('ucs2');
             return item;
         }) :
         _getWindowChild(parentHandle, className !== null ? Buffer.from(className, "ucs2") : null, title !== undefined ? Buffer.from(title, "ucs2") : null)

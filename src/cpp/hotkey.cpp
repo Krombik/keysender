@@ -55,18 +55,11 @@ Hotkey::Hotkey(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Hotkey>(info)
         return;
     }
     UINT keyCode;
-    if (info[0].IsNumber())
-        keyCode = info[0].As<Napi::Number>();
-    else
+    if (!Keyboard::getKeyCode(info[0], &keyCode))
     {
-        const std::string keyName = info[0].As<Napi::String>();
-        if (Keyboard::keysDef.count(keyName) == 0)
-        {
-            Napi::Error::New(env, "Wrong key name")
-                .ThrowAsJavaScriptException();
-            return;
-        }
-        keyCode = Keyboard::keysDef.at(keyName);
+        Napi::Error::New(info.Env(), "Wrong key name")
+            .ThrowAsJavaScriptException();
+        return;
     }
     it = hotkeyPointers.insert(hotkeyPointers.end(), new TsfnContext);
     (*it)->keyCode = keyCode;
@@ -89,18 +82,11 @@ void Hotkey::reassignmentHotkey(const Napi::CallbackInfo &info)
         return;
     }
     UINT keyCode;
-    if (info[0].IsNumber())
-        keyCode = info[0].As<Napi::Number>();
-    else
+    if (!Keyboard::getKeyCode(info[0], &keyCode))
     {
-        const std::string keyName = info[0].As<Napi::String>();
-        if (Keyboard::keysDef.count(keyName) == 0)
-        {
-            Napi::Error::New(env, "Wrong key name")
-                .ThrowAsJavaScriptException();
-            return;
-        }
-        keyCode = Keyboard::keysDef.at(keyName);
+        Napi::Error::New(info.Env(), "Wrong key name")
+            .ThrowAsJavaScriptException();
+        return;
     }
     (*it)->reassignment = true;
     (*it)->exist = false;

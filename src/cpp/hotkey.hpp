@@ -2,15 +2,7 @@
 #ifndef HOTKEY_H
 #define HOTKEY_H
 
-#include "includes.hpp"
-
-typedef struct
-{
-    bool exist = true;
-    bool reassignment = false;
-    UINT keyCode;
-    Napi::ThreadSafeFunction tsfn;
-} TsfnContext;
+#include "types.hpp"
 
 class Hotkey : public Napi::ObjectWrap<Hotkey>
 {

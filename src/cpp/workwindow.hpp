@@ -2,7 +2,7 @@
 #ifndef WORKWINDOW_H
 #define WORKWINDOW_H
 
-#include "includes.hpp"
+#include "types.hpp"
 
 Napi::Value getWindow(const Napi::CallbackInfo &info);
 Napi::Value getWindowChild(const Napi::CallbackInfo &info);
@@ -18,6 +18,7 @@ public:
     void setForeground(const Napi::CallbackInfo &info);
     void kill(const Napi::CallbackInfo &info);
     void close(const Napi::CallbackInfo &info);
+    static Window windowGetter(HWND hWnd);
 
 protected:
     HWND hWnd = NULL;

@@ -20,27 +20,25 @@ BOOL CALLBACK EnumChildProc(HWND hWnd, LPARAM lParam)
     return TRUE;
 }
 
-Napi::Object windowGetter(HWND hWnd, Napi::Env env)
+Window Workwindow::windowGetter(HWND hWnd)
 {
-    Napi::Object window = Napi::Object::New(env);
-    window["handle"] = HandleToLong(hWnd);
-    window["title"] = "";
-    window["className"] = "";
+    Window window;
+    window.handle = HandleToLong(hWnd);
     if (hWnd != NULL)
     {
-        int titleLength = GetWindowTextLengthA(hWnd);
+        uint8_t titleLength = GetWindowTextLengthA(hWnd);
         if (titleLength > 0)
         {
             std::vector<wchar_t> title(titleLength + 1);
             GetWindowTextW(hWnd, &title[0], title.size());
             title.pop_back();
-            window["title"] = Napi::Buffer<wchar_t>::Copy(env, title.data(), title.size());
+            window.title = title;
         }
         std::vector<wchar_t> className(256);
         GetClassNameW(hWnd, &className[0], className.size());
         className.resize(std::distance(className.begin(), std::search_n(className.begin(), className.end(), 2, 0)));
         className.shrink_to_fit();
-        window["className"] = Napi::Buffer<wchar_t>::Copy(env, className.data(), className.size());
+        window.className = className;
     }
     return window;
 }
@@ -54,10 +52,17 @@ Napi::Value getWindow(const Napi::CallbackInfo &info)
         EnumWindows(EnumWindowsProc, reinterpret_cast<LPARAM>(&hWnds));
         Napi::Array windows = Napi::Array::New(env);
         for (const HWND &hWnd : hWnds)
-            windows[windows.Length()] = windowGetter(hWnd, env);
+        {
+            Window window = Workwindow::windowGetter(hWnd);
+            Napi::Object windowObj = Napi::Object::New(env);
+            windowObj["handle"] = window.handle;
+            windowObj["title"] = Napi::Buffer<wchar_t>::Copy(env, window.title.data(), window.title.size());
+            windowObj["className"] = Napi::Buffer<wchar_t>::Copy(env, window.className.data(), window.className.size());
+            windows[windows.Length()] = windowObj;
+        }
         return windows;
     }
-    if (info.Length() != 2)
+    if (info.Length() != 2 || (!info[0].IsBuffer() && !info[0].IsNull()) || (!info[1].IsBuffer() && !info[1].IsNull()))
     {
         Napi::Error::New(env, "Expected 0 or 2 arguments: Buffer||NULL, Buffer||NULL")
             .ThrowAsJavaScriptException();
@@ -78,10 +83,17 @@ Napi::Value getWindowChild(const Napi::CallbackInfo &info)
         Napi::Array children = Napi::Array::New(env);
         if (!chWnds.empty())
             for (const HWND &hWnd : chWnds)
-                children[children.Length()] = windowGetter(hWnd, env);
+            {
+                Window window = Workwindow::windowGetter(hWnd);
+                Napi::Object child = Napi::Object::New(env);
+                child["handle"] = window.handle;
+                child["title"] = Napi::Buffer<wchar_t>::Copy(env, window.title.data(), window.title.size());
+                child["className"] = Napi::Buffer<wchar_t>::Copy(env, window.className.data(), window.className.size());
+                children[children.Length()] = child;
+            }
         return children;
     }
-    if (info.Length() != 3 || !info[0].IsNumber() || !info[1].IsBuffer() || !info[2].IsBuffer())
+    if (info.Length() != 3 || !info[0].IsNumber() || (!info[1].IsBuffer() && !info[1].IsNull()) || (!info[2].IsBuffer() && !info[2].IsNull()))
     {
         Napi::Error::New(env, "Expected 1 or 3 arguments: Number, Buffer||NULL, Buffer||NULL")
             .ThrowAsJavaScriptException();
@@ -275,7 +287,13 @@ void Workwindow::setWorkwindow(const Napi::CallbackInfo &info, const Napi::Value
 
 Napi::Value Workwindow::getWorkwindow(const Napi::CallbackInfo &info)
 {
-    return windowGetter(hWnd, info.Env());
+    Napi::Env env = info.Env();
+    Window window = windowGetter(hWnd);
+    Napi::Object windowObj = Napi::Object::New(env);
+    windowObj["handle"] = window.handle;
+    windowObj["title"] = Napi::Buffer<wchar_t>::Copy(env, window.title.data(), window.title.size());
+    windowObj["className"] = Napi::Buffer<wchar_t>::Copy(env, window.className.data(), window.className.size());
+    return windowObj;
 }
 
 void Workwindow::setWindowInfo(const Napi::CallbackInfo &info, const Napi::Value &value)

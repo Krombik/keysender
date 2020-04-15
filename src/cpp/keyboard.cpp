@@ -1,5 +1,19 @@
 #include "keyboard.hpp"
 
+bool Keyboard::getKeyCode(Napi::Value key, UINT *keyCode)
+{
+    if (key.IsNumber())
+        *keyCode = key.As<Napi::Number>();
+    else
+    {
+        const std::string keyName = key.As<Napi::String>();
+        if (keysDef.count(keyName) == 0)
+            return false;
+        *keyCode = keysDef.at(keyName);
+    }
+    return true;
+}
+
 void Keyboard::toggleKey(const Napi::CallbackInfo &info)
 {
     if (info.Length() != 2 || (!info[0].IsString() && !info[0].IsNumber()) || !info[1].IsBoolean())
@@ -9,18 +23,11 @@ void Keyboard::toggleKey(const Napi::CallbackInfo &info)
         return;
     }
     UINT keyCode;
-    if (info[0].IsNumber())
-        keyCode = info[0].As<Napi::Number>();
-    else
+    if (!getKeyCode(info[0], &keyCode))
     {
-        const std::string keyName = info[0].As<Napi::String>();
-        if (keysDef.count(keyName) == 0)
-        {
-            Napi::Error::New(info.Env(), "Wrong key name")
-                .ThrowAsJavaScriptException();
-            return;
-        }
-        keyCode = keysDef.at(keyName);
+        Napi::Error::New(info.Env(), "Wrong key name")
+            .ThrowAsJavaScriptException();
+        return;
     }
     keyToggler(keyCode, info[1].As<Napi::Boolean>());
 }

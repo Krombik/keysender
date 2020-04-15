@@ -14,5 +14,6 @@
 #include <algorithm>
 #include <iterator>
 #include <set>
+#include <Wingdi.h>
 
 #endif
