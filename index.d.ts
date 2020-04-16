@@ -27,3 +27,5 @@ export { GlobalHotkey } from './src/ts/hotkey.d';
 export { getScreenSize, getWindow, getWindowChild } from './src/ts/workwindow.d'
 
 export { sleep } from './src/ts/sleep.d'
+
+export * from './src/ts/types.d'
