@@ -20,6 +20,8 @@ export declare class Hardware extends Worker { }
 /** Provides methods implementations on virtual level. */
 export declare class Virtual extends Worker { }
 
+export { vkToString } from './src/ts/keyboard.d';
+
 export { GlobalHotkey } from './src/ts/hotkey.d';
 
 export { getScreenSize, getWindow, getWindowChild } from './src/ts/workwindow.d'

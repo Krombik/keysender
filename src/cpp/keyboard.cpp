@@ -1,5 +1,21 @@
 #include "keyboard.hpp"
 
+Napi::Value vkToString(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+    if (info.Length() != 1 || !info[0].IsNumber())
+    {
+        Napi::Error::New(env, "Expected 1 arguments: Number")
+            .ThrowAsJavaScriptException();
+        return env.Undefined();
+    }
+    UINT keyCode = info[0].As<Napi::Number>();
+    for (auto it = Keyboard::keysDef.begin(); it != Keyboard::keysDef.end(); ++it)
+        if (it->second == keyCode)
+            return Napi::String::New(env, it->first);
+    return env.Undefined();
+}
+
 bool Keyboard::getKeyCode(Napi::Value key, UINT *keyCode)
 {
     if (key.IsNumber())

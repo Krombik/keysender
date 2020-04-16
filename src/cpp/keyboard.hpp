@@ -4,6 +4,8 @@
 
 #include "includes.hpp"
 
+Napi::Value vkToString(const Napi::CallbackInfo &info);
+
 class Keyboard
 {
 public:

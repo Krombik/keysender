@@ -1,5 +1,55 @@
 # keysender
-> Node.js Desktop Automation for Windows. Emulate the mouse and keyboard physical or hardware inputs, capture workwindow, register global hotkeys.
+> Node.js Desktop Automation for Windows. Emulate the mouse and keyboard physical or virtual inputs, capture workwindow, register global hotkeys.
+
+## Contents
+
+- [Installation](#installation)
+- [Example](#example)
+- [Syntax](#syntax)
+  - [getWindow](#getwindow)
+  - [getWindowChild](#getwindowChild)
+  - [Hardware](#hardware)
+  - [Virtual](#virtual)
+    - [EventEmitter](#eventemitter)
+    - [keyboard](#keyboard)
+      - [keyboardButton](#keyboardbutton)
+      - [keyTogglerDelay](#keytogglerdelay)
+      - [keySenderDelay](#keysenderdelay)
+      - [toggleKey](#togglekey)
+      - [sendKey](#sendkey)
+      - [sendKeys](#sendkeys)
+      - [printText](#printtext)
+    - [mouse](#mouse)
+      - [buttonTogglerDelay](#buttontogglerDelay)
+      - [saveMod](#savemod)
+      - [toggle](#toggle)
+      - [click](#click)
+      - [moveTo](#moveto)
+      - [move](#move)
+      - [moveCurveTo](#movecurveto)
+      - [scrollWheel](#scrollwheel)
+      - [getPos](#getpos)
+    - [workwindow](#workwindow)
+      - [set](#set)
+      - [get](#get)
+      - [setInfo](#setinfo)
+      - [getInfo](#getinfo)
+      - [setForeground](#setforeground)
+      - [isForeground](#isforeground)
+      - [isOpen](#isopen)
+      - [kill](#kill)
+      - [close](#close)
+      - [capture](#capture)
+      - [colorAt](#colorat)
+  - [GlobalHotkey](#globalhotkey)
+    - [reassignment](#reassignment)
+    - [unregister](#unregister)
+    - [unregisterAll](#unregisterall)
+    - [delete](#delete)
+    - [deleteAll](#deleteall)
+  - [getScreenSize](#getscreensize)
+  - [vkToString](#vktostring)
+  - [sleep](#sleep)
 
 # Installation
 Install Windows Build Tools:
@@ -23,7 +73,7 @@ yarn add keysender
 ```js
 const { Hardware, getWindow, GlobalHotkey } = require("keysender");
 const obj = new Hardware(getWindow(null, "Notepad")); // find Notepad handle by className and set it as workwindow
-GlobalHotkey.register("num+", "sync", () => { // register hotkey
+new GlobalHotkey("num+", () => { // register hotkey
     obj.workwindow.setInfo({ x: 0, y: 0, width: 500 }) // move workwindow to top left corner of the screen and change width to 500px
     obj.keyboard.printText("hello"); // instantly types "hello"
     obj.keyboard.sendKey("space", 50); // press key "space", sleep for 50 milliseconds, release key "space"
@@ -33,7 +83,7 @@ GlobalHotkey.register("num+", "sync", () => { // register hotkey
     obj.mouse.click("left", 25); // press left mouse button, sleep for 25 milliseconds, release left mouse button
 });
 // or
-GlobalHotkey.register("num-", "async", async () => { // register hotkey
+new GlobalHotkey("num-", async () => { // register hotkey
     obj.workwindow.setInfo({ x: 0, y: 0, width: 500 }) // move workwindow to top left corner of the screen and change width to 500px
     obj.keyboard.printTextAsync("hello"); // instantly types "hello"
     await obj.keyboard.sendKeyAsync("space", 50); // press key "space", await for 50 milliseconds, release key "space"
@@ -45,23 +95,6 @@ GlobalHotkey.register("num-", "async", async () => { // register hotkey
 ```
 
 # Syntax
-
-## Hardware
-Provides methods implementations on hardware level.
-```js
-const { Hardware } = require("keysender");
-const obj = new Hardware(handle); // Create new instance of Hardware class with {handle} of initial working window.
-                                  // {handle} could be found with getWindow or getWindowChild methods
-                                  // pass 0 if initial working window is not required
-```
-
-## Virtual
-Provides methods implementations on virtual level.
-```js
-const { Virtual } = require("keysender");
-const obj = new Virtual(handle); // Create new instance of Virtual class with {handle} of initial working window.
-                                 // {handle} could be found with getWindow or getWindowChild methods
-```
 
 ## getWindow
 ```ts
@@ -91,9 +124,31 @@ console.log(getWindowChild(parentHandle, null, "someTitle")) // {handle} of firs
 console.log(getWindowChild(parentHandle, "someClass", "someTitle")) // {handle} of first find {parentHandle} child with "someTitle" title and "someClass" class
 ```
 
-## EventEmitter
-EventEmitter available for every sendInput method from [keyboard](#keyboard) and [mouse](#mouse) modules and capture method from [workwindow](#workwindow) module.
+## Hardware
+Provides [keyboard](#keyboard), [mouse](#mouse) and [workwindow](#workwindow) methods. Keyboard and mouse methods implementations on hardware level by inserts the events serially into the keyboard or mouse input stream. These events are not interspersed with other keyboard or mouse input events inserted either by the user (with the keyboard or mouse).
+```js
+const { Hardware } = require("keysender");
+const obj = new Hardware(handle); // Create new instance of Hardware class with {handle} of initial working window.
+                                  // {handle} could be found with getWindow or getWindowChild methods
+                                  // pass 0 if initial working window is not required
+```
 
+## Virtual
+Provides [keyboard](#keyboard), [mouse](#mouse) and [workwindow](#workwindow) methods. Keyboard and mouse methods implementations on virtual level by sending messages to workwindow, so it could work with background window.
+> Note: keyboard or mouse methods do not work for all windows, for example, input line in certain window may accept message from [printText](#printext) method, but [sendKey](#sendkey) method makes no effect outside input line, or the window may accept a keystroke message from [sendKey](#sendkey) method but not accept mouse movement message from [moveTo](#moveto) method.
+```js
+const { Virtual } = require("keysender");
+const obj = new Virtual(handle); // Create new instance of Virtual class with {handle} of initial working window.
+                                 // {handle} could be found with getWindow or getWindowChild methods
+```
+
+#### EventEmitter
+EventEmitter available for every sendInput method from [keyboard](#keyboard) and [mouse](#mouse) modules and capture method from [workwindow](#workwindow) module.
+```ts
+type keyboardEvent = "beforePrintText" | "beforeToggleKey" | "beforeSendKey" | "beforeSendKeys" | "afterPrintText" | "afterToggleKey" | "afterSendKey" | "afterSendKeys";
+type mouseEvent = "beforeToggle" | "beforeClick" | "beforeMoveTo" | "beforeMoveCurveTo" | "beforeMove" | "beforeScrollWheel" | "afterToggle" | "afterClick" | "afterMoveTo" | "afterMoveCurveTo" | "afterMove" | "afterScrollWheel";
+type workwindowEvent = "capture";
+```
 Example:
 ```js
 const { Virtual, Hardware } = require("keysender");
@@ -109,10 +164,18 @@ obj.keyboard.sendKeyAsync("b");
 ```
 >For more details see [EventEmitter documentation](https://nodejs.org/api/events.html#events_class_eventemitter).
 
-## keyboard
+### keyboard
 Provides methods to synthesize keystrokes.
 
-### keyTogglerDelay
+#### keyboardButton
+[toggleKey](#togglekey), [sendKey](#sendkey), [sendKeys](#sendkeys), [GlobalHotkey](#globalhotkey) supports for following keys or [virtual key codes](https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes)
+```ts
+type keyboardRegularButton = "backspace" | "tab" | "enter" | "pause" | "capslock" | "escape" | "space" | "pageup" | "pagedown" | "end" | "home" | "left" | "up" | "right" | "down" | "prntscrn" | "insert" | "delete" | "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" | "num0" | "num0" | "num1" | "num2" | "num3" | "num4" | "num5" | "num6" | "num7" | "num8" | "num9" | "num*" | "num+" | "num," | "num-" | "num." | "num/" | "f1" | "f2" | "f3" | "f4" | "f5" | "f6" | "f7" | "f8" | "f9" | "f10" | "f11" | "f12" | "f13" | "f14" | "f15" | "f16" | "f17" | "f18" | "f19" | "f20" | "f21" | "f22" | "f23" | "f24" | "numlock" | "scrolllock" | ";" | "+" | "," | "-" | "." | "/" | "~" | "[" | "|" | "]" | "'";
+type keyboardSpecButton = "alt" | "ctrl" | "shift" | "lshift" | "rshift" | "lctrl" | "rctrl" | "lalt" | "ralt" | "lwin" | "rwin";
+type keyboardButton = keyboardRegularButton | keyboardSpecButton;
+```
+
+#### keyTogglerDelay
 ```ts
 keyTogglerDelay: number | randomFromRange = 35;
 ```
@@ -123,7 +186,7 @@ obj.keyboard.keyTogglerDelay = 25;
 obj.keyboard.keyTogglerDelay = [25, 50];
 ```
 
-### keySenderDelay
+#### keySenderDelay
 ```ts
 keySenderDelay: number | randomFromRange = 35;
 ```
@@ -134,10 +197,10 @@ obj.keyboard.keySenderDelay=25;
 obj.keyboard.keySenderDelay=[25, 50];
 ```
 
-### toggleKey
+#### toggleKey
 ```ts
-toggleKey(key: keyboardButton | keyboardButton[], state?: boolean, delay?: number | randomFromRange): void;
-toggleKeyAsync(key: keyboardButton | keyboardButton[], state?: boolean, delay?: number | randomFromRange): Promise<void>;
+toggleKey(key: keyboardButton | number | keyboardButton[] | number[], state?: boolean, delay?: number | randomFromRange): void;
+toggleKeyAsync(key: keyboardButton | number | keyboardButton[] | number[], state?: boolean, delay?: number | randomFromRange): Promise<void>;
 ```
 Toggles key or combination of keys to provided state.
 | Argument | Description | Default Value |
@@ -163,10 +226,10 @@ obj.keyboard.toggleKeyAsync("b", true) // press key "b" and await for {keyToggle
 console.log("You will see this message without waiting for all previous actions");
 ```
 
-### sendKey
+#### sendKey
 ```ts
-sendKey(key: keyboardButton | keyboardButton[], afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): void;
-sendKeyAsync(key: keyboardButton | keyboardButton[], afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): Promise<void>;
+sendKey(key: keyboardButton | number | keyboardButton[] | number[], afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): void;
+sendKeyAsync(key: keyboardButton | number | keyboardButton[] | number[], afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): Promise<void>;
 ```
 Press and release key or combination of keys.
 | Argument | Description | Default Value |
@@ -193,10 +256,10 @@ obj.keyboard.sendKeyAsync("b") // press key "b", await for {keyTogglerDelay} mil
 console.log("You will see this message without waiting for all previous actions");
 ```
 
-### sendKeys
+#### sendKeys
 ```ts
-sendKeys(keys: keyboardButton[], afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): void;
-sendKeysAsync(keys: keyboardButton[], afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): Promise<void>;
+sendKeys(keys: keyboardButton[] | number[], afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): void;
+sendKeysAsync(keys: keyboardButton[] | number[], afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): Promise<void>;
 ```
 Press and release array of keys.
 | Argument | Description | Default Value |
@@ -223,7 +286,7 @@ obj.keyboard.sendKeysAsync(["a", "b"]) // press key "a", await for {keyTogglerDe
 console.log("You will see this message without waiting for all previous actions");
 ```
 
-### printText
+#### printText
 ```ts
 printText(text: string, afterTypeDelay?: number | randomFromRange): void;
 printTextAsync(text: string, afterTypeDelay?: number | randomFromRange): Promise<void>;
@@ -251,10 +314,10 @@ obj.keyboard.printText("γ Ğ ф f Ș ě š") // instantly types "γ Ğ ф f Ș 
 console.log("You will see this message without waiting for all previous actions");
 ```
 
-## mouse
+### mouse
 Provides methods to synthesize mouse motions, and button clicks.
 
-### buttonTogglerDelay
+#### buttonTogglerDelay
 ```ts
 buttonTogglerDelay: number | randomFromRange = 35;
 ```
@@ -265,7 +328,7 @@ obj.mouse.buttonTogglerDelay = 25;
 obj.mouse.buttonTogglerDelay = [25, 50];
 ```
 
-### saveMod
+#### saveMod
 ```ts
 enableSaveMod(bool: boolean): void;
 ```
@@ -276,7 +339,7 @@ const obj = new Hardware(handle); // or Virtual
 obj.mouse.enableSaveMod(true);
 ```
 
-### toggle
+#### toggle
 ```ts
 toggle(state: boolean, button?: mouseButton, delay?: number | randomFromRange): void;
 toggleAsync(state: boolean, button?: mouseButton, delay?: number | randomFromRange): Promise<void>;
@@ -305,7 +368,7 @@ obj.mouse.toggleAsync(true, "middle") // press middle mouse button (wheel) and s
 console.log("You will see this message without waiting for all previous actions");
 ```
 
-### click
+#### click
 ```ts
 click(button?: mouseButton, afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): void;
 clickAsync(button?: mouseButton, afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): Promise<void>;
@@ -332,12 +395,12 @@ obj.mouse.clickAsync("middle", [25, 50]) // press middle mouse button, await for
 console.log("You will see this message without waiting for all previous actions");
 ```
 
-### moveTo
+#### moveTo
 ```ts
 moveTo(x: number, y: number, delay?: number | randomFromRange): void;
 moveToAsync(x: number, y: number, delay?: number | randomFromRange): Promise<void>;
 ```
-Move mouse to [x, y].
+Move mouse to [x, y] in current workwindow.
 | Argument | Description | Default Value |
 | --- | --- | --- |
 | delay | milliseconds to sleep/await after mouse movement | 0 |
@@ -357,7 +420,7 @@ obj.mouse.moveToAsync(25, 25) // move mouse cursor to [25, 25]
 console.log("You will see this message without waiting for all previous actions");
 ```
 
-### move
+#### move
 ```ts
 move(x: number, y: number, delay?: number | randomFromRange): void;
 moveAsync(x: number, y: number, delay?: number | randomFromRange): Promise<void>;
@@ -382,12 +445,12 @@ obj.mouse.moveAsync(25, -25) // move mouse cursor from current position by [25, 
 console.log("You will see this message without waiting for all previous actions");
 ```
 
-### moveCurveTo
+#### moveCurveTo
 ```ts
 moveCurveTo(x: number, y: number, speed?: number | "max", deviation?: number): void;
 moveCurveToAsync(x: number, y: number, speed?: number | "max", deviation?: number): Promise<void>;
 ```
-Simulate human similar mouse movement to [x, y].
+Simulate human similar mouse movement to [x, y] in current workwindow.
 | Argument | Description | Default Value |
 | --- | --- | --- |
 | speed | move speed, if speed equals to "max" - immediate movement | 5 |
@@ -407,7 +470,7 @@ obj.mouse.moveCurveToAsync(50, 50, "max") // makes instant human similar mouse m
 console.log("You will see this message without waiting for all previous actions");
 ```
 
-### scrollWheel
+#### scrollWheel
 ```ts
 scrollWheel(amount: number, wheelTogglerDelay?: number | randomFromRange): void;
 scrollWheelAsync(count: number, wheelTogglerDelay?: number | randomFromRange): Promise<void>;
@@ -432,11 +495,11 @@ obj.mouse.scrollWheelAsync(25, 25)
 console.log("You will see this message without waiting for all previous actions");
 ```
 
-### getPos
+#### getPos
 ```ts
 getPos(): pos;
 ```
-Returns current cursor position at screen for Hardware class or position at current workwindow for Virtual class.
+Returns current cursor position relative to workwindow.
 ```js
 const { Virtual, Hardware } = require("keysender");
 const obj = new Hardware(handle); // or Virtual
@@ -444,9 +507,9 @@ obj.mouse.moveTo(25, 50);
 console.log(obj.mouse.getPos()); // object {x: 25, y: 50}
 ```
 
-## workwindow
+### workwindow
 
-### set
+#### set
 ```ts
 set(handle: number): void;
 ```
@@ -457,7 +520,7 @@ const obj = new Hardware(handle); // or Virtual
 obj.workwindow.set(newHandle);
 ```
 
-### get
+#### get
 ```ts
 get(): windowData;
 ```
@@ -468,9 +531,9 @@ const obj = new Hardware(handle); // or Virtual
 console.log(obj.workwindow.set(newHandle)); // object {handle, title, className}
 ```
 
-### setInfo
+#### setInfo
 ```ts
-setInfo(info: Partial<posAndSize>): void;
+setInfo(info: Partial<pos & size>): void;
 ```
 Set workwindow position and(or) size.
 | Object field | Description |
@@ -488,9 +551,9 @@ obj.workwindow.setInfo({y: 25, width: 1200}); // sets y position of workwindow t
 obj.workwindow.setInfo({x: 50, y: 25, width: 1200, height: 800});
 ```
 
-### getInfo
+#### getInfo
 ```ts
-getInfo(): posAndSize;
+getInfo(): pos & size;
 ```
 Returns object with workwindow position and size.
 ```js
@@ -499,7 +562,7 @@ const obj = new Hardware(handle); // or Virtual
 console.log(obj.workwindow.getInfo()); // object {x, y, width, height}
 ```
 
-### setForeground
+#### setForeground
 ```ts
 setForeground(): void;
 ```
@@ -510,7 +573,7 @@ const obj = new Hardware(handle); // or Virtual
 obj.workwindow.setForeground();
 ```
 
-### isForeground
+#### isForeground
 ```ts
 isForeground(): boolean;
 ```
@@ -521,7 +584,7 @@ const obj = new Hardware(handle); // or Virtual
 console.log(obj.workwindow.isForeground()); // true if current workwindow is a foreground window, false if not
 ```
 
-### isOpen
+#### isOpen
 ```ts
 isOpen(): boolean;
 ```
@@ -532,7 +595,7 @@ const obj = new Hardware(handle); // or Virtual
 console.log(obj.workwindow.isOpen()); // true if current workwindow exist, false if not
 ```
 
-### kill
+#### kill
 ```ts
 kill(): void;
 ```
@@ -543,7 +606,7 @@ const obj = new Hardware(handle); // or Virtual
 obj.workwindow.kill();
 ```
 
-### close
+#### close
 ```ts
 close(): void;
 ```
@@ -554,14 +617,14 @@ const obj = new Hardware(handle); // or Virtual
 obj.workwindow.close();
 ```
 
-### capture
+#### capture
 ```ts
-capture(part: posAndSize, format?: "rgba" | "bgra" | "grey"): img;
-capture(part: posAndSize, format: "monochrome", threshold?: uint8): img;
+capture(part: pos & size, format?: "rgba" | "bgra" | "grey"): img;
+capture(part: pos & size, format: "monochrome", threshold?: uint8): img;
 capture(format?: "rgba" | "bgra" | "grey"): img;
 capture(format: "monochrome", threshold?: uint8): img;
 ```
-Capture screenshot of current workwindow or desktop. 
+Capture screenshot of current workwindow (even if it background) or desktop. 
 | Argument | Description | Default Value |
 | --- | --- | --- |
 | part | object {x, y, height, width} with position and size to be captured |  |
@@ -586,9 +649,9 @@ obj.workwindow.capture("grey"); // returns {data: Buffer with captured image dat
 obj.workwindow.capture({x: 25, y: 25, width: 500, height: 500}, "monochrome", 200); // returns {data: Buffer with captured image data in monochrome color format, width: 500, height: 500}
 ```
 
-### colorAt
+#### colorAt
 ```ts
-colorAt(x: number, y: number, returnType?: "string"): hexString;
+colorAt(x: number, y: number, returnType?: "string"): string;
 colorAt(x: number, y: number, returnType: "array"): [red, green, blue];
 colorAt(x: number, y: number, returnType: "number"): number;
 ```
@@ -604,89 +667,135 @@ desktop.workwindow.colorAt(25, 25); // returns screen color in [25, 25] in "rrgg
 ```
 
 ## GlobalHotkey
-Register or unregister global hotkeys
-
-### register
 ```ts
-register(hotkey: keyboardRegularButton, hotkeyName: string, func: () => boolean | Promise<boolean>, mode: "hold" | "toggle", delay?: number): void;
-register(hotkey: keyboardRegularButton, hotkeyName: string, func: () => void | Promise<void>, mode?: "once"): void;
+constructor(hotkey: keyboardRegularButton | number, func: () => boolean | Promise<boolean>, mode: "hold" | "toggle", delay?: number, finalizerCallback?: () => void | Promise<void>);
+constructor(hotkey: keyboardRegularButton | number, func: () => void | Promise<void>, mode?: "once");
 ```
-Register hotkey.
+Register global hotkey, if {hotkey} already registered, re-registers it.
 | Argument | Description | Default Value |
 | --- | --- | --- |
-| func | function to be calling in new thread after hotkey was pressed |  |
-| mode | if "once" - {func} will repeat one time for each {hotkey} press, if "hold" - {func} will repeat while {hotkey} is pressed, if "toggle" - {func} starts repeat after {hotkey} first time pressed and end repeat after {hotkey} second time pressed | "once" |
+| func | function to be call in new thread after hotkey was pressed |  |
+| mode | if "once" - {func} will repeat one time for each {hotkey} press, if "hold" - {func} will repeat while {hotkey} is pressed or {func} returns true, if "toggle" - {func} starts repeat after {hotkey} first time pressed and end repeat after {hotkey} second time pressed or {func} returns false | "once" |
 | delay | if {mode} is "hold" or "toggle" - sets delay between {func} calls | 0 |
+| finalizerCallback | if {mode} is "hold" or "toggle" - function to be call after hotkey work is end |  |
 
 ```js
 const { GlobalHotkey } = require("keysender");
-GlobalHotkey.register("num+", "first", () => { // logs "hi" every time "ctrl+num+" is pressed
+const foo = new GlobalHotkey("num+", () => { // logs "hi" after pressing "num+"
     console.log("hi");
 });
-GlobalHotkey.register("num*", "second", () => { // logs "hi" every 50 milliseconds while "num*" is pressed
+new GlobalHotkey("num*", () => { // logs "hi" every 50 milliseconds while "num*" is pressed
     console.log("hi");
     return true;
 }, "hold", 50);
 let i = 0;
-GlobalHotkey.register("num/", "second", () => { // logs "hi" every 50 milliseconds after "num/" is pressed until "num/" be pressed again or i become > 50
+new GlobalHotkey("num/", () => { // logs "hi" every 50 milliseconds after "num/" is pressed until "num/" be pressed again or i become > 50
     i++;
     if (i>50) return false;
     console.log("hi")
     return true
 }, "toggle", 50); 
+new GlobalHotkey("num-", async () => { // logs "hi" every 50 milliseconds while "num-" is pressed, logs "bye" when "num-" is released
+    console.log("hi");
+    return true;
+}, "hold", 50, async ()=> {
+    console.log("bye");
+});
+const bar = new GlobalHotkey("num+", () => { // unregister prev "num+" hotkey {foo} (but it still could be reassignment) and register new hotkey "num+" {bar}
+    console.log("hello");
+});
+```
+
+### reassignment
+```ts
+reassignment(newHotkey: keyboardRegularButton | number): void;
+```
+Reassignment hotkey.
+```js
+const { GlobalHotkey } = require("keysender");
+function func() {
+    console.log("hi");
+}
+const foo = new GlobalHotkey("num+", func);
+foo.reassignment("a"); // now function {func} calling after "a" pressed
 ```
 
 ### unregister
 ```ts
-unregister(hotkeyName: string): void;
+unregister(): void;
 ```
-Unregister hotkeys by name.
+Unregister hotkey, but it still can be re-register by {reassignment} method.
 ```js
 const { GlobalHotkey } = require("keysender");
-GlobalHotkey.register("num+", "first", () => {
-    console.log("hi")
+const foo = new GlobalHotkey("num+", () => {
+    console.log("hi");
 });
-GlobalHotkey.unregister("first");
+foo.unregister(); // hotkey "num+" {foo} is unregister, but it still could be reassignment
 ```
 
 ### unregisterAll
 ```ts
-unregisterAll(): void;
+static unregisterAll(): void;
 ```
-Unregister all hotkeys.
+Unregister all hotkeys, but they still can be re-register by {reassignment} method.
 ```js
 const { GlobalHotkey } = require("keysender");
-GlobalHotkey.register("num+", "first", () => {
+new GlobalHotkey("num+", () => {
     console.log("hi")
 });
-GlobalHotkey.register("num-", "second", () => {
+new GlobalHotkey("num-", () => {
     console.log("hi")
 });
 GlobalHotkey.unregisterAll();
 ```
 
-### findHotkeyName
+### delete
 ```ts
-findHotkeyName(hotkey: keyboardRegularButton): string | undefined;
+delete(): void;
 ```
-Returns name of {hotkey} or null if {hotkey} is not registered.
+Delete hotkey.
 ```js
 const { GlobalHotkey } = require("keysender");
-GlobalHotkey.register("num-", "second", () => {
+const foo = new GlobalHotkey("num+", () => {
+    console.log("hi");
+});
+foo.delete(); // hotkey "num+" {foo} is no longer exist
+```
+
+### deleteAll
+```ts
+static deleteAll(): void;
+```
+Delete all hotkeys, use it before close program.
+```js
+const { GlobalHotkey } = require("keysender");
+new GlobalHotkey("num+", () => {
     console.log("hi")
 });
-console.log(GlobalHotkey.findHotkeyName("num-")); // "second"
-console.log(GlobalHotkey.findHotkeyName("a")); // undefined
+new GlobalHotkey("num-", () => {
+    console.log("hi")
+});
+GlobalHotkey.deleteAll();
 ```
 
 ## getScreenSize
 ```ts
 getScreenSize(): size;
 ```
-Returns object with screen size
+Returns object with screen size.
 ```js
 const { getScreenSize } = require("keysender");
 console.log(getScreenSize()); // object {width, height}
+```
+
+## vkToString
+```ts
+vkToString(virtualKey: number): keyboardButton;
+```
+Returns string name of {virtualKey}.
+```js
+const { vkToString } = require("keysender");
+console.log(vkToString(66)); // "b"
 ```
 
 ## sleep

@@ -1,10 +1,10 @@
 {
   "name": "keysender",
-  "version": "1.1.0",
-  "description": "Node.js keyboard and mouse inputs emulator for Windows",
+  "version": "1.2.0",
+  "description": "Node.js keyboard and mouse inputs emulator, global hotkey register for Windows",
   "keywords": [
     "automation",
-    "send inputs",
+    "send input",
     "keyboard",
     "mouse",
     "emulator",
