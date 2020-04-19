@@ -19,7 +19,7 @@
       - [.printText](#printtext)
     - [.mouse](#mouse)
       - [.buttonTogglerDelay](#buttontogglerDelay)
-      - [.saveMod](#savemod)
+      - [.enableSaveMode](#enableSaveMode)
       - [.toggle](#toggle)
       - [.click](#click)
       - [.moveTo](#moveto)
@@ -339,15 +339,15 @@ obj.mouse.buttonTogglerDelay = 25;
 obj.mouse.buttonTogglerDelay = [25, 50];
 ```
 
-#### saveMod
+#### enableSaveMode
 ```ts
-enableSaveMod(bool: boolean): void;
+enableSaveMode(bool: boolean): void;
 ```
-If saveMod is enable every mouse move method first back to last known coordinates ([0, 0] on first move), by default - disable
+If saveMode is enable - every mouse move method first back to last known coordinates ([0, 0] on first move), by default - disable
 ```js
 const { Virtual, Hardware } = require("keysender");
 const obj = new Hardware(handle); // or Virtual
-obj.mouse.enableSaveMod(true);
+obj.mouse.enableSaveMode(true);
 ```
 
 #### toggle

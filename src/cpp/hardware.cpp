@@ -49,7 +49,7 @@ void Hardware::mousePosGetter(POINT *coords)
 Napi::Value Hardware::getLastCoords(const Napi::CallbackInfo &info)
 {
     Napi::Object coords = Napi::Object::New(info.Env());
-    if (saveMod)
+    if (saveMode)
     {
         coords["x"] = lastCoords.x;
         coords["y"] = lastCoords.y;
@@ -88,7 +88,7 @@ void Hardware::mover(POINT coords, bool isAbsolute)
     ip.mi.dwExtraInfo = 0;
     ip.mi.time = 0;
     ip.mi.dwFlags = MOUSEEVENTF_MOVE;
-    if (saveMod)
+    if (saveMode)
     {
         POINT currCoords;
         GetCursorPos(&currCoords);
@@ -190,7 +190,7 @@ Napi::Object Hardware::Init(Napi::Env env, Napi::Object exports)
                              InstanceMethod("_close", &Hardware::close),
                              InstanceAccessor("_workwindow", &Hardware::getWorkwindow, &Hardware::setWorkwindow),
                              InstanceAccessor("_lastCoords", &Hardware::getLastCoords, NULL),
-                             InstanceAccessor("_saveMod", &Hardware::getSaveMod, &Hardware::setSaveMod),
+                             InstanceAccessor("_saveMode", NULL, &Hardware::setSaveMode),
                              InstanceAccessor("_windowInfo", &Hardware::getWindowInfo, &Hardware::setWindowInfo),
                          });
     constructor = Napi::Persistent(func);

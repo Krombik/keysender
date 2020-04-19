@@ -64,7 +64,7 @@ void Mouse::move(const Napi::CallbackInfo &info)
     mover(coords, info[2].As<Napi::Boolean>());
 }
 
-void Mouse::setSaveMod(const Napi::CallbackInfo &info, const Napi::Value &value)
+void Mouse::setSaveMode(const Napi::CallbackInfo &info, const Napi::Value &value)
 {
     if (!info[0].IsBoolean())
     {
@@ -72,10 +72,5 @@ void Mouse::setSaveMod(const Napi::CallbackInfo &info, const Napi::Value &value)
             .ThrowAsJavaScriptException();
         return;
     }
-    saveMod = info[0].As<Napi::Boolean>();
-};
-
-Napi::Value Mouse::getSaveMod(const Napi::CallbackInfo &info)
-{
-    return Napi::Boolean::New(info.Env(), saveMod);
+    saveMode = info[0].As<Napi::Boolean>();
 };

@@ -68,8 +68,8 @@ module.exports.Mouse = ClassName => class extends ClassName {
         Object.defineProperty(this, "mouse", {
             value: Object.assign(new EventEmitter, {
                 buttonTogglerDelay: 35,
-                enableSaveMod(bool) {
-                    self._saveMod = bool;
+                enableSaveMode(bool) {
+                    self._saveMode = bool;
                 },
                 getPos() {
                     return self._getPos();

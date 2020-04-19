@@ -17,9 +17,8 @@ private:
 
 protected:
     POINT lastCoords = {0, 0};
-    bool saveMod = false;
-    void setSaveMod(const Napi::CallbackInfo &info, const Napi::Value &value);
-    Napi::Value getSaveMod(const Napi::CallbackInfo &info);
+    bool saveMode = false;
+    void setSaveMode(const Napi::CallbackInfo &info, const Napi::Value &value);
     virtual void mousePosGetter(POINT *coords) = 0;
     virtual void mbToggler(uint8_t button, bool isButtonDown) = 0;
     virtual void mover(POINT coords, bool isAbsolute) = 0;

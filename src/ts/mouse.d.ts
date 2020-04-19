@@ -1,8 +1,8 @@
 import { EventEmitter, randomFromRange, mouseButton, mouseEvent, pos } from './types.d'
 export declare interface mouse extends EventEmitter<mouseEvent> {
     buttonTogglerDelay: number | randomFromRange;
-    /** If saveMod is enable every mouse move method first back to last known coordinates ([0, 0] on first move), by default - disable. */
-    enableSaveMod(bool: boolean): void;
+    /** If saveMode is enable every mouse move method first back to last known coordinates ([0, 0] on first move), by default - disable. */
+    enableSaveMode(bool: boolean): void;
     /** @returns current cursor position relative to workwindow. */
     getPos(): pos;
     /**
