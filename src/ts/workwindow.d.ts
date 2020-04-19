@@ -1,5 +1,5 @@
-import { EventEmitter, pos, size, img, windowData, uint8 } from './types.d'
-export declare interface workwindow extends EventEmitter<"capture"> {
+import { EventEmitter, pos, size, img, windowData, uint8, workwindowEvent } from './types.d'
+export declare interface workwindow extends EventEmitter<workwindowEvent> {
     /** Set current workwindow by {handle}. */
     set(handle: number): void;
     /** @returns object with {handle}, {title} and {className} of current workwindow. */
