@@ -1,3 +1,4 @@
+const { getScreenSize } = require('../../build/Release/key_sender.node');
 const { sleep, sleepAsync, random } = require('./sleep');
 const { EventEmitter } = require('events');
 module.exports.Mouse = ClassName => class extends ClassName {

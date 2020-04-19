@@ -303,7 +303,7 @@ void Workwindow::setWindowInfo(const Napi::CallbackInfo &info, const Napi::Value
     {
         uint16_t x, y, width, height;
         RECT rect;
-        GetClientRect(hWnd, &rect);
+        GetWindowRect(hWnd, &rect);
         Napi::Object windowInfo(env, info[0]);
         if (!windowInfo.Get("width").IsNumber())
             width = rect.right - rect.left;

@@ -8,44 +8,43 @@
 - [Syntax](#syntax)
   - [getWindow](#getwindow)
   - [getWindowChild](#getwindowChild)
-  - [Hardware](#hardware)
-  - [Virtual](#virtual)
+  - [Available keyboard buttons](#keyboardbutton)
+  - [Hardware](#hardware) and [Virtual](#virtual)
+    - [.keyboard](#keyboard)
+      - [.keyTogglerDelay](#keytogglerdelay)
+      - [.keySenderDelay](#keysenderdelay)
+      - [.toggleKey](#togglekey)
+      - [.sendKey](#sendkey)
+      - [.sendKeys](#sendkeys)
+      - [.printText](#printtext)
+    - [.mouse](#mouse)
+      - [.buttonTogglerDelay](#buttontogglerDelay)
+      - [.saveMod](#savemod)
+      - [.toggle](#toggle)
+      - [.click](#click)
+      - [.moveTo](#moveto)
+      - [.move](#move)
+      - [.moveCurveTo](#movecurveto)
+      - [.scrollWheel](#scrollwheel)
+      - [.getPos](#getpos)
+    - [.workwindow](#workwindow)
+      - [.set](#set)
+      - [.get](#get)
+      - [.setInfo](#setinfo)
+      - [.getInfo](#getinfo)
+      - [.setForeground](#setforeground)
+      - [.isForeground](#isforeground)
+      - [.isOpen](#isopen)
+      - [.kill](#kill)
+      - [.close](#close)
+      - [.capture](#capture)
+      - [.colorAt](#colorat)      
     - [EventEmitter](#eventemitter)
-    - [keyboard](#keyboard)
-      - [keyboardButton](#keyboardbutton)
-      - [keyTogglerDelay](#keytogglerdelay)
-      - [keySenderDelay](#keysenderdelay)
-      - [toggleKey](#togglekey)
-      - [sendKey](#sendkey)
-      - [sendKeys](#sendkeys)
-      - [printText](#printtext)
-    - [mouse](#mouse)
-      - [buttonTogglerDelay](#buttontogglerDelay)
-      - [saveMod](#savemod)
-      - [toggle](#toggle)
-      - [click](#click)
-      - [moveTo](#moveto)
-      - [move](#move)
-      - [moveCurveTo](#movecurveto)
-      - [scrollWheel](#scrollwheel)
-      - [getPos](#getpos)
-    - [workwindow](#workwindow)
-      - [set](#set)
-      - [get](#get)
-      - [setInfo](#setinfo)
-      - [getInfo](#getinfo)
-      - [setForeground](#setforeground)
-      - [isForeground](#isforeground)
-      - [isOpen](#isopen)
-      - [kill](#kill)
-      - [close](#close)
-      - [capture](#capture)
-      - [colorAt](#colorat)
   - [GlobalHotkey](#globalhotkey)
-    - [reassignment](#reassignment)
-    - [unregister](#unregister)
+    - [.reassignment](#reassignment)
+    - [.unregister](#unregister)
+    - [.delete](#delete)
     - [unregisterAll](#unregisterall)
-    - [delete](#delete)
     - [deleteAll](#deleteall)
   - [getScreenSize](#getscreensize)
   - [vkToString](#vktostring)
@@ -73,25 +72,59 @@ yarn add keysender
 ```js
 const { Hardware, getWindow, GlobalHotkey } = require("keysender");
 const obj = new Hardware(getWindow(null, "Notepad")); // find Notepad handle by className and set it as workwindow
-new GlobalHotkey("num+", () => { // register hotkey
-    obj.workwindow.setInfo({ x: 0, y: 0, width: 500 }) // move workwindow to top left corner of the screen and change width to 500px
-    obj.keyboard.printText("hello"); // instantly types "hello"
-    obj.keyboard.sendKey("space", 50); // press key "space", sleep for 50 milliseconds, release key "space"
-    obj.keyboard.sendKeys("world".split(''),[25, 50], 50); // press key "w", sleep for random from range [25, 50] milliseconds, release key "w", sleep for 50 milliseconds, press key "o", sleep for random from range [25, 50] milliseconds, release key "o", sleep for 50 milliseconds, ..., release key "d"
-    obj.keyboard.sendKey(["ctrl", "s"], 50); // press key combination "ctrl+s", sleep for 50 milliseconds, release key combination
-    obj.mouse.moveCurveTo(480, 10); // makes human similar mouse movement from current cursor position to [480, 10]
-    obj.mouse.click("left", 25); // press left mouse button, sleep for 25 milliseconds, release left mouse button
-});
+new GlobalHotkey({ // register hotkey
+    key: "num+",
+    isEnabled() {
+      if (!obj.workwindow.isOpen())
+        obj.workwindow.set(getWindow(null, "Notepad")); // try to re-set workwindow if it isn't open
+      return obj.workwindow.isForeground() && obj.workwindow.isOpen(); // if "Notepad" is open and foreground - do {action}
+    },
+    actionArgs: [ // something like watcher for {size}
+      {
+        stateGetter() {
+          const { height, width } = obj.workwindow.getInfo();
+          return ({ height, width }); // returns current {size}
+        },
+        argSetter: size => ([size.width / 2, size.height / 2]) // change {middleCoords} if current {size} not equal to previous size 
+      }
+    ],
+    action(middleCoords) {
+      obj.workwindow.setInfo({ x: 0, y: 0 }) // move workwindow to top left corner of the screen
+      obj.mouse.moveCurveTo(...middleCoords); // makes human similar mouse movement from current cursor position to middle of "Notepad" window
+      obj.keyboard.printText("hello"); // instantly types "hello"
+      obj.keyboard.sendKey("space", 50); // press key "space", sleep for 50 milliseconds, release key "space"
+      obj.keyboard.sendKeys("world".split(''), [25, 50], 50); // press key "w", sleep for random from range [25, 50] milliseconds, release key "w", sleep for 50 milliseconds, press key "o", sleep for random from range [25, 50] milliseconds, release key "o", sleep for 50 milliseconds, ..., release key "d"
+      obj.keyboard.sendKey(["ctrl", "s"], 50); // press key combination "ctrl+s", sleep for 50 milliseconds, release key combination
+      obj.workwindow.close(); // close "Notepad" window
+    }
+  });
 // or
-new GlobalHotkey("num-", async () => { // register hotkey
-    obj.workwindow.setInfo({ x: 0, y: 0, width: 500 }) // move workwindow to top left corner of the screen and change width to 500px
-    obj.keyboard.printTextAsync("hello"); // instantly types "hello"
-    await obj.keyboard.sendKeyAsync("space", 50); // press key "space", await for 50 milliseconds, release key "space"
-    await obj.keyboard.sendKeysAsync("world".split(''),[25, 50], 50); // press key "w", await for random from range [25, 50] milliseconds, release key "w", await for 50 milliseconds, press key "o", await for random from range [25, 50] milliseconds, release key "o", await for 50 milliseconds, ..., release key "d"
-    await obj.keyboard.sendKeyAsync(["ctrl", "s"], 50); // press key combination "ctrl+s", await for 50 milliseconds, release key combination
-    await obj.mouse.moveCurveToAsync(480, 10); // makes human similar mouse movement from current cursor position to [480, 10]
-    await obj.mouse.clickAsync("left", 25); // press left mouse button, await for 25 milliseconds, release left mouse button
-});
+new GlobalHotkey({ // register hotkey
+    key: "num-",
+    isEnabled() {
+      if (!obj.workwindow.isOpen())
+        obj.workwindow.set(getWindow(null, "Notepad")); // try to re-set workwindow if it isn't open
+      return obj.workwindow.isForeground() && obj.workwindow.isOpen(); // if "Notepad" is open and foreground - do {action}
+    },
+    actionArgs: [ // something like watcher for {size}
+      {
+        stateGetter() {
+          const { height, width } = obj.workwindow.getInfo();
+          return ({ height, width }); // returns current {size}
+        },
+        argSetter: size => ([size.width / 2, size.height / 2]) // change {middleCoords} if current {size} not equal to previous size 
+      }
+    ],
+    async action(middleCoords) {
+      obj.workwindow.setInfo({ x: 0, y: 0 }) // move workwindow to top left corner of the screen
+      await obj.mouse.moveCurveToAsync(...middleCoords); // makes human similar mouse movement from current cursor position to middle of "Notepad" window
+      await obj.keyboard.printTextAsync("hello"); // instantly types "hello"
+      await obj.keyboard.sendKeyAsync("space", 50); // press key "space", await for 50 milliseconds, release key "space"
+      await obj.keyboard.sendKeysAsync("world".split(''), [25, 50], 50); // press key "w", await for random from range [25, 50] milliseconds, release key "w", await for 50 milliseconds, press key "o", await for random from range [25, 50] milliseconds, release key "o", await for 50 milliseconds, ..., release key "d"
+      await obj.keyboard.sendKeyAsync(["ctrl", "s"], 50); // press key combination "ctrl+s", await for 50 milliseconds, release key combination
+      obj.workwindow.close(); // close "Notepad" window
+    }
+  });
 ```
 
 # Syntax
@@ -124,6 +157,14 @@ console.log(getWindowChild(parentHandle, null, "someTitle")) // {handle} of firs
 console.log(getWindowChild(parentHandle, "someClass", "someTitle")) // {handle} of first find {parentHandle} child with "someTitle" title and "someClass" class
 ```
 
+#### keyboardButton
+[toggleKey](#togglekey), [sendKey](#sendkey), [sendKeys](#sendkeys), [GlobalHotkey](#globalhotkey) supports for following keys or numbers([virtual key codes](https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes))
+```ts
+type keyboardRegularButton = "backspace" | "tab" | "enter" | "pause" | "capslock" | "escape" | "space" | "pageup" | "pagedown" | "end" | "home" | "left" | "up" | "right" | "down" | "prntscrn" | "insert" | "delete" | "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" | "num0" | "num0" | "num1" | "num2" | "num3" | "num4" | "num5" | "num6" | "num7" | "num8" | "num9" | "num*" | "num+" | "num," | "num-" | "num." | "num/" | "f1" | "f2" | "f3" | "f4" | "f5" | "f6" | "f7" | "f8" | "f9" | "f10" | "f11" | "f12" | "f13" | "f14" | "f15" | "f16" | "f17" | "f18" | "f19" | "f20" | "f21" | "f22" | "f23" | "f24" | "numlock" | "scrolllock" | ";" | "+" | "," | "-" | "." | "/" | "~" | "[" | "|" | "]" | "'";
+type keyboardSpecButton = "alt" | "ctrl" | "shift" | "lshift" | "rshift" | "lctrl" | "rctrl" | "lalt" | "ralt" | "lwin" | "rwin";
+type keyboardButton = keyboardRegularButton | keyboardSpecButton;
+```
+
 ## Hardware
 Provides [keyboard](#keyboard), [mouse](#mouse) and [workwindow](#workwindow) methods. Keyboard and mouse methods implementations on hardware level by inserts the events serially into the keyboard or mouse input stream. These events are not interspersed with other keyboard or mouse input events inserted either by the user (with the keyboard or mouse).
 ```js
@@ -142,38 +183,8 @@ const obj = new Virtual(handle); // Create new instance of Virtual class with {h
                                  // {handle} could be found with getWindow or getWindowChild methods
 ```
 
-#### EventEmitter
-EventEmitter available for every sendInput method from [keyboard](#keyboard) and [mouse](#mouse) modules and capture method from [workwindow](#workwindow) module.
-```ts
-type keyboardEvent = "beforePrintText" | "beforeToggleKey" | "beforeSendKey" | "beforeSendKeys" | "afterPrintText" | "afterToggleKey" | "afterSendKey" | "afterSendKeys";
-type mouseEvent = "beforeToggle" | "beforeClick" | "beforeMoveTo" | "beforeMoveCurveTo" | "beforeMove" | "beforeScrollWheel" | "afterToggle" | "afterClick" | "afterMoveTo" | "afterMoveCurveTo" | "afterMove" | "afterScrollWheel";
-type workwindowEvent = "capture";
-```
-Example:
-```js
-const { Virtual, Hardware } = require("keysender");
-const obj = new Hardware(handle); // or Virtual
-obj.keyboard.on("beforeSendKey", (key, delay) => {
-    console.log(`get ready, now I press ${key}, wait for ${delay} ms and release it`); // logs before each sendKey or sendKeyAsync method
-});
-obj.keyboard.on("afterSendKey", () => {
-    console.log("I done"); // logs after each sendKey or sendKeyAsync method
-});
-obj.keyboard.sendKey("a");
-obj.keyboard.sendKeyAsync("b");
-```
->For more details see [EventEmitter documentation](https://nodejs.org/api/events.html#events_class_eventemitter).
-
 ### keyboard
 Provides methods to synthesize keystrokes.
-
-#### keyboardButton
-[toggleKey](#togglekey), [sendKey](#sendkey), [sendKeys](#sendkeys), [GlobalHotkey](#globalhotkey) supports for following keys or [virtual key codes](https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes)
-```ts
-type keyboardRegularButton = "backspace" | "tab" | "enter" | "pause" | "capslock" | "escape" | "space" | "pageup" | "pagedown" | "end" | "home" | "left" | "up" | "right" | "down" | "prntscrn" | "insert" | "delete" | "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" | "num0" | "num0" | "num1" | "num2" | "num3" | "num4" | "num5" | "num6" | "num7" | "num8" | "num9" | "num*" | "num+" | "num," | "num-" | "num." | "num/" | "f1" | "f2" | "f3" | "f4" | "f5" | "f6" | "f7" | "f8" | "f9" | "f10" | "f11" | "f12" | "f13" | "f14" | "f15" | "f16" | "f17" | "f18" | "f19" | "f20" | "f21" | "f22" | "f23" | "f24" | "numlock" | "scrolllock" | ";" | "+" | "," | "-" | "." | "/" | "~" | "[" | "|" | "]" | "'";
-type keyboardSpecButton = "alt" | "ctrl" | "shift" | "lshift" | "rshift" | "lctrl" | "rctrl" | "lalt" | "ralt" | "lwin" | "rwin";
-type keyboardButton = keyboardRegularButton | keyboardSpecButton;
-```
 
 #### keyTogglerDelay
 ```ts
@@ -315,7 +326,7 @@ console.log("You will see this message without waiting for all previous actions"
 ```
 
 ### mouse
-Provides methods to synthesize mouse motions, and button clicks.
+Provides methods to synthesize mouse motions, mouse button clicks and get mouse position.
 
 #### buttonTogglerDelay
 ```ts
@@ -508,6 +519,7 @@ console.log(obj.mouse.getPos()); // object {x: 25, y: 50}
 ```
 
 ### workwindow
+Provides methods to work with workwindow.
 
 #### set
 ```ts
@@ -666,43 +678,158 @@ obj.workwindow.colorAt(25, 25, "number"); // returns workwindow color in [25, 25
 desktop.workwindow.colorAt(25, 25); // returns screen color in [25, 25] in "rrggbb" format
 ```
 
+#### EventEmitter
+EventEmitter available for every sendInput method from [keyboard](#keyboard) and [mouse](#mouse) modules and capture method from [workwindow](#workwindow) module.
+```ts
+type keyboardEvent = "beforePrintText" | "beforeToggleKey" | "beforeSendKey" | "beforeSendKeys" | "afterPrintText" | "afterToggleKey" | "afterSendKey" | "afterSendKeys";
+type mouseEvent = "beforeToggle" | "beforeClick" | "beforeMoveTo" | "beforeMoveCurveTo" | "beforeMove" | "beforeScrollWheel" | "afterToggle" | "afterClick" | "afterMoveTo" | "afterMoveCurveTo" | "afterMove" | "afterScrollWheel";
+type workwindowEvent = "capture";
+```
+Example:
+```js
+const { Virtual, Hardware } = require("keysender");
+const obj = new Hardware(handle); // or Virtual
+obj.keyboard.on("beforeSendKey", (key, delay) => {
+    console.log(`get ready, now I press ${key}, wait for ${delay} ms and release it`); // logs before each sendKey or sendKeyAsync method
+});
+obj.keyboard.on("afterSendKey", () => {
+    console.log("I done"); // logs after each sendKey or sendKeyAsync method
+});
+obj.keyboard.sendKey("a");
+obj.keyboard.sendKeyAsync("b");
+```
+>For more details see [EventEmitter documentation](https://nodejs.org/api/events.html#events_class_eventemitter).
+
 ## GlobalHotkey
 ```ts
-constructor(hotkey: keyboardRegularButton | number, func: () => boolean | Promise<boolean>, mode: "hold" | "toggle", delay?: number, finalizerCallback?: () => void | Promise<void>);
-constructor(hotkey: keyboardRegularButton | number, func: () => void | Promise<void>, mode?: "once");
+type actionArgs<S extends any[], A extends any[]> = {
+    [i in keyof S]: { stateGetter(): S[i], argSetter(item: S[i]): A[i extends keyof A ? i : never] }
+}
+type hotkeyOptions<S extends any[], A extends any[]> = {
+    key: keyboardRegularButton | number;
+    isEnabled?(): boolean | Promise<boolean>;
+    actionArgs?: actionArgs<S, A>;
+    mode?: "once";
+    action(...args: A): void | Promise<void>;
+} | {
+    key: keyboardRegularButton | number;
+    isEnabled?(): boolean | Promise<boolean>;
+    actionArgs?: actionArgs<S, A>;
+    mode: "toggle" | "hold";
+    action(...args: A): boolean | Promise<boolean>;
+    finalizerCallback?(...args: A): void | Promise<void>;
+    delay?: number;
+};
+constructor(options: hotkeyOptions<stateTypes extends any[] ? stateTypes : [stateTypes], argsTypes extends any[] ? argsTypes : [argsTypes]>);
 ```
-Register global hotkey, if {hotkey} already registered, re-registers it.
-| Argument | Description | Default Value |
-| --- | --- | --- |
-| func | function to be call in new thread after hotkey was pressed |  |
-| mode | if "once" - {func} will repeat one time for each {hotkey} press, if "hold" - {func} will repeat while {hotkey} is pressed or {func} returns true, if "toggle" - {func} starts repeat after {hotkey} first time pressed and end repeat after {hotkey} second time pressed or {func} returns false | "once" |
-| delay | if {mode} is "hold" or "toggle" - sets delay between {func} calls | 0 |
-| finalizerCallback | if {mode} is "hold" or "toggle" - function to be call after hotkey work is end |  |
-
+Registers hotkey, if some hotkey already registered for this {options.key}, [unregister](#unregister) previous hotkey and registers new hotkey.
+| field | Description | Default Value |  |
+| --- | --- | --- | --- |
+| key | hotkey |  | required |
+| mode | if "once" - {options.action} will call one time for each {options.key} press, if "hold" - {options.action} will repeat every {options.delay} milliseconds while {options.key} is pressed or {options.action} returns true, if "toggle" - {options.action} starts repeat repeat every {options.delay} milliseconds after {options.key} first time pressed and stops after {options.key} second time pressed or {options.action} returns false | "once" |  |
+| isEnabled | function to check if hotkey is need to be executing |  |  |
+| actionArgs | something like watcher for arguments of {options.action} and {options.finalizerCallback}, i.e. array with objects { stateGetter: () => stateType, argSetter: (item: stateType) => argType }, where stateGetter is function for gets current state, argSetter - function to change arg value if state getting by stateGetter is different from the previous state, see an example for a better understanding. |  |  |
+| action | function to be call after hotkey was pressed |  | required |
+| finalizerCallback | if {options.mode} is "hold" or "toggle" - function to be call after hotkey work is end |  |  |
+| delay | if {options.mode} is "hold" or "toggle" - sets delay between {options.action} calls | 0 |  |
 ```js
 const { GlobalHotkey } = require("keysender");
-const foo = new GlobalHotkey("num+", () => { // logs "hi" after pressing "num+"
-    console.log("hi");
+const foo = new GlobalHotkey({ // logs "hi" after pressing "num+"
+    key: "num+", 
+    action() {
+        console.log("hi");
+    }
 });
-new GlobalHotkey("num*", () => { // logs "hi" every 50 milliseconds while "num*" is pressed
-    console.log("hi");
-    return true;
-}, "hold", 50);
+new GlobalHotkey({ // logs "hi" every 50 milliseconds while "num*" is pressed
+    key: "num*", 
+    action() {
+        console.log("hi");
+        return true;
+    }, 
+    mode: "hold", 
+    delay: 50
+});
 let i = 0;
-new GlobalHotkey("num/", () => { // logs "hi" every 50 milliseconds after "num/" is pressed until "num/" be pressed again or i become > 50
-    i++;
-    if (i>50) return false;
-    console.log("hi")
-    return true
-}, "toggle", 50); 
-new GlobalHotkey("num-", async () => { // logs "hi" every 50 milliseconds while "num-" is pressed, logs "bye" when "num-" is released
-    console.log("hi");
-    return true;
-}, "hold", 50, async ()=> {
-    console.log("bye");
+new GlobalHotkey({ // logs "hi" every 50 milliseconds after "num/" is pressed until "num/" be pressed again or i become > 50
+    key: "num/", 
+    action() {
+        i++;
+        if (i>50) return false;
+        console.log("hi")
+        return true
+    }, 
+    mode: "toggle", 
+    delay: 50
 });
-const bar = new GlobalHotkey("num+", () => { // unregister prev "num+" hotkey {foo} (but it still could be reassignment) and register new hotkey "num+" {bar}
-    console.log("hello");
+new GlobalHotkey({ // after "a" is pressed if i <= 50 - logs "hi" every 50 milliseconds until "a" be pressed again
+    key: "a",
+    isEnabled() {
+        return i <= 50;
+    }
+    action() {
+        i++;
+        console.log("hi")
+        return true
+    }, 
+    mode: "toggle", 
+    delay: 50
+}); 
+new GlobalHotkey({ // logs "hi" every 50 milliseconds while "num-" is pressed, logs "bye" when "num-" is released
+    key: "num-", 
+    async action() { 
+        console.log("hi");
+        return true;
+    }, 
+    mode: "hold", 
+    delay: 50, 
+    async finalizerCallback() {
+        console.log("bye");
+    }
+});
+const bar = new GlobalHotkey({ // unregister prev "num+" hotkey {foo} (but it still could be reassignment) and register new hotkey "num+" {bar}
+    key: "num+", 
+    action() { 
+        console.log("hello");
+    }
+});
+```
+```ts
+import { Hardware, getWindow, GlobalHotkey } from 'keysender';
+/**Code described below registers hotkey "num +", takes first {stateValue} of "Notepad" {height, width} and returns [width / 2, height / 2] as arg for {action}.
+ * When "num +" will be pressed {isEnabled} will check is "Notepad" open,
+ * if it's not open, it try to find it again,
+ * if it still isn't open hotkey do nothing do nothing,
+ * if it's open {stateGetter} gets {height, width} of "Notepad" and compares it with previous {stateValue},
+ * if they are not equal sets new value [width / 2, height / 2] for argument of {action}, based on current {stateValue},
+ * if they are equal, argument of {action} is not change,
+ * after this it do {action} - moves mouse cursor to middle of "Notepad" window and makes left mouse click.
+ */
+const obj = new Hardware(getWindow(null, "Notepad"));
+type stateType = {
+    height: number,
+    width: number
+}
+type argType = [number, number];
+new GlobalHotkey<[stateType], [argType]>({
+    key: "num+",
+    isEnabled() {
+        if (!obj.workwindow.isOpen())
+            obj.workwindow.set(getWindow(null, "Notepad"));
+        return obj.workwindow.isOpen();
+    },
+    actionArgs: [
+        {
+            stateGetter() {
+                const { height, width } = obj.workwindow.getInfo();
+                return ({ height, width });
+            },
+            argSetter: size => ([size.width / 2, size.height / 2])
+        }
+    ],
+    async action(size) {
+        await obj.mouse.moveToAsync(...size);
+        await obj.mouse.clickAsync();
+    },
 });
 ```
 
@@ -710,43 +837,33 @@ const bar = new GlobalHotkey("num+", () => { // unregister prev "num+" hotkey {f
 ```ts
 reassignment(newHotkey: keyboardRegularButton | number): void;
 ```
-Reassignment hotkey.
+Reassignments hotkey.
 ```js
 const { GlobalHotkey } = require("keysender");
-function func() {
+function action() {
     console.log("hi");
 }
-const foo = new GlobalHotkey("num+", func);
-foo.reassignment("a"); // now function {func} calling after "a" pressed
+const foo = new GlobalHotkey({
+    key: "num+", 
+    action
+});
+foo.reassignment("a"); // now function {action} calling after "a" pressed
 ```
 
 ### unregister
 ```ts
 unregister(): void;
 ```
-Unregister hotkey, but it still can be re-register by {reassignment} method.
+Unregister hotkey, but it still can be reassignment by [reassignment](#reassignment) method.
 ```js
 const { GlobalHotkey } = require("keysender");
-const foo = new GlobalHotkey("num+", () => {
-    console.log("hi");
+const foo = new GlobalHotkey({
+    key: "num+", 
+    action() {
+        console.log("hi");
+    }
 });
 foo.unregister(); // hotkey "num+" {foo} is unregister, but it still could be reassignment
-```
-
-### unregisterAll
-```ts
-static unregisterAll(): void;
-```
-Unregister all hotkeys, but they still can be re-register by {reassignment} method.
-```js
-const { GlobalHotkey } = require("keysender");
-new GlobalHotkey("num+", () => {
-    console.log("hi")
-});
-new GlobalHotkey("num-", () => {
-    console.log("hi")
-});
-GlobalHotkey.unregisterAll();
 ```
 
 ### delete
@@ -756,10 +873,35 @@ delete(): void;
 Delete hotkey.
 ```js
 const { GlobalHotkey } = require("keysender");
-const foo = new GlobalHotkey("num+", () => {
-    console.log("hi");
+const foo = new GlobalHotkey({
+    key: "num+", 
+    action() {
+        console.log("hi");
+    }
 });
 foo.delete(); // hotkey "num+" {foo} is no longer exist
+```
+
+### unregisterAll
+```ts
+static unregisterAll(): void;
+```
+Unregister all hotkeys, but they still can be reassignment by [reassignment](#reassignment) method.
+```js
+const { GlobalHotkey } = require("keysender");
+new GlobalHotkey({
+    key: "num+", 
+    action() {
+        console.log("hi");
+    }
+});
+new GlobalHotkey({
+    key: "num-", 
+    action() {
+        console.log("hi");
+    }
+});
+GlobalHotkey.unregisterAll();
 ```
 
 ### deleteAll
@@ -769,11 +911,17 @@ static deleteAll(): void;
 Delete all hotkeys, use it before close program.
 ```js
 const { GlobalHotkey } = require("keysender");
-new GlobalHotkey("num+", () => {
-    console.log("hi")
+new GlobalHotkey({
+    key: "num+", 
+    action() {
+        console.log("hi");
+    }
 });
-new GlobalHotkey("num-", () => {
-    console.log("hi")
+new GlobalHotkey({
+    key: "num-", 
+    action() {
+        console.log("hi");
+    }
 });
 GlobalHotkey.deleteAll();
 ```

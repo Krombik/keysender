@@ -1,6 +1,6 @@
 import { keyboardRegularButton, hotkeyOptions } from './types.d'
 export declare class GlobalHotkey<stateTypes, argsTypes> {
-    /** Registers hotkey, if hotkey already registered, {unregister} previous hotkey and registers new hotkey.
+    /** Registers hotkey, if some hotkey already registered for this {options.key}, {unregister} previous hotkey and registers new hotkey.
      * @param options.key - hotkey.
      * @param options.mode - if "once" - {options.action} will call one time for each {options.key} press,
      * if "hold" - {options.action} will repeat every {options.delay} milliseconds while {options.key} is pressed or {options.action} returns true,
@@ -32,7 +32,7 @@ export declare class GlobalHotkey<stateTypes, argsTypes> {
      * new GlobalHotkey<[stateType], [argType]>({
      *     key: "num+",
      *     isEnabled() {
-     *         if (obj.workwindow.isOpen())
+     *         if (!obj.workwindow.isOpen())
      *             obj.workwindow.set(getWindow(null, "Notepad"));
      *         return obj.workwindow.isOpen();
      *     },
@@ -52,11 +52,11 @@ export declare class GlobalHotkey<stateTypes, argsTypes> {
      * });
      */
     constructor(options: hotkeyOptions<stateTypes extends any[] ? stateTypes : [stateTypes], argsTypes extends any[] ? argsTypes : [argsTypes]>);
-    /** Reassigns {hotkey} to {newHotkey}, if {newHotkey} already registered, re-registers it */
-    reassignment(newHotkey: keyboardRegularButton | number): void;
-    /** Unregister hotkey, hotkey can be re-register by {reassignment} method. */
+    /** Reassigns hotkey to {newKey}, if some hotkey already registered for {newKey}, {unregister} previous hotkey and registers new hotkey */
+    reassignment(newKey: keyboardRegularButton | number): void;
+    /** Unregister hotkey, hotkey can be reassignment by {reassignment} method. */
     unregister(): void;
-    /** Unregister all hotkeys, hotkeys can be re-register by {reassignment} method. */
+    /** Unregister all hotkeys, hotkeys can be reassignment by {reassignment} method. */
     static unregisterAll(): void;
     /** Delete hotkey. */
     delete(): void;
