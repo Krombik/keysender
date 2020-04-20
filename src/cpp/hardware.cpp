@@ -188,10 +188,11 @@ Napi::Object Hardware::Init(Napi::Env env, Napi::Object exports)
                              InstanceMethod("_getColor", &Hardware::getColor),
                              InstanceMethod("_kill", &Hardware::kill),
                              InstanceMethod("_close", &Hardware::close),
-                             InstanceAccessor("_workwindow", &Hardware::getWorkwindow, &Hardware::setWorkwindow),
+                             InstanceMethod("_setWorkwindow", &Hardware::setWorkwindow),
+                             InstanceMethod("_getWorkwindow", &Hardware::getWorkwindow),
                              InstanceAccessor("_lastCoords", &Hardware::getLastCoords, NULL),
                              InstanceAccessor("_saveMode", NULL, &Hardware::setSaveMode),
-                             InstanceAccessor("_windowInfo", &Hardware::getWindowInfo, &Hardware::setWindowInfo),
+                             InstanceAccessor("_windowView", &Hardware::getWindowView, &Hardware::setWindowView),
                          });
     constructor = Napi::Persistent(func);
     constructor.SuppressDestruct();

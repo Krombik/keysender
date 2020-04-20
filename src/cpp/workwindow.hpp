@@ -4,8 +4,8 @@
 
 #include "types.hpp"
 
-Napi::Value getWindow(const Napi::CallbackInfo &info);
-Napi::Value getWindowChild(const Napi::CallbackInfo &info);
+Napi::Value getAllWindows(const Napi::CallbackInfo &info);
+Napi::Value getWindowChildren(const Napi::CallbackInfo &info);
 Napi::Value getScreenSize(const Napi::CallbackInfo &info);
 
 class Workwindow
@@ -18,14 +18,16 @@ public:
     void setForeground(const Napi::CallbackInfo &info);
     void kill(const Napi::CallbackInfo &info);
     void close(const Napi::CallbackInfo &info);
-    static Window windowGetter(HWND hWnd);
+    static Napi::Object windowGetter(HWND hWnd, Napi::Env env);
+    static std::wstring bufferToWstring(Napi::Value val);
 
 protected:
     HWND hWnd = NULL;
-    void setWorkwindow(const Napi::CallbackInfo &info, const Napi::Value &value);
+    std::wstring titleName, className, childTitleName, childClassName;
+    void setWorkwindow(const Napi::CallbackInfo &info);
     Napi::Value getWorkwindow(const Napi::CallbackInfo &info);
-    void setWindowInfo(const Napi::CallbackInfo &info, const Napi::Value &value);
-    Napi::Value getWindowInfo(const Napi::CallbackInfo &info);
+    void setWindowView(const Napi::CallbackInfo &info, const Napi::Value &value);
+    Napi::Value getWindowView(const Napi::CallbackInfo &info);
 };
 
 #endif

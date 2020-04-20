@@ -1,11 +1,12 @@
-const { _getWindow, _getWindowChild } = require('../../build/Release/key_sender.node');
+const { _getAllWindows, _getWindowChildren } = require('../../build/Release/key_sender.node');
 const { Buffer } = require('buffer');
 const { EventEmitter } = require('events');
+const getWindowArgs = args => args.map(item => typeof item === "string" ? Buffer.from(item, "ucs2") : item);
 module.exports = {
     Workwindow: ClassName => class extends ClassName {
-        constructor(workwindow) {
+        constructor(...args) {
             super();
-            this._workwindow = workwindow;
+            this._setWorkwindow(...getWindowArgs(args));
         }
         get workwindow() {
             const self = this;
@@ -13,11 +14,11 @@ module.exports = {
             const hex = (...rgb) => rgb.reduce((hex, color) => hex + add0(color.toString(16)), '');
             Object.defineProperty(this, "workwindow", {
                 value: Object.assign(new EventEmitter, {
-                    set(workwindow) {
-                        self._workwindow = workwindow;
+                    set(...args) {
+                        self._setWorkwindow(...getWindowArgs(args));
                     },
                     get() {
-                        const workwindow = { ...self._workwindow };
+                        const workwindow = self._getWorkwindow();
                         workwindow.className = workwindow.className.toString('ucs2');
                         workwindow.title = workwindow.title.toString('ucs2');
                         return workwindow;
@@ -63,19 +64,16 @@ module.exports = {
             return this.workwindow;
         }
     },
-    getWindow: (title, className) => title === undefined && className === undefined ?
-        _getWindow().map(item => {
+    getAllWindows: () =>
+        _getAllWindows().map(item => {
+            item.className = item.className.toString('ucs2');
+            item.title = item.title.toString('ucs2');
+            return item;
+        }),
+    getWindowChildren: (...args) =>
+        _getWindowChildren(...args.map(item => typeof item === "string" ? Buffer.from(item, "ucs2") : item)).map(item => {
             item.className = item.className.toString('ucs2');
             item.title = item.title.toString('ucs2');
             return item;
         })
-        :
-        _getWindow(title !== null ? Buffer.from(title, "ucs2") : null, className !== undefined ? Buffer.from(className, "ucs2") : null),
-    getWindowChild: (parentHandle, className, title) => className === undefined && title === undefined ?
-        _getWindowChild(parentHandle).map(item => {
-            item.className = item.className.toString('ucs2');
-            item.title = item.title.toString('ucs2');
-            return item;
-        }) :
-        _getWindowChild(parentHandle, className !== null ? Buffer.from(className, "ucs2") : null, title !== undefined ? Buffer.from(title, "ucs2") : null)
 }

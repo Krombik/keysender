@@ -83,10 +83,11 @@ Napi::Object Virtual::Init(Napi::Env env, Napi::Object exports)
                             InstanceMethod("_getColor", &Virtual::getColor),
                             InstanceMethod("_kill", &Virtual::kill),
                             InstanceMethod("_close", &Virtual::close),
-                            InstanceAccessor("_workwindow", &Virtual::getWorkwindow, &Virtual::setWorkwindow),
+                            InstanceMethod("_setWorkwindow", &Virtual::setWorkwindow),
+                            InstanceMethod("_getWorkwindow", &Virtual::getWorkwindow),
                             InstanceAccessor("_lastCoords", &Virtual::getLastCoords, NULL),
                             InstanceAccessor("_saveMode", NULL, &Virtual::setSaveMode),
-                            InstanceAccessor("_windowInfo", &Virtual::getWindowInfo, &Virtual::setWindowInfo),
+                            InstanceAccessor("_windowView", &Virtual::getWindowView, &Virtual::setWindowView),
                         });
     constructor = Napi::Persistent(func);
     constructor.SuppressDestruct();
