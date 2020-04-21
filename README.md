@@ -6,10 +6,8 @@
 - [Installation](#installation)
 - [Example](#example)
 - [Syntax](#syntax)
-  - [getWindow](#getwindow)
-  - [getWindowChild](#getwindowChild)
   - [Available keyboard buttons](#keyboardbutton)
-  - [Hardware](#hardware) and [Virtual](#virtual)
+  - [Hardware and Virtual](#hardware-and-virtual)
     - [.keyboard](#keyboard)
       - [.keyTogglerDelay](#keytogglerdelay)
       - [.keySenderDelay](#keysenderdelay)
@@ -30,8 +28,9 @@
     - [.workwindow](#workwindow)
       - [.set](#set)
       - [.get](#get)
-      - [.setInfo](#setinfo)
-      - [.getInfo](#getinfo)
+      - [.refresh](#refresh)
+      - [.setView](#setview)
+      - [.getView](#getview)
       - [.setForeground](#setforeground)
       - [.isForeground](#isforeground)
       - [.isOpen](#isopen)
@@ -46,6 +45,8 @@
     - [.delete](#delete)
     - [unregisterAll](#unregisterall)
     - [deleteAll](#deleteall)
+  - [getAllWindows](#getallwindows)
+  - [getWindowChildren](#getwindowchildren)
   - [getScreenSize](#getscreensize)
   - [vkToString](#vktostring)
   - [sleep](#sleep)
@@ -70,92 +71,60 @@ yarn add keysender
 
 # Example
 ```js
-const { Hardware, getWindow, GlobalHotkey } = require("keysender");
-const obj = new Hardware(getWindow(null, "Notepad")); // find Notepad handle by className and set it as workwindow
+const { Hardware, GlobalHotkey } = require("keysender");
+const obj = new Hardware(null, "Notepad"); // find Notepad handle by className and set it as workwindow
 new GlobalHotkey({ // register hotkey
-    key: "num+",
-    isEnabled() {
-      if (!obj.workwindow.isOpen())
-        obj.workwindow.set(getWindow(null, "Notepad")); // try to re-set workwindow if it isn't open
-      return obj.workwindow.isForeground() && obj.workwindow.isOpen(); // if "Notepad" is open and foreground - do {action}
-    },
-    actionArgs: [ // something like watcher for {size}
-      {
-        stateGetter() {
-          const { height, width } = obj.workwindow.getInfo();
-          return ({ height, width }); // returns current {size}
-        },
-        argSetter: size => ([size.width / 2, size.height / 2]) // change {middleCoords} if current {size} not equal to previous size 
-      }
-    ],
-    action(middleCoords) {
-      obj.workwindow.setInfo({ x: 0, y: 0 }) // move workwindow to top left corner of the screen
-      obj.mouse.moveCurveTo(...middleCoords); // makes human similar mouse movement from current cursor position to middle of "Notepad" window
-      obj.keyboard.printText("hello"); // instantly types "hello"
-      obj.keyboard.sendKey("space", 50); // press key "space", sleep for 50 milliseconds, release key "space"
-      obj.keyboard.sendKeys("world".split(''), [25, 50], 50); // press key "w", sleep for random from range [25, 50] milliseconds, release key "w", sleep for 50 milliseconds, press key "o", sleep for random from range [25, 50] milliseconds, release key "o", sleep for 50 milliseconds, ..., release key "d"
-      obj.keyboard.sendKey(["ctrl", "s"], 50); // press key combination "ctrl+s", sleep for 50 milliseconds, release key combination
-      obj.workwindow.close(); // close "Notepad" window
+  key: "num+",
+  isEnabled() {
+    return (obj.workwindow.isOpen() ? true : obj.workwindow.refresh()) && obj.workwindow.isForeground(); // if "Notepad" is open and foreground - do {action}
+  },
+  actionArgs: [ // something like watcher for {size}
+    {
+      stateGetter() {
+        const { height, width } = obj.workwindow.getView();
+        return ({ height, width }); // returns current {size}
+      },
+      argSetter: size => ([size.width / 2, size.height / 2]) // change {middleCoords} if current {size} not equal to previous size 
     }
-  });
+  ],
+  action(middleCoords) {
+    obj.workwindow.setView({ x: 0, y: 0 }) // move workwindow to top left corner of the screen
+    obj.mouse.moveCurveTo(...middleCoords); // makes human similar mouse movement from current cursor position to middle of "Notepad" window
+    obj.keyboard.printText("hello"); // instantly types "hello"
+    obj.keyboard.sendKey("space", 50); // press key "space", sleep for 50 milliseconds, release key "space"
+    obj.keyboard.sendKeys("world".split(''), [25, 50], 50); // press key "w", sleep for random from range [25, 50] milliseconds, release key "w", sleep for 50 milliseconds, press key "o", sleep for random from range [25, 50] milliseconds, release key "o", sleep for 50 milliseconds, ..., release key "d"
+    obj.keyboard.sendKey(["ctrl", "s"], 50); // press key combination "ctrl+s", sleep for 50 milliseconds, release key combination
+    obj.workwindow.close(); // close "Notepad" window
+  }
+});
 // or
 new GlobalHotkey({ // register hotkey
-    key: "num-",
-    isEnabled() {
-      if (!obj.workwindow.isOpen())
-        obj.workwindow.set(getWindow(null, "Notepad")); // try to re-set workwindow if it isn't open
-      return obj.workwindow.isForeground() && obj.workwindow.isOpen(); // if "Notepad" is open and foreground - do {action}
-    },
-    actionArgs: [ // something like watcher for {size}
-      {
-        stateGetter() {
-          const { height, width } = obj.workwindow.getInfo();
-          return ({ height, width }); // returns current {size}
-        },
-        argSetter: size => ([size.width / 2, size.height / 2]) // change {middleCoords} if current {size} not equal to previous size 
-      }
-    ],
-    async action(middleCoords) {
-      obj.workwindow.setInfo({ x: 0, y: 0 }) // move workwindow to top left corner of the screen
-      await obj.mouse.moveCurveToAsync(...middleCoords); // makes human similar mouse movement from current cursor position to middle of "Notepad" window
-      await obj.keyboard.printTextAsync("hello"); // instantly types "hello"
-      await obj.keyboard.sendKeyAsync("space", 50); // press key "space", await for 50 milliseconds, release key "space"
-      await obj.keyboard.sendKeysAsync("world".split(''), [25, 50], 50); // press key "w", await for random from range [25, 50] milliseconds, release key "w", await for 50 milliseconds, press key "o", await for random from range [25, 50] milliseconds, release key "o", await for 50 milliseconds, ..., release key "d"
-      await obj.keyboard.sendKeyAsync(["ctrl", "s"], 50); // press key combination "ctrl+s", await for 50 milliseconds, release key combination
-      obj.workwindow.close(); // close "Notepad" window
+  key: "num-",
+  isEnabled() {
+    return (obj.workwindow.isOpen() ? true : obj.workwindow.refresh()) && obj.workwindow.isForeground(); // if "Notepad" is open and foreground - do {action}
+  },
+  actionArgs: [ // something like watcher for {size}
+    {
+      stateGetter() {
+        const { height, width } = obj.workwindow.getView();
+        return ({ height, width }); // returns current {size}
+      },
+      argSetter: size => ([size.width / 2, size.height / 2]) // change {middleCoords} if current {size} not equal to previous size 
     }
-  });
+  ],
+  async action(middleCoords) {
+    obj.workwindow.setView({ x: 0, y: 0 }) // move workwindow to top left corner of the screen
+    await obj.mouse.moveCurveToAsync(...middleCoords); // makes human similar mouse movement from current cursor position to middle of "Notepad" window
+    await obj.keyboard.printTextAsync("hello"); // instantly types "hello"
+    await obj.keyboard.sendKeyAsync("space", 50); // press key "space", await for 50 milliseconds, release key "space"
+    await obj.keyboard.sendKeysAsync("world".split(''), [25, 50], 50); // press key "w", await for random from range [25, 50] milliseconds, release key "w", await for 50 milliseconds, press key "o", await for random from range [25, 50] milliseconds, release key "o", await for 50 milliseconds, ..., release key "d"
+    await obj.keyboard.sendKeyAsync(["ctrl", "s"], 50); // press key combination "ctrl+s", await for 50 milliseconds, release key combination
+    obj.workwindow.close(); // close "Notepad" window
+  }
+});
 ```
 
 # Syntax
-
-## getWindow
-```ts
-getWindow(): windowData[];
-getWindow(title: string | null, className?: string | null): number;
-```
-Returns window {handle} by {title} and(or) {className} or array with objects {handle, title, className} of all open windows.
-```js
-const { getWindow } = require("keysender");
-console.log(getWindow()) // array with objects {handle, title, className} of all open windows
-console.log(getWindow("someTitle")) // {handle} of first find window with "someTitle" title
-console.log(getWindow(null, "someClass")) // {handle} of first find window with "someClass" class
-console.log(getWindow("someTitle", "someClass")) // {handle} of first find window with "someTitle" title and "someClass" class
-```
-
-## getWindowChild
-```ts
-getWindowChild(parentHandle: number): windowData[];
-getWindowChild(parentHandle: number, className: string | null, title?: string | null): number;
-```
-Returns window child {handle} by {title} and(or) {className} or array with objects {handle, title, className} of all existing window children.
-```js
-const { getWindowChild } = require("keysender");
-console.log(getWindowChild(parentHandle)) // array with objects {handle, title, className} of all {parentHandle} children
-console.log(getWindowChild(parentHandle, "someClass")) // {handle} of first find {parentHandle} child with "someClass" class
-console.log(getWindowChild(parentHandle, null, "someTitle")) // {handle} of first find {parentHandle} child with "someTitle" title 
-console.log(getWindowChild(parentHandle, "someClass", "someTitle")) // {handle} of first find {parentHandle} child with "someTitle" title and "someClass" class
-```
 
 #### keyboardButton
 [toggleKey](#togglekey), [sendKey](#sendkey), [sendKeys](#sendkeys), [GlobalHotkey](#globalhotkey) supports for following keys or numbers([virtual key codes](https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes))
@@ -165,22 +134,26 @@ type keyboardSpecButton = "alt" | "ctrl" | "shift" | "lshift" | "rshift" | "lctr
 type keyboardButton = keyboardRegularButton | keyboardSpecButton;
 ```
 
-## Hardware
-Provides [keyboard](#keyboard), [mouse](#mouse) and [workwindow](#workwindow) methods. Keyboard and mouse methods implementations on hardware level by inserts the events serially into the keyboard or mouse input stream. These events are not interspersed with other keyboard or mouse input events inserted either by the user (with the keyboard or mouse).
-```js
-const { Hardware } = require("keysender");
-const obj = new Hardware(handle); // Create new instance of Hardware class with {handle} of initial working window.
-                                  // {handle} could be found with getWindow or getWindowChild methods
-                                  // pass 0 if initial working window is not required
+## Hardware and Virtual
+```ts
+/** Sets current workwindow by {handle}. */
+constructor(handle?: number);
+/** Finds the first window with {title} and/or {className} and sets it as current workwindow. */
+constructor(title: string | null, className?: string | null);
+/** Finds the first child window with {childClassName} and/or {childTitle} of window with {parentHandle} and sets it as current workwindow. */
+constructor(parentHandle: number, childClassName: string | null, childTitle?: string | null);
+/** Finds the first child window with {childClassName} and/or {childTitle} of the first found window with {parentTitle} and/or {parentClassName} and sets it as current workwindow. */
+constructor(parentTitle: string | null, parentClassName: string | null, childClassName: string | null, childTitle?: string | null);
 ```
-
-## Virtual
-Provides [keyboard](#keyboard), [mouse](#mouse) and [workwindow](#workwindow) methods. Keyboard and mouse methods implementations on virtual level by sending messages to workwindow, so it could work with background window.
-> Note: keyboard or mouse methods do not work for all windows, for example, input line in certain window may accept message from [printText](#printext) method, but [sendKey](#sendkey) method makes no effect outside input line, or the window may accept a keystroke message from [sendKey](#sendkey) method but not accept mouse movement message from [moveTo](#moveto) method.
+Classes Hardware and Virtual provide the same [keyboard](#keyboard), [mouse](#mouse) and [workwindow](#workwindow) methods and have the same constructors, but:
+- Class Hardware provides keyboard and mouse methods implementations on hardware level by inserts the events serially into the keyboard or mouse input stream. These events are not interspersed with other keyboard or mouse input events inserted either by the user (with the keyboard or mouse).
+- Class Virtual provides keyboard and mouse methods implementations on virtual level by sending messages to workwindow, so it could work with background window.
+> Note: Virtual keyboard and mouse methods do not work for all windows, for example, input line in certain window may accept message from [printText](#printext) method, but [sendKey](#sendkey) method makes no effect outside input line, or the window may accept a keystroke message from [sendKey](#sendkey) method but not accept mouse movement message from [moveTo](#moveto) method.
 ```js
-const { Virtual } = require("keysender");
-const obj = new Virtual(handle); // Create new instance of Virtual class with {handle} of initial working window.
-                                 // {handle} could be found with getWindow or getWindowChild methods
+const { Hardware, Virtual } = require("keysender");
+const foo = new Hardware("Some title");
+const bar = new Virtual(null, "SomeClassName");
+const foobar = new Hardware("Some parent title", "SomeParentClassName", "SomeChildClassName");
 ```
 
 ### keyboard
@@ -523,29 +496,48 @@ Provides methods to work with workwindow.
 
 #### set
 ```ts
-set(handle: number): void;
+/** Sets current workwindow by {handle}. */
+set(handle?: number): void;
+/** Finds the first window with {title} and/or {className} and sets it as current workwindow. */
+set(title: string | null, className?: string | null): void;
+/** Finds the first child window with {childClassName} and/or {childTitle} of window with {parentHandle} and sets it as current workwindow. */
+set(parentHandle: number, childClassName: string | null, childTitle?: string | null): void;
+/** Finds the first child window with {childClassName} and/or {childTitle} of the first found window with {parentTitle} and/or {parentClassName} and sets it as currentworkwindow. */
+set(parentTitle: string | null, parentClassName: string | null, childClassName: string | null, childTitle?: string | null): void;
 ```
-Set new current workwindow by {handle}.
+Same as [constructor](#hardware-and-virtual).
 ```js
 const { Virtual, Hardware } = require("keysender");
-const obj = new Hardware(handle); // or Virtual
-obj.workwindow.set(newHandle);
+const obj = new Hardware("Some title"); // or Virtual
+obj.workwindow.set(null, "SomeClass");
 ```
 
 #### get
 ```ts
-get(): windowData;
+get(): windowInfo;
 ```
 Returns object with {handle}, {title} and {className} of current workwindow.
 ```js
 const { Virtual, Hardware } = require("keysender");
-const obj = new Hardware(handle); // or Virtual
-console.log(obj.workwindow.set(newHandle)); // object {handle, title, className}
+const obj = new Hardware("Some title"); // or Virtual
+console.log(obj.workwindow.get()); // object {handle, title, className}
 ```
 
-#### setInfo
+#### refresh
 ```ts
-setInfo(info: Partial<pos & size>): void;
+refresh(): boolean;
+```
+Tries to find a new workwindow using already defined {handle}, {className}, {childTitle}, {childClassName},
+returns "true" if new workwindow successfully find (new handle not equal to 0), "false" if it is not.
+```js
+const { Virtual, Hardware } = require("keysender");
+const obj = new Hardware("Some title"); // or Virtual
+obj.workwindow.refresh();
+```
+
+#### setView
+```ts
+setView(info: Partial<pos & size>): void;
 ```
 Set workwindow position and(or) size.
 | Object field | Description |
@@ -558,20 +550,20 @@ Set workwindow position and(or) size.
 ```js
 const { Virtual, Hardware } = require("keysender");
 const obj = new Hardware(handle); // or Virtual
-obj.workwindow.setInfo({x: 25}); // sets x position of workwindow to 25
-obj.workwindow.setInfo({y: 25, width: 1200}); // sets y position of workwindow to 25, sets workwindow width to 1200px
-obj.workwindow.setInfo({x: 50, y: 25, width: 1200, height: 800});
+obj.workwindow.setView({x: 25}); // sets x position of workwindow to 25
+obj.workwindow.setView({y: 25, width: 1200}); // sets y position of workwindow to 25, sets workwindow width to 1200px
+obj.workwindow.setView({x: 50, y: 25, width: 1200, height: 800});
 ```
 
-#### getInfo
+#### getView
 ```ts
-getInfo(): pos & size;
+getView(): pos & size;
 ```
 Returns object with workwindow position and size.
 ```js
 const { Virtual, Hardware } = require("keysender");
 const obj = new Hardware(handle); // or Virtual
-console.log(obj.workwindow.getInfo()); // object {x, y, width, height}
+console.log(obj.workwindow.getView()); // object {x, y, width, height}
 ```
 
 #### setForeground
@@ -794,7 +786,7 @@ const bar = new GlobalHotkey({ // unregister prev "num+" hotkey {foo} (but it st
 });
 ```
 ```ts
-import { Hardware, getWindow, GlobalHotkey } from 'keysender';
+import { Hardware, GlobalHotkey } from 'keysender';
 /**Code described below registers hotkey "num +", takes first {stateValue} of "Notepad" {height, width} and returns [width / 2, height / 2] as arg for {action}.
  * When "num +" will be pressed {isEnabled} will check is "Notepad" open,
  * if it's not open, it try to find it again,
@@ -804,7 +796,7 @@ import { Hardware, getWindow, GlobalHotkey } from 'keysender';
  * if they are equal, argument of {action} is not change,
  * after this it do {action} - moves mouse cursor to middle of "Notepad" window and makes left mouse click.
  */
-const obj = new Hardware(getWindow(null, "Notepad"));
+const obj = new Hardware(null, "Notepad");
 type stateType = {
     height: number,
     width: number
@@ -813,14 +805,12 @@ type argType = [number, number];
 new GlobalHotkey<[stateType], [argType]>({
     key: "num+",
     isEnabled() {
-        if (!obj.workwindow.isOpen())
-            obj.workwindow.set(getWindow(null, "Notepad"));
-        return obj.workwindow.isOpen();
+        return obj.workwindow.isOpen() ? true : obj.workwindow.refresh();
     },
     actionArgs: [
         {
             stateGetter() {
-                const { height, width } = obj.workwindow.getInfo();
+                const { height, width } = obj.workwindow.getView();
                 return ({ height, width });
             },
             argSetter: size => ([size.width / 2, size.height / 2])
@@ -924,6 +914,30 @@ new GlobalHotkey({
     }
 });
 GlobalHotkey.deleteAll();
+```
+
+## getAllWindows
+```ts
+getAllWindows(): windowInfo[];
+```
+Returns array with objects {handle, title, className} of all open windows.
+```js
+const { getAllWindows } = require("keysender");
+console.log(getAllWindows()) // array with objects {handle, title, className} of all open windows
+```
+
+## getWindowChildren
+```ts
+getWindowChildren(parentHandle: number): windowInfo[];
+getWindowChildren(parentTitle: string | null, parentClassName?: string | null): windowInfo[];
+```
+Returns array with objects {handle, title, className} with all children of given window.
+```js
+const { getWindowChildren } = require("keysender");
+console.log(getWindowChildren(parentHandle)) // array with objects {handle, title, className} of all {parentHandle} children
+console.log(getWindowChildren("Some title")) // array with objects {handle, title, className} of all children window of the first found window with title "Some title"
+console.log(getWindowChildren(null, "SomeClass")) // array with objects {handle, title, className} of all children window of the first found window with className "SomeClass"
+console.log(getWindowChildren("Some title", "SomeClass")) // array with objects {handle, title, className} of all children window of the first found window with className "SomeClass" and title "Some title"
 ```
 
 ## getScreenSize

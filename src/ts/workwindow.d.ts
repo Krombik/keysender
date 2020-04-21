@@ -9,7 +9,7 @@ export declare interface workwindow extends EventEmitter<workwindowEvent> {
     /** Finds the first child window with {childClassName} and/or {childTitle} of the first found window with {parentTitle} and/or {parentClassName} and sets it as current workwindow. */
     set(parentTitle: string | null, parentClassName: string | null, childClassName: string | null, childTitle?: string | null): void;
     /** Tries to find a new workwindow using already defined {handle}, {className}, {childTitle}, {childClassName}.
-     * @returns "true" if new workwindow successfully find (new handle not equal to 0), "false" if it not exist
+     * @returns "true" if new workwindow successfully find (new handle not equal to 0), "false" if it is not.
      */
     refresh(): boolean;
     /** @returns object with {handle}, {title} and {className} of current workwindow. */

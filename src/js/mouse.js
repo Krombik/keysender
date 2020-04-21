@@ -7,7 +7,7 @@ module.exports.Mouse = ClassName => class extends ClassName {
         const tremor = probability => Math.random() <= probability ? choice(-1, 1) : 0;
         const curveDotMaker = (start, end, deviation, sign) => Math.round(start + (end - start) / 2 + sign * (end - start) * 0.01 * deviation);
         const firstCurveDotMaker = (start, end, deviation, sign) => Math.round(start + sign * (end - start) * 0.01 * deviation);
-        const curveMaker = (t, start, curvDot1, curvDot2, end) => Math.floor(Math.pow(1 - t, 3) * start + 3 * Math.pow(1 - t, 2) * t * curvDot1 + 3 * (1 - t) * t * t * curvDot2 + t * t * t * end);
+        const curveMaker = (t, start, curveDot1, curveDot2, end) => Math.floor(Math.pow(1 - t, 3) * start + 3 * Math.pow(1 - t, 2) * t * curveDot1 + 3 * (1 - t) * t * t * curveDot2 + t * t * t * end);
         const humanCurve = (xE, yE, speed, deviation) => {
             const { x, y } = self._lastCoords;
             if (x != xE && y != yE) {
@@ -24,21 +24,21 @@ module.exports.Mouse = ClassName => class extends ClassName {
                 let xPartEnd = x + xPartLength * parts;
                 let yPartEnd = y + yPartLength * parts;
                 do {
-                    let curvDotX1, curvDotX2, curvDotY1, curvDotY2;
+                    let curveDotX1, curveDotX2, curveDotY1, curveDotY2;
                     const dotIterator = speedMultiplier / parts;
                     if (partsLeft !== partsTotal) {
-                        curvDotX1 = curveDotMaker(xPartStart, xPartEnd, random(deviation / 3, deviation), choice(-1, 1));
-                        curvDotY1 = curveDotMaker(yPartStart, yPartEnd, random(deviation / 3, deviation / 2), choice(-1, 1));
-                        curvDotX2 = curveDotMaker(xPartStart, xPartEnd, random(0, deviation), choice(-1, 1));
-                        curvDotY2 = curveDotMaker(yPartStart, yPartEnd, random(0, deviation / 2), choice(-1, 1));
+                        curveDotX1 = curveDotMaker(xPartStart, xPartEnd, random(deviation / 3, deviation), choice(-1, 1));
+                        curveDotY1 = curveDotMaker(yPartStart, yPartEnd, random(deviation / 3, deviation / 2), choice(-1, 1));
+                        curveDotX2 = curveDotMaker(xPartStart, xPartEnd, random(0, deviation), choice(-1, 1));
+                        curveDotY2 = curveDotMaker(yPartStart, yPartEnd, random(0, deviation / 2), choice(-1, 1));
                     } else {
-                        curvDotX1 = firstCurveDotMaker(xPartStart, xPartEnd, random(deviation / 2, deviation), 1);
-                        curvDotY1 = firstCurveDotMaker(yPartStart, yPartEnd, random(deviation / 4, deviation / 3), 1);
-                        curvDotX2 = firstCurveDotMaker(xPartStart, xPartEnd, random(deviation / 2, deviation), choice(-1, 1));
-                        curvDotY2 = firstCurveDotMaker(yPartStart, yPartEnd, random(deviation / 2, deviation), choice(-1, 1));
+                        curveDotX1 = firstCurveDotMaker(xPartStart, xPartEnd, random(deviation / 2, deviation), 1);
+                        curveDotY1 = firstCurveDotMaker(yPartStart, yPartEnd, random(deviation / 4, deviation / 3), 1);
+                        curveDotX2 = firstCurveDotMaker(xPartStart, xPartEnd, random(deviation / 2, deviation), choice(-1, 1));
+                        curveDotY2 = firstCurveDotMaker(yPartStart, yPartEnd, random(deviation / 2, deviation), choice(-1, 1));
                     }
                     for (let t = 0; t < 1.00001; t += dotIterator) {
-                        const curr = [curveMaker(t, xPartStart, curvDotX1, curvDotX2, xPartEnd), curveMaker(t, yPartStart, curvDotY1, curvDotY2, yPartEnd)];
+                        const curr = [curveMaker(t, xPartStart, curveDotX1, curveDotX2, xPartEnd), curveMaker(t, yPartStart, curveDotY1, curveDotY2, yPartEnd)];
                         const prev = path[path.length - 1];
                         if (path.length === 0 || !(prev[0] === curr[0] && prev[1] === curr[1]))
                             path.push(curr);
