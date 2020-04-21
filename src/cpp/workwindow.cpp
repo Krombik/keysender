@@ -46,15 +46,10 @@ Napi::Object Workwindow::windowGetter(HWND hWnd, Napi::Env env)
         uint8_t titleLength = GetWindowTextLengthA(hWnd);
         if (titleLength > 0)
         {
-            std::vector<wchar_t> title(titleLength + 1);
-            GetWindowTextW(hWnd, &title[0], title.size());
-            title.pop_back();
+            std::wstring title = titleGetter(hWnd);
             window["title"] = Napi::Buffer<wchar_t>::Copy(env, title.data(), title.size());
         }
-        std::vector<wchar_t> className(256);
-        GetClassNameW(hWnd, &className[0], className.size());
-        className.resize(std::distance(className.begin(), std::search_n(className.begin(), className.end(), 2, 0)));
-        className.shrink_to_fit();
+        std::wstring className = classNameGetter(hWnd);
         window["className"] = Napi::Buffer<wchar_t>::Copy(env, className.data(), className.size());
     }
     return window;
@@ -368,7 +363,7 @@ Napi::Value Workwindow::refresh(const Napi::CallbackInfo &info)
     Napi::Env env = info.Env();
     if (className.empty() && title.empty())
     {
-        Napi::Error::New(info.Env(), "Refresh available only if title and/or className exist")
+        Napi::Error::New(env, "Refresh available only if title and/or className exist")
             .ThrowAsJavaScriptException();
         return env.Undefined();
     }
@@ -387,51 +382,51 @@ Napi::Value Workwindow::getWorkwindow(const Napi::CallbackInfo &info)
 void Workwindow::setWindowView(const Napi::CallbackInfo &info, const Napi::Value &value)
 {
     Napi::Env env = info.Env();
-    if (hWnd != NULL)
+    if (hWnd == NULL)
     {
-        uint16_t x, y, width, height;
-        RECT rect;
-        GetWindowRect(hWnd, &rect);
-        Napi::Object windowInfo(env, info[0]);
-        if (!windowInfo.Get("width").IsNumber())
-            width = rect.right - rect.left;
-        else if ((width = windowInfo.Get("width").As<Napi::Number>().Int32Value()) < 0)
-        {
-            Napi::Error::New(env, "width should be > 0")
-                .ThrowAsJavaScriptException();
-            return;
-        }
-        if (!windowInfo.Get("height").IsNumber())
-            height = rect.bottom - rect.top;
-        else if ((height = windowInfo.Get("height").As<Napi::Number>().Int32Value()) < 0)
-        {
-            Napi::Error::New(env, "height should be > 0")
-                .ThrowAsJavaScriptException();
-            return;
-        }
-        if (windowInfo.Get("x").IsNumber())
-            if ((x = windowInfo.Get("x").As<Napi::Number>().Int32Value()) >= 0)
-                rect.left = x;
-            else
-            {
-                Napi::Error::New(env, "x should be >= 0")
-                    .ThrowAsJavaScriptException();
-                return;
-            }
-        if (windowInfo.Get("y").IsNumber())
-            if ((y = windowInfo.Get("y").As<Napi::Number>().Int32Value()) >= 0)
-                rect.top = y;
-            else
-            {
-                Napi::Error::New(env, "y should be >= 0")
-                    .ThrowAsJavaScriptException();
-                return;
-            }
-        SetWindowPos(hWnd, NULL, rect.left, rect.top, width, height, NULL);
-    }
-    else
         Napi::Error::New(env, "handle = 0")
             .ThrowAsJavaScriptException();
+        return;
+    }
+    uint16_t x, y, width, height;
+    RECT rect;
+    GetWindowRect(hWnd, &rect);
+    Napi::Object windowInfo(env, info[0]);
+    if (!windowInfo.Get("width").IsNumber())
+        width = rect.right - rect.left;
+    else if ((width = windowInfo.Get("width").As<Napi::Number>().Int32Value()) < 0)
+    {
+        Napi::Error::New(env, "width should be > 0")
+            .ThrowAsJavaScriptException();
+        return;
+    }
+    if (!windowInfo.Get("height").IsNumber())
+        height = rect.bottom - rect.top;
+    else if ((height = windowInfo.Get("height").As<Napi::Number>().Int32Value()) < 0)
+    {
+        Napi::Error::New(env, "height should be > 0")
+            .ThrowAsJavaScriptException();
+        return;
+    }
+    if (windowInfo.Get("x").IsNumber())
+        if ((x = windowInfo.Get("x").As<Napi::Number>().Int32Value()) >= 0)
+            rect.left = x;
+        else
+        {
+            Napi::Error::New(env, "x should be >= 0")
+                .ThrowAsJavaScriptException();
+            return;
+        }
+    if (windowInfo.Get("y").IsNumber())
+        if ((y = windowInfo.Get("y").As<Napi::Number>().Int32Value()) >= 0)
+            rect.top = y;
+        else
+        {
+            Napi::Error::New(env, "y should be >= 0")
+                .ThrowAsJavaScriptException();
+            return;
+        }
+    SetWindowPos(hWnd, NULL, rect.left, rect.top, width, height, NULL);
 }
 
 Napi::Value Workwindow::getWindowView(const Napi::CallbackInfo &info)

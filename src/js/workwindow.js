@@ -26,11 +26,11 @@ module.exports = {
                     refresh() {
                         return self._refresh();
                     },
-                    setInfo(info) {
-                        self._windowInfo = info;
+                    setView(view) {
+                        self._windowView = view;
                     },
-                    getInfo() {
-                        return self._windowInfo;
+                    getView() {
+                        return self._windowView;
                     },
                     setForeground() {
                         self._setForeground();
