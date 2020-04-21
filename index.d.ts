@@ -5,7 +5,7 @@ import { workwindow } from './src/ts/workwindow.d'
 
 declare class Worker {
     /** Sets current workwindow by {handle}. */
-    constructor(handle: number);
+    constructor(handle?: number);
     /** Finds the first window with {title} and/or {className} and sets it as current workwindow. */
     constructor(title: string | null, className?: string | null);
     /** Finds the first child window with {childClassName} and/or {childTitle} of window with {parentHandle} and sets it as current workwindow. */

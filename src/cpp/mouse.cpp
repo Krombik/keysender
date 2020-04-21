@@ -47,20 +47,7 @@ void Mouse::move(const Napi::CallbackInfo &info)
             .ThrowAsJavaScriptException();
         return;
     }
-    int x, y;
-    if ((x = info[0].As<Napi::Number>().Int32Value()) < 0)
-    {
-        Napi::Error::New(info.Env(), "x should be >= 0")
-            .ThrowAsJavaScriptException();
-        return;
-    }
-    if ((y = info[1].As<Napi::Number>().Int32Value()) < 0)
-    {
-        Napi::Error::New(info.Env(), "y should be >= 0")
-            .ThrowAsJavaScriptException();
-        return;
-    }
-    POINT coords = {x, y};
+    POINT coords = {info[0].As<Napi::Number>().Int32Value(), info[1].As<Napi::Number>().Int32Value()};
     mover(coords, info[2].As<Napi::Boolean>());
 }
 

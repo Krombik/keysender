@@ -320,42 +320,45 @@ BOOL CALLBACK Workwindow::EnumChildProc(HWND hWnd, LPARAM lParam)
 
 void Workwindow::setWorkwindow(const Napi::CallbackInfo &info)
 {
-    Napi::Env env = info.Env();
-    bool isError = false;
     const size_t argsCount = info.Length();
-    if (argsCount > 1)
-        for (size_t i = 1; i < argsCount; i++)
-            if (isError |= !info[i].IsBuffer() && !info[i].IsNull())
-                break;
-    if (isError || argsCount > 4 || (!info[0].IsBuffer() && !info[0].IsNull() && !info[0].IsNumber() && !info[0].IsUndefined()) || (info[0].IsNull() && info[1].IsNull()))
+    if (argsCount > 0)
     {
-        Napi::Error::New(info.Env(), "Expected 0-4 arguments: Buffer || Null || Number, Buffer || Null, Buffer || Null, Buffer || Null")
-            .ThrowAsJavaScriptException();
-        return;
+        Napi::Env env = info.Env();
+        bool isError = false;
+        if (argsCount > 1)
+            for (size_t i = 1; i < argsCount; i++)
+                if (isError |= !info[i].IsBuffer() && !info[i].IsNull())
+                    break;
+        if (isError || argsCount > 4 || (!info[0].IsBuffer() && !info[0].IsNull() && !info[0].IsNumber() && !info[0].IsUndefined()) || (info[0].IsNull() && info[1].IsNull()))
+        {
+            Napi::Error::New(info.Env(), "Expected 0-4 arguments: Buffer || Null || Number, Buffer || Null, Buffer || Null, Buffer || Null")
+                .ThrowAsJavaScriptException();
+            return;
+        }
+        if (info[0].IsNumber())
+        {
+            hWnd = (HWND)info[0].As<Napi::Number>().Int64Value();
+            if (info[1].IsBuffer())
+                childClassName = bufferToWstring(info[1]);
+            if (info[2].IsBuffer())
+                childTitle = bufferToWstring(info[2]);
+        }
+        else
+        {
+            if (info[0].IsBuffer())
+                title = bufferToWstring(info[0]);
+            if (info[1].IsBuffer())
+                className = bufferToWstring(info[1]);
+            if (info[2].IsBuffer())
+                childClassName = bufferToWstring(info[2]);
+            if (info[3].IsBuffer())
+                childTitle = bufferToWstring(info[3]);
+        }
+        if (hWnd == NULL)
+            EnumWindows(EnumWindowsProc, (LPARAM)this);
+        if (!childClassName.empty() || !childTitle.empty())
+            EnumChildWindows(hWnd, EnumChildProc, (LPARAM)this);
     }
-    if (info[0].IsNumber())
-    {
-        hWnd = (HWND)info[0].As<Napi::Number>().Int64Value();
-        if (info[1].IsBuffer())
-            childClassName = bufferToWstring(info[1]);
-        if (info[2].IsBuffer())
-            childTitle = bufferToWstring(info[2]);
-    }
-    else
-    {
-        if (info[0].IsBuffer())
-            title = bufferToWstring(info[0]);
-        if (info[1].IsBuffer())
-            className = bufferToWstring(info[1]);
-        if (info[2].IsBuffer())
-            childClassName = bufferToWstring(info[2]);
-        if (info[3].IsBuffer())
-            childTitle = bufferToWstring(info[3]);
-    }
-    if (hWnd == NULL)
-        EnumWindows(EnumWindowsProc, (LPARAM)this);
-    if (!childClassName.empty() || !childTitle.empty())
-        EnumChildWindows(hWnd, EnumChildProc, (LPARAM)this);
 };
 
 Napi::Value Workwindow::refresh(const Napi::CallbackInfo &info)
@@ -391,25 +394,25 @@ void Workwindow::setWindowView(const Napi::CallbackInfo &info, const Napi::Value
     uint16_t x, y, width, height;
     RECT rect;
     GetWindowRect(hWnd, &rect);
-    Napi::Object windowInfo(env, info[0]);
-    if (!windowInfo.Get("width").IsNumber())
+    Napi::Object windowView(env, info[0]);
+    if (!windowView.Get("width").IsNumber())
         width = rect.right - rect.left;
-    else if ((width = windowInfo.Get("width").As<Napi::Number>().Int32Value()) < 0)
+    else if ((width = windowView.Get("width").As<Napi::Number>().Int32Value()) < 0)
     {
         Napi::Error::New(env, "width should be > 0")
             .ThrowAsJavaScriptException();
         return;
     }
-    if (!windowInfo.Get("height").IsNumber())
+    if (!windowView.Get("height").IsNumber())
         height = rect.bottom - rect.top;
-    else if ((height = windowInfo.Get("height").As<Napi::Number>().Int32Value()) < 0)
+    else if ((height = windowView.Get("height").As<Napi::Number>().Int32Value()) < 0)
     {
         Napi::Error::New(env, "height should be > 0")
             .ThrowAsJavaScriptException();
         return;
     }
-    if (windowInfo.Get("x").IsNumber())
-        if ((x = windowInfo.Get("x").As<Napi::Number>().Int32Value()) >= 0)
+    if (windowView.Get("x").IsNumber())
+        if ((x = windowView.Get("x").As<Napi::Number>().Int32Value()) >= 0)
             rect.left = x;
         else
         {
@@ -417,8 +420,8 @@ void Workwindow::setWindowView(const Napi::CallbackInfo &info, const Napi::Value
                 .ThrowAsJavaScriptException();
             return;
         }
-    if (windowInfo.Get("y").IsNumber())
-        if ((y = windowInfo.Get("y").As<Napi::Number>().Int32Value()) >= 0)
+    if (windowView.Get("y").IsNumber())
+        if ((y = windowView.Get("y").As<Napi::Number>().Int32Value()) >= 0)
             rect.top = y;
         else
         {

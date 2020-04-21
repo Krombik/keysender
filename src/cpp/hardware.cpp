@@ -82,7 +82,17 @@ void Hardware::mover(POINT coords, bool isAbsolute)
 {
     INPUT ip;
     if (isAbsolute)
+    {
         ClientToScreen(hWnd, &coords);
+        if (coords.x < 0)
+            coords.x = 0;
+        else if (coords.x >= screenWidth)
+            coords.x = screenWidth - 1;
+        if (coords.y < 0)
+            coords.y = 0;
+        else if (coords.y >= screenHeigh)
+            coords.y = screenHeigh - 1;
+    }
     ip.type = INPUT_MOUSE;
     ip.mi.mouseData = 0;
     ip.mi.dwExtraInfo = 0;

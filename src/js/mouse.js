@@ -1,20 +1,17 @@
-const { getScreenSize } = require('../../build/Release/key_sender.node');
 const { sleep, sleepAsync, random } = require('./sleep');
 const { EventEmitter } = require('events');
 module.exports.Mouse = ClassName => class extends ClassName {
     get mouse() {
         const self = this;
         const choice = (...items) => items[Math.round(Math.random() * (items.length - 1))];
-        const normalize = (item, max) => item < 0 ? 0 : item >= max ? max - 1 : item;
         const tremor = probability => Math.random() <= probability ? choice(-1, 1) : 0;
-        const curvDotMaker = (start, end, deviation, sign) => Math.round(start + (end - start) / 2 + sign * (end - start) * 0.01 * deviation);
-        const firstCurvDotMaker = (start, end, deviation, sign) => Math.round(start + sign * (end - start) * 0.01 * deviation);
-        const curvMaker = (t, start, curvDot1, curvDot2, end) => Math.floor(Math.pow(1 - t, 3) * start + 3 * Math.pow(1 - t, 2) * t * curvDot1 + 3 * (1 - t) * t * t * curvDot2 + t * t * t * end);
-        const humanCurv = (xE, yE, speed, deviation) => {
+        const curveDotMaker = (start, end, deviation, sign) => Math.round(start + (end - start) / 2 + sign * (end - start) * 0.01 * deviation);
+        const firstCurveDotMaker = (start, end, deviation, sign) => Math.round(start + sign * (end - start) * 0.01 * deviation);
+        const curveMaker = (t, start, curvDot1, curvDot2, end) => Math.floor(Math.pow(1 - t, 3) * start + 3 * Math.pow(1 - t, 2) * t * curvDot1 + 3 * (1 - t) * t * t * curvDot2 + t * t * t * end);
+        const humanCurve = (xE, yE, speed, deviation) => {
             const { x, y } = self._lastCoords;
             if (x != xE && y != yE) {
                 const path = [];
-                const { height, width } = getScreenSize();
                 const partLength = random(50, 200) / 2;
                 const partsTotal = Math.ceil(Math.pow(Math.pow(xE - x, 2) + Math.pow(yE - y, 2), 0.5) / partLength);
                 const xPartLength = (xE - x) / partsTotal;
@@ -30,18 +27,18 @@ module.exports.Mouse = ClassName => class extends ClassName {
                     let curvDotX1, curvDotX2, curvDotY1, curvDotY2;
                     const dotIterator = speedMultiplier / parts;
                     if (partsLeft !== partsTotal) {
-                        curvDotX1 = curvDotMaker(xPartStart, xPartEnd, random(deviation / 3, deviation), choice(-1, 1));
-                        curvDotY1 = curvDotMaker(yPartStart, yPartEnd, random(deviation / 3, deviation / 2), choice(-1, 1));
-                        curvDotX2 = curvDotMaker(xPartStart, xPartEnd, random(0, deviation), choice(-1, 1));
-                        curvDotY2 = curvDotMaker(yPartStart, yPartEnd, random(0, deviation / 2), choice(-1, 1));
+                        curvDotX1 = curveDotMaker(xPartStart, xPartEnd, random(deviation / 3, deviation), choice(-1, 1));
+                        curvDotY1 = curveDotMaker(yPartStart, yPartEnd, random(deviation / 3, deviation / 2), choice(-1, 1));
+                        curvDotX2 = curveDotMaker(xPartStart, xPartEnd, random(0, deviation), choice(-1, 1));
+                        curvDotY2 = curveDotMaker(yPartStart, yPartEnd, random(0, deviation / 2), choice(-1, 1));
                     } else {
-                        curvDotX1 = firstCurvDotMaker(xPartStart, xPartEnd, random(deviation / 2, deviation), 1);
-                        curvDotY1 = firstCurvDotMaker(yPartStart, yPartEnd, random(deviation / 4, deviation / 3), 1);
-                        curvDotX2 = firstCurvDotMaker(xPartStart, xPartEnd, random(deviation / 2, deviation), choice(-1, 1));
-                        curvDotY2 = firstCurvDotMaker(yPartStart, yPartEnd, random(deviation / 2, deviation), choice(-1, 1));
+                        curvDotX1 = firstCurveDotMaker(xPartStart, xPartEnd, random(deviation / 2, deviation), 1);
+                        curvDotY1 = firstCurveDotMaker(yPartStart, yPartEnd, random(deviation / 4, deviation / 3), 1);
+                        curvDotX2 = firstCurveDotMaker(xPartStart, xPartEnd, random(deviation / 2, deviation), choice(-1, 1));
+                        curvDotY2 = firstCurveDotMaker(yPartStart, yPartEnd, random(deviation / 2, deviation), choice(-1, 1));
                     }
                     for (let t = 0; t < 1.00001; t += dotIterator) {
-                        const curr = [curvMaker(t, xPartStart, curvDotX1, curvDotX2, xPartEnd), curvMaker(t, yPartStart, curvDotY1, curvDotY2, yPartEnd)];
+                        const curr = [curveMaker(t, xPartStart, curvDotX1, curvDotX2, xPartEnd), curveMaker(t, yPartStart, curvDotY1, curvDotY2, yPartEnd)];
                         const prev = path[path.length - 1];
                         if (path.length === 0 || !(prev[0] === curr[0] && prev[1] === curr[1]))
                             path.push(curr);
@@ -61,7 +58,7 @@ module.exports.Mouse = ClassName => class extends ClassName {
                     }
                 } while (true);
                 path.shift();
-                return path.map((item, index) => index !== path.length - 1 ? [normalize(item[0], width), normalize(item[1] + tremor(speed / 15), height)] : [xE, yE]);
+                return path.map((item, index) => index !== path.length - 1 ? [item[0], item[1] + tremor(speed / 15)] : [xE, yE]);
             }
             return [[x, y]];
         }
@@ -117,7 +114,7 @@ module.exports.Mouse = ClassName => class extends ClassName {
                 moveCurveTo(x, y, speed = 5, deviation = 30) {
                     this.emit('beforeMoveCurveTo', ...arguments);
                     const sleepTime = speed >= 1 ? 1 : speed !== "max" ? Math.round(1 / speed) : 0;
-                    humanCurv(x, y, speed, deviation).forEach(dot => {
+                    humanCurve(x, y, speed, deviation).forEach(dot => {
                         self._move(dot[0], dot[1], true);
                         sleep(sleepTime);
                     });
@@ -126,7 +123,7 @@ module.exports.Mouse = ClassName => class extends ClassName {
                 async moveCurveToAsync(x, y, speed = 5, deviation = 30) {
                     this.emit('beforeMoveCurveTo', ...arguments);
                     const sleepTime = speed >= 1 ? 1 : speed !== "max" ? Math.round(1 / speed) : 0;
-                    for (const dot of humanCurv(x, y, speed, deviation)) {
+                    for (const dot of humanCurve(x, y, speed, deviation)) {
                         self._move(dot[0], dot[1], true);
                         await sleepAsync(sleepTime);
                     }

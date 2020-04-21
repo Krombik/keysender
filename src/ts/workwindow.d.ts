@@ -1,7 +1,7 @@
 import { EventEmitter, pos, size, img, windowInfo, uint8, workwindowEvent } from './types.d'
 export declare interface workwindow extends EventEmitter<workwindowEvent> {
     /** Sets current workwindow by {handle}. */
-    set(handle: number): void;
+    set(handle?: number): void;
     /** Finds the first window with {title} and/or {className} and sets it as current workwindow. */
     set(title: string | null, className?: string | null): void;
     /** Finds the first child window with {childClassName} and/or {childTitle} of window with {parentHandle} and sets it as current workwindow. */
