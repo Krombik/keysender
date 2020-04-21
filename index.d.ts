@@ -4,8 +4,14 @@ import { mouse } from './src/ts/mouse.d'
 import { workwindow } from './src/ts/workwindow.d'
 
 declare class Worker {
-    /** @param handle - handle of workwindow. */
+    /** Sets current workwindow by {handle}. */
     constructor(handle: number);
+    /** Finds the first window with {title} and/or {className} and sets it as current workwindow. */
+    constructor(title: string | null, className?: string | null);
+    /** Finds the first child window with {childClassName} and/or {childTitle} of window with {parentHandle} and sets it as current workwindow. */
+    constructor(parentHandle: number, childClassName: string | null, childTitle?: string | null);
+    /** Finds the first child window with {childClassName} and/or {childTitle} of the first found window with {parentTitle} and/or {parentClassName} and sets it as current workwindow. */
+    constructor(parentTitle: string | null, parentClassName: string | null, childClassName: string | null, childTitle?: string | null);
     /** Provides methods to synthesize keystrokes. */
     declare keyboard: keyboard;
     /** Provides methods to synthesize mouse motions, and button clicks. */
@@ -24,7 +30,7 @@ export { vkToString } from './src/ts/keyboard.d';
 
 export { GlobalHotkey } from './src/ts/hotkey.d';
 
-export { getScreenSize, getWindow, getWindowChild } from './src/ts/workwindow.d'
+export { getScreenSize, getAllWindows, getWindowChildren } from './src/ts/workwindow.d'
 
 export { sleep } from './src/ts/sleep.d'
 

@@ -14,7 +14,7 @@ export declare type img = {
     height: number;
     width: number;
 }
-export declare type windowData = {
+export declare type windowInfo = {
     handle: number;
     className: string;
     title: string;

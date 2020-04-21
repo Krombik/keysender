@@ -1,21 +1,31 @@
-import { EventEmitter, pos, size, img, windowData, uint8, workwindowEvent } from './types.d'
+import { EventEmitter, pos, size, img, windowInfo, uint8, workwindowEvent } from './types.d'
 export declare interface workwindow extends EventEmitter<workwindowEvent> {
-    /** Set current workwindow by {handle}. */
+    /** Sets current workwindow by {handle}. */
     set(handle: number): void;
-    /** @returns object with {handle}, {title} and {className} of current workwindow. */
-    get(): windowData;
-    /** Set workwindow position and(or) size.
-     * @param info - object {x, y, width, height}
+    /** Finds the first window with {title} and/or {className} and sets it as current workwindow. */
+    set(title: string | null, className?: string | null): void;
+    /** Finds the first child window with {childClassName} and/or {childTitle} of window with {parentHandle} and sets it as current workwindow. */
+    set(parentHandle: number, childClassName: string | null, childTitle?: string | null): void;
+    /** Finds the first child window with {childClassName} and/or {childTitle} of the first found window with {parentTitle} and/or {parentClassName} and sets it as current workwindow. */
+    set(parentTitle: string | null, parentClassName: string | null, childClassName: string | null, childTitle?: string | null): void;
+    /** Tries to find a new workwindow using already defined {handle}, {className}, {childTitle}, {childClassName}.
+     * @returns "true" if new workwindow successfully find (new handle not equal to 0), "false" if it not exist
      */
-    setInfo(info: Partial<pos & size>): void;
-    /** @returns object {x, y, width, height} */
-    getInfo(): pos & size;
-    /** Set current workwindow foreground. */
+    refresh(): boolean;
+    /** @returns object with {handle}, {title} and {className} of current workwindow. */
+    get(): windowInfo;
+    /** Sets workwindow position and(or) size.
+     * @param view - object {x, y, width, height}
+     */
+    setView(view: Partial<pos & size>): void;
+    /** @returns object with {x, y, width, height} of current workwindow */
+    getView(): pos & size;
+    /** Makes the current workwindow a foreground window. */
     setForeground(): void;
     isForeground(): boolean;
     isOpen(): boolean;
     /**
-     * Capture part of current workwindow (or screen if {handle} is 0).
+     * Captures part of current workwindow (or screen if {handle} is 0).
      * @param part - position of top left corner and size to be capture
      * @param format - color format of return data, could be "rgba", "bgra", "grey", "monochrome"
      * if not provided defaults to "rgba".
@@ -33,21 +43,19 @@ export declare interface workwindow extends EventEmitter<workwindowEvent> {
     colorAt(x: number, y: number, returnType?: "string"): string;
     colorAt(x: number, y: number, returnType: "array"): [uint8, uint8, uint8];
     colorAt(x: number, y: number, returnType: "number"): number;
-    /** Terminate current workwindow by killing it's thread.*/
+    /** Terminates current workwindow by killing it's thread. */
     kill(): void;
-    /** Close current workwindow by sending close message. */
+    /** Closes current workwindow by sending close message. */
     close(): void;
 }
 
 /** @returns object {width, height} with screen size. */
 export declare function getScreenSize(): size;
 
-/** Get array with objects {handle, title, className} of all open windows. */
-export declare function getWindow(): windowData[];
-/** Get window {handle} by {title} and(or) {className}. */
-export declare function getWindow(title: string | null, className?: string | null): number;
+/** @returns array with objects {handle, title, className} of all open windows. */
+export declare function getAllWindows(): windowInfo[];
 
-/** Get array with objects {handle, title, className} of all {parentHandle} children. */
-export declare function getWindowChild(parentHandle: number): windowData[];
-/** Get {handle} of {parentHandle} child by {className} and(or) {title}. */
-export declare function getWindowChild(parentHandle: number, className: string | null, title?: string | null): number;
+/** @returns array with objects {handle, title, className} of all {parentHandle} children. */
+export declare function getWindowChildren(parentHandle: number): windowInfo[];
+/** @returns array with objects {handle, title, className} with all children of window with {parentTitle} and/or {parentClassName}. */
+export declare function getWindowChildren(parentTitle: string | null, parentClassName?: string | null): windowInfo[];
