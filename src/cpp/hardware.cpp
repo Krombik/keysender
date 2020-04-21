@@ -188,6 +188,7 @@ Napi::Object Hardware::Init(Napi::Env env, Napi::Object exports)
                              InstanceMethod("_getColor", &Hardware::getColor),
                              InstanceMethod("_kill", &Hardware::kill),
                              InstanceMethod("_close", &Hardware::close),
+                             InstanceMethod("_refresh", &Hardware::refresh),
                              InstanceMethod("_setWorkwindow", &Hardware::setWorkwindow),
                              InstanceMethod("_getWorkwindow", &Hardware::getWorkwindow),
                              InstanceAccessor("_lastCoords", &Hardware::getLastCoords, NULL),

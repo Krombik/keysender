@@ -23,9 +23,9 @@ typedef struct
 
 typedef struct
 {
-    long handle;
-    std::vector<wchar_t> className;
-    std::vector<wchar_t> title;
-} Window;
+    HWND hWnd= NULL;
+    std::wstring className;
+    std::wstring title;
+} WindowInfo;
 
 #endif

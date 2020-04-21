@@ -1,22 +1,37 @@
 #include "workwindow.hpp"
 
-BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
+std::wstring Workwindow::classNameGetter(HWND hWnd)
+{
+    std::wstring className;
+    className.resize(256);
+    GetClassNameW(hWnd, &className[0], className.size());
+    className.resize(std::distance(className.begin(), std::search_n(className.begin(), className.end(), 2, 0)));
+    className.shrink_to_fit();
+    return className;
+}
+
+std::wstring Workwindow::titleGetter(HWND hWnd)
+{
+    std::wstring title;
+    title.resize(GetWindowTextLengthA(hWnd) + 1);
+    GetWindowTextW(hWnd, &title[0], title.size());
+    title.pop_back();
+    return title;
+}
+
+BOOL CALLBACK EnumAllWindowsProc(HWND hWnd, LPARAM lParam)
 {
     if (!IsWindowVisible(hWnd) || !IsWindowEnabled(hWnd) || GetWindowTextLengthA(hWnd) == 0)
         return TRUE;
-    std::vector<HWND> &hWnds =
-        *reinterpret_cast<std::vector<HWND> *>(lParam);
-    hWnds.push_back(hWnd);
+    (*reinterpret_cast<std::vector<HWND> *>(lParam)).push_back(hWnd);
     return TRUE;
 }
 
-BOOL CALLBACK EnumChildProc(HWND hWnd, LPARAM lParam)
+BOOL CALLBACK EnumChildrenProc(HWND hWnd, LPARAM lParam)
 {
     if (!IsWindowVisible(hWnd) || !IsWindowEnabled(hWnd))
         return TRUE;
-    std::vector<HWND> &chWnds =
-        *reinterpret_cast<std::vector<HWND> *>(lParam);
-    chWnds.push_back(hWnd);
+    (*reinterpret_cast<std::vector<HWND> *>(lParam)).push_back(hWnd);
     return TRUE;
 }
 
@@ -49,7 +64,7 @@ Napi::Value getAllWindows(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
     std::vector<HWND> hWnds;
-    EnumWindows(EnumWindowsProc, reinterpret_cast<LPARAM>(&hWnds));
+    EnumWindows(EnumAllWindowsProc, reinterpret_cast<LPARAM>(&hWnds));
     Napi::Array windows = Napi::Array::New(env);
     for (const HWND &hWnd : hWnds)
         windows[windows.Length()] = Workwindow::windowGetter(hWnd, env);
@@ -61,10 +76,23 @@ std::wstring Workwindow::bufferToWstring(Napi::Value buffer)
     return std::wstring(buffer.As<Napi::Buffer<wchar_t>>().Data());
 }
 
+BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
+{
+    if (!IsWindowVisible(hWnd) || !IsWindowEnabled(hWnd) || GetWindowTextLengthA(hWnd) == 0)
+        return TRUE;
+    WindowInfo *windowInfo = (WindowInfo *)lParam;
+    if (!windowInfo->className.empty() && Workwindow::classNameGetter(hWnd).compare(windowInfo->className) != 0)
+        return TRUE;
+    if (!windowInfo->title.empty() && Workwindow::titleGetter(hWnd).compare(windowInfo->title) != 0)
+        return TRUE;
+    windowInfo->hWnd = hWnd;
+    return FALSE;
+}
+
 Napi::Value getWindowChildren(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
-    std::wstring titleName, className;
+    std::wstring title, className;
     HWND hWnd = NULL;
     if (info.Length() < 1 || info.Length() > 2 || (!info[0].IsBuffer() && !info[0].IsNull() && !info[0].IsNumber()) || (!info[1].IsBuffer() && !info[1].IsNull() && !info[1].IsUndefined()) || (info[0].IsNull() && info[1].IsNull()))
     {
@@ -76,18 +104,24 @@ Napi::Value getWindowChildren(const Napi::CallbackInfo &info)
         hWnd = (HWND)info[0].As<Napi::Number>().Int64Value();
     else
     {
+        WindowInfo *windowInfo = new WindowInfo;
         if (info[0].IsBuffer())
-            titleName = Workwindow::bufferToWstring(info[0]);
+            windowInfo->title = Workwindow::bufferToWstring(info[0]);
         if (info[1].IsBuffer())
-            className = Workwindow::bufferToWstring(info[1]);
-        hWnd = FindWindowW(className.empty() ? NULL : className.data(), titleName.empty() ? NULL : titleName.data());
+            windowInfo->className = Workwindow::bufferToWstring(info[1]);
+        EnumWindows(EnumWindowsProc, (LPARAM)windowInfo);
+        hWnd = windowInfo->hWnd;
+        delete windowInfo;
     }
-    std::vector<HWND> chWnds;
-    EnumChildWindows(hWnd, EnumChildProc, reinterpret_cast<LPARAM>(&chWnds));
     Napi::Array children = Napi::Array::New(env);
-    if (!chWnds.empty())
-        for (const HWND &hWnd : chWnds)
-            children[children.Length()] = Workwindow::windowGetter(hWnd, env);
+    if (hWnd != NULL)
+    {
+        std::vector<HWND> hWnds;
+        EnumChildWindows(hWnd, EnumChildrenProc, reinterpret_cast<LPARAM>(&hWnds));
+        if (!hWnds.empty())
+            for (const HWND &hWnd : hWnds)
+                children[children.Length()] = Workwindow::windowGetter(hWnd, env);
+    }
     return children;
 }
 
@@ -263,11 +297,35 @@ void Workwindow::close(const Napi::CallbackInfo &info)
     SendMessage(hWnd, WM_CLOSE, NULL, NULL);
 }
 
+BOOL CALLBACK Workwindow::EnumWindowsProc(HWND hWnd, LPARAM lParam)
+{
+    if (!IsWindowVisible(hWnd) || !IsWindowEnabled(hWnd) || GetWindowTextLengthA(hWnd) == 0)
+        return TRUE;
+    Workwindow *self = (Workwindow *)lParam;
+    if (!self->className.empty() && classNameGetter(hWnd).compare(self->className) != 0)
+        return TRUE;
+    if (!self->title.empty() && titleGetter(hWnd).compare(self->title) != 0)
+        return TRUE;
+    self->hWnd = hWnd;
+    return FALSE;
+}
+
+BOOL CALLBACK Workwindow::EnumChildProc(HWND hWnd, LPARAM lParam)
+{
+    if (!IsWindowVisible(hWnd) || !IsWindowEnabled(hWnd))
+        return TRUE;
+    Workwindow *self = (Workwindow *)lParam;
+    if (!self->childClassName.empty() && classNameGetter(hWnd).compare(self->childClassName) != 0)
+        return TRUE;
+    if (!self->childTitle.empty() && titleGetter(hWnd).compare(self->childTitle) != 0)
+        return TRUE;
+    self->hWnd = hWnd;
+    return FALSE;
+}
+
 void Workwindow::setWorkwindow(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
-    std::wstring titleName, className, childTitleName, childClassName;
-    HWND hWnd = NULL;
     bool isError = false;
     const size_t argsCount = info.Length();
     if (argsCount > 1)
@@ -286,30 +344,40 @@ void Workwindow::setWorkwindow(const Napi::CallbackInfo &info)
         if (info[1].IsBuffer())
             childClassName = bufferToWstring(info[1]);
         if (info[2].IsBuffer())
-            childTitleName = bufferToWstring(info[2]);
+            childTitle = bufferToWstring(info[2]);
     }
     else
     {
         if (info[0].IsBuffer())
-            titleName = bufferToWstring(info[0]);
+            title = bufferToWstring(info[0]);
         if (info[1].IsBuffer())
             className = bufferToWstring(info[1]);
         if (info[2].IsBuffer())
             childClassName = bufferToWstring(info[2]);
         if (info[3].IsBuffer())
-            childTitleName = bufferToWstring(info[3]);
+            childTitle = bufferToWstring(info[3]);
     }
     if (hWnd == NULL)
-        hWnd = FindWindowW(className.empty() ? NULL : className.data(), titleName.empty() ? NULL : titleName.data());
-    if (!childClassName.empty() || !childTitleName.empty())
-        hWnd = FindWindowExW(hWnd, NULL, childClassName.empty() ? NULL : childClassName.data(), childTitleName.empty() ? NULL : childTitleName.data());
-    std::wcout << " " << titleName << " " << className << " " << childTitleName << " " << childClassName << " " << std::endl;
-    this->hWnd = hWnd;
-    this->titleName = titleName;
-    this->className = className;
-    this->childTitleName = childTitleName;
-    this->childClassName = childClassName;
+        EnumWindows(EnumWindowsProc, (LPARAM)this);
+    if (!childClassName.empty() || !childTitle.empty())
+        EnumChildWindows(hWnd, EnumChildProc, (LPARAM)this);
 };
+
+Napi::Value Workwindow::refresh(const Napi::CallbackInfo &info)
+{
+    Napi::Env env = info.Env();
+    if (className.empty() && title.empty())
+    {
+        Napi::Error::New(info.Env(), "Refresh available only if title and/or className exist")
+            .ThrowAsJavaScriptException();
+        return env.Undefined();
+    }
+    hWnd = NULL;
+    EnumWindows(EnumWindowsProc, (LPARAM)this);
+    if (!childClassName.empty() || !childTitle.empty())
+        EnumChildWindows(hWnd, EnumChildProc, (LPARAM)this);
+    return Napi::Boolean::New(env, hWnd != NULL);
+}
 
 Napi::Value Workwindow::getWorkwindow(const Napi::CallbackInfo &info)
 {

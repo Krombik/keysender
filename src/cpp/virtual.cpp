@@ -82,7 +82,7 @@ Napi::Object Virtual::Init(Napi::Env env, Napi::Object exports)
                             InstanceMethod("_capture", &Virtual::capture),
                             InstanceMethod("_getColor", &Virtual::getColor),
                             InstanceMethod("_kill", &Virtual::kill),
-                            InstanceMethod("_close", &Virtual::close),
+                            InstanceMethod("_refresh", &Virtual::refresh),
                             InstanceMethod("_setWorkwindow", &Virtual::setWorkwindow),
                             InstanceMethod("_getWorkwindow", &Virtual::getWorkwindow),
                             InstanceAccessor("_lastCoords", &Virtual::getLastCoords, NULL),

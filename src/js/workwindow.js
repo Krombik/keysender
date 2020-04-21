@@ -1,12 +1,12 @@
 const { _getAllWindows, _getWindowChildren } = require('../../build/Release/key_sender.node');
 const { Buffer } = require('buffer');
 const { EventEmitter } = require('events');
-const getWindowArgs = args => args.map(item => typeof item === "string" ? Buffer.from(item, "ucs2") : item);
+const stringToBuffer = args => args.map(item => typeof item === "string" ? Buffer.from(item, "ucs2") : item);
 module.exports = {
     Workwindow: ClassName => class extends ClassName {
         constructor(...args) {
             super();
-            this._setWorkwindow(...getWindowArgs(args));
+            this._setWorkwindow(...stringToBuffer(args));
         }
         get workwindow() {
             const self = this;
@@ -15,13 +15,16 @@ module.exports = {
             Object.defineProperty(this, "workwindow", {
                 value: Object.assign(new EventEmitter, {
                     set(...args) {
-                        self._setWorkwindow(...getWindowArgs(args));
+                        self._setWorkwindow(...stringToBuffer(args));
                     },
                     get() {
                         const workwindow = self._getWorkwindow();
                         workwindow.className = workwindow.className.toString('ucs2');
                         workwindow.title = workwindow.title.toString('ucs2');
                         return workwindow;
+                    },
+                    refresh() {
+                        return self._refresh();
                     },
                     setInfo(info) {
                         self._windowInfo = info;
@@ -71,7 +74,7 @@ module.exports = {
             return item;
         }),
     getWindowChildren: (...args) =>
-        _getWindowChildren(...args.map(item => typeof item === "string" ? Buffer.from(item, "ucs2") : item)).map(item => {
+        _getWindowChildren(...stringToBuffer(args)).map(item => {
             item.className = item.className.toString('ucs2');
             item.title = item.title.toString('ucs2');
             return item;
