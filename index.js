@@ -1,9 +1,10 @@
-const { Virtual, Hardware, getScreenSize, vkToString } = require('./build/Release/key_sender.node');
+const { _Virtual, _Hardware, getScreenSize, vkToString } = require('./build/Release/key_sender.node');
 const { GlobalHotkey } = require('./src/js/hotkey');
-const { getAllWindows, getWindowChildren, Workwindow } = require('./src/js/workwindow');
+const { Workwindow } = require('./src/js/workwindow');
 const { Keyboard } = require('./src/js/keyboard');
 const { Mouse } = require('./src/js/mouse');
 const { sleep } = require('./src/js/sleep');
+const { getAllWindows, getWindowChildren, textToImg } = require('./src/js/textToImg');
 
 module.exports = {
     vkToString,
@@ -12,6 +13,7 @@ module.exports = {
     getAllWindows,
     getWindowChildren,
     sleep,
-    Virtual: Mouse(Keyboard(Workwindow(Virtual))),
-    Hardware: Mouse(Keyboard(Workwindow(Hardware))),
+    Virtual: Mouse(Keyboard(Workwindow(_Virtual))),
+    Hardware: Mouse(Keyboard(Workwindow(_Hardware))),
+    textToImg
 }

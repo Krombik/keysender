@@ -9,7 +9,9 @@
                 "src/cpp/workwindow.cpp",
                 "src/cpp/hardware.cpp",
                 "src/cpp/virtual.cpp",
-                "src/cpp/hotkey.cpp"
+                "src/cpp/hotkey.cpp",
+                "src/cpp/helper.cpp",
+                "src/cpp/utilities.cpp"
             ],
             "cflags!": ["-fno-exceptions"],
             "cflags_cc!": ["-fno-exceptions"],

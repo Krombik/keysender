@@ -1,6 +1,6 @@
 
 #include "hotkey.hpp"
-#include "keyboard.hpp"
+#include "helper.hpp"
 
 std::set<TsfnContext *> Hotkey::hotkeyPointers;
 
@@ -57,7 +57,7 @@ Hotkey::Hotkey(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Hotkey>(info)
         return;
     }
     UINT keyCode;
-    if (!Keyboard::getKeyCode(info[0], &keyCode))
+    if (!Helper::getKeyCode(info[0], &keyCode))
     {
         Napi::Error::New(info.Env(), "Wrong key name")
             .ThrowAsJavaScriptException();
@@ -86,7 +86,7 @@ void Hotkey::reassignmentHotkey(const Napi::CallbackInfo &info)
         return;
     }
     UINT keyCode;
-    if (!Keyboard::getKeyCode(info[0], &keyCode))
+    if (!Helper::getKeyCode(info[0], &keyCode))
     {
         Napi::Error::New(info.Env(), "Wrong key name")
             .ThrowAsJavaScriptException();

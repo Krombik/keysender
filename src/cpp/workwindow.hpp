@@ -4,10 +4,6 @@
 
 #include "types.hpp"
 
-Napi::Value getAllWindows(const Napi::CallbackInfo &info);
-Napi::Value getWindowChildren(const Napi::CallbackInfo &info);
-Napi::Value getScreenSize(const Napi::CallbackInfo &info);
-
 class Workwindow
 {
 public:
@@ -21,10 +17,6 @@ public:
     void close(const Napi::CallbackInfo &info);
     static BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam);
     static BOOL CALLBACK EnumChildProc(HWND hWnd, LPARAM lParam);
-    static std::wstring Workwindow::classNameGetter(HWND hWnd);
-    static std::wstring Workwindow::titleGetter(HWND hWnd);
-    static Napi::Object windowGetter(HWND hWnd, Napi::Env env);
-    static std::wstring bufferToWstring(Napi::Value val);
 
 protected:
     HWND hWnd = NULL;

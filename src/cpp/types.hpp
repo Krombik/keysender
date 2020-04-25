@@ -23,9 +23,27 @@ typedef struct
 
 typedef struct
 {
-    HWND hWnd= NULL;
+    HWND hWnd = NULL;
     std::wstring className;
     std::wstring title;
 } WindowInfo;
+
+typedef struct _BITMAP : BITMAPINFO
+{
+    _BITMAP(int height, int width)
+    {
+        bmiHeader.biWidth = width;
+        bmiHeader.biHeight = -height;
+        bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+        bmiHeader.biPlanes = 1;
+        bmiHeader.biBitCount = 32;
+        bmiHeader.biCompression = BI_RGB;
+        bmiHeader.biSizeImage = 0;
+        bmiHeader.biXPelsPerMeter = 0;
+        bmiHeader.biYPelsPerMeter = 0;
+        bmiHeader.biClrUsed = 0;
+        bmiHeader.biClrImportant = 0;
+    }
+} MAKEBITMAPINFO;
 
 #endif

@@ -1,137 +1,10 @@
 #include "workwindow.hpp"
-
-std::wstring Workwindow::classNameGetter(HWND hWnd)
-{
-    std::wstring className;
-    className.resize(256);
-    GetClassNameW(hWnd, &className[0], className.size());
-    className.resize(std::distance(className.begin(), std::search_n(className.begin(), className.end(), 2, 0)));
-    className.shrink_to_fit();
-    return className;
-}
-
-std::wstring Workwindow::titleGetter(HWND hWnd)
-{
-    std::wstring title;
-    title.resize(GetWindowTextLengthA(hWnd) + 1);
-    GetWindowTextW(hWnd, &title[0], title.size());
-    title.pop_back();
-    return title;
-}
-
-BOOL CALLBACK EnumAllWindowsProc(HWND hWnd, LPARAM lParam)
-{
-    if (!IsWindowVisible(hWnd) || !IsWindowEnabled(hWnd) || GetWindowTextLengthA(hWnd) == 0)
-        return TRUE;
-    (*reinterpret_cast<std::vector<HWND> *>(lParam)).push_back(hWnd);
-    return TRUE;
-}
-
-BOOL CALLBACK EnumChildrenProc(HWND hWnd, LPARAM lParam)
-{
-    if (!IsWindowVisible(hWnd) || !IsWindowEnabled(hWnd))
-        return TRUE;
-    (*reinterpret_cast<std::vector<HWND> *>(lParam)).push_back(hWnd);
-    return TRUE;
-}
-
-Napi::Object Workwindow::windowGetter(HWND hWnd, Napi::Env env)
-{
-    Napi::Object window = Napi::Object::New(env);
-    window["handle"] = HandleToLong(hWnd);
-    window["title"] = Napi::Buffer<wchar_t>::New(env, 0);
-    window["className"] = Napi::Buffer<wchar_t>::New(env, 0);
-    if (hWnd != NULL)
-    {
-        uint8_t titleLength = GetWindowTextLengthA(hWnd);
-        if (titleLength > 0)
-        {
-            std::wstring title = titleGetter(hWnd);
-            window["title"] = Napi::Buffer<wchar_t>::Copy(env, title.data(), title.size());
-        }
-        std::wstring className = classNameGetter(hWnd);
-        window["className"] = Napi::Buffer<wchar_t>::Copy(env, className.data(), className.size());
-    }
-    return window;
-}
-
-Napi::Value getAllWindows(const Napi::CallbackInfo &info)
-{
-    Napi::Env env = info.Env();
-    std::vector<HWND> hWnds;
-    EnumWindows(EnumAllWindowsProc, reinterpret_cast<LPARAM>(&hWnds));
-    Napi::Array windows = Napi::Array::New(env);
-    for (const HWND &hWnd : hWnds)
-        windows[windows.Length()] = Workwindow::windowGetter(hWnd, env);
-    return windows;
-}
-
-std::wstring Workwindow::bufferToWstring(Napi::Value buffer)
-{
-    return std::wstring(buffer.As<Napi::Buffer<wchar_t>>().Data());
-}
-
-BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
-{
-    if (!IsWindowVisible(hWnd) || !IsWindowEnabled(hWnd) || GetWindowTextLengthA(hWnd) == 0)
-        return TRUE;
-    WindowInfo *windowInfo = (WindowInfo *)lParam;
-    if (!windowInfo->className.empty() && Workwindow::classNameGetter(hWnd).compare(windowInfo->className) != 0)
-        return TRUE;
-    if (!windowInfo->title.empty() && Workwindow::titleGetter(hWnd).compare(windowInfo->title) != 0)
-        return TRUE;
-    windowInfo->hWnd = hWnd;
-    return FALSE;
-}
-
-Napi::Value getWindowChildren(const Napi::CallbackInfo &info)
-{
-    Napi::Env env = info.Env();
-    std::wstring title, className;
-    HWND hWnd = NULL;
-    if (info.Length() < 1 || info.Length() > 2 || (!info[0].IsBuffer() && !info[0].IsNull() && !info[0].IsNumber()) || (!info[1].IsBuffer() && !info[1].IsNull() && !info[1].IsUndefined()) || (info[0].IsNull() && info[1].IsNull()))
-    {
-        Napi::Error::New(info.Env(), "Expected 1-2 arguments: Buffer || Null || Number, Buffer || Null")
-            .ThrowAsJavaScriptException();
-        return env.Undefined();
-    }
-    if (info[0].IsNumber())
-        hWnd = (HWND)info[0].As<Napi::Number>().Int64Value();
-    else
-    {
-        WindowInfo *windowInfo = new WindowInfo;
-        if (info[0].IsBuffer())
-            windowInfo->title = Workwindow::bufferToWstring(info[0]);
-        if (info[1].IsBuffer())
-            windowInfo->className = Workwindow::bufferToWstring(info[1]);
-        EnumWindows(EnumWindowsProc, (LPARAM)windowInfo);
-        hWnd = windowInfo->hWnd;
-        delete windowInfo;
-    }
-    Napi::Array children = Napi::Array::New(env);
-    if (hWnd != NULL)
-    {
-        std::vector<HWND> hWnds;
-        EnumChildWindows(hWnd, EnumChildrenProc, reinterpret_cast<LPARAM>(&hWnds));
-        if (!hWnds.empty())
-            for (const HWND &hWnd : hWnds)
-                children[children.Length()] = Workwindow::windowGetter(hWnd, env);
-    }
-    return children;
-}
-
-Napi::Value getScreenSize(const Napi::CallbackInfo &info)
-{
-    Napi::Object screenSize = Napi::Object::New(info.Env());
-    screenSize["width"] = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-    screenSize["height"] = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-    return screenSize;
-}
+#include "helper.hpp"
 
 Napi::Value Workwindow::capture(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
-    RECT rect;
+    RECT rect = {0, 0, 0, 0};
     int16_t width, height;
     std::string format = "rgba";
     uint8_t threshold = 127;
@@ -181,76 +54,22 @@ Napi::Value Workwindow::capture(const Napi::CallbackInfo &info)
         }
         else
         {
-            rect.left = 0;
-            rect.top = 0;
             width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
             height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
         }
     }
     const uint32_t size = width * height * 4;
     HDC context = GetDC(hWnd);
-    BITMAPINFO bi;
-    bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bi.bmiHeader.biWidth = width;
-    bi.bmiHeader.biHeight = -height;
-    bi.bmiHeader.biPlanes = 1;
-    bi.bmiHeader.biBitCount = 32;
-    bi.bmiHeader.biCompression = BI_RGB;
-    bi.bmiHeader.biSizeImage = 0;
-    bi.bmiHeader.biXPelsPerMeter = 0;
-    bi.bmiHeader.biYPelsPerMeter = 0;
-    bi.bmiHeader.biClrUsed = 0;
-    bi.bmiHeader.biClrImportant = 0;
+    MAKEBITMAPINFO bi(height, width);
     uint8_t *pixels;
     HDC memDC = CreateCompatibleDC(context);
     HBITMAP section = CreateDIBSection(context, &bi, DIB_RGB_COLORS, (void **)&pixels, 0, 0);
     DeleteObject(SelectObject(memDC, section));
     BitBlt(memDC, 0, 0, width, height, context, rect.left, rect.top, SRCCOPY);
     DeleteDC(memDC);
-    Napi::Value data;
-    if (format == "grey")
-    {
-        std::vector<uint8_t> greyscale;
-        for (size_t i = 0; i < size; i += 4)
-            greyscale.push_back(pixels[i] * 0.114 + pixels[i + 1] * 0.587 + pixels[i + 2] * 0.299);
-        data = Napi::Buffer<uint8_t>::Copy(env, greyscale.data(), greyscale.size());
-    }
-    else if (format == "rgba")
-    {
-        for (size_t i = 0; i < size; i += 4)
-        {
-            std::swap(pixels[i], pixels[i + 2]);
-            if (pixels[i + 3] != 255)
-                pixels[i + 3] = 255;
-        }
-        data = Napi::Buffer<uint8_t>::Copy(env, pixels, size);
-    }
-    else if (format == "bgra")
-    {
-        for (size_t i = 0; i < size; i += 4)
-            if (pixels[i + 3] != 255)
-                pixels[i + 3] = 255;
-        data = Napi::Buffer<uint8_t>::Copy(env, pixels, size);
-    }
-    else if (format == "monochrome")
-    {
-        std::vector<uint8_t> monochrome;
-        for (size_t i = 0; i < size; i += 4)
-            monochrome.push_back(pixels[i] * 0.114 + pixels[i + 1] * 0.587 + pixels[i + 2] * 0.299 < threshold ? 0 : 255);
-        data = Napi::Buffer<uint8_t>::Copy(env, monochrome.data(), monochrome.size());
-    }
-    else
-    {
-        Napi::Error::New(env, "Wrong color format")
-            .ThrowAsJavaScriptException();
-        return env.Undefined();
-    }
-    Napi::Object returnValue = Napi::Object::New(env);
-    returnValue["data"] = data;
-    returnValue["width"] = width;
-    returnValue["height"] = height;
+    Napi::Object img = Helper::imgGetter(env, pixels, height, width, format, threshold);
     DeleteObject(section);
-    return returnValue;
+    return img;
 }
 
 Napi::Value Workwindow::getColor(const Napi::CallbackInfo &info)
@@ -297,9 +116,9 @@ BOOL CALLBACK Workwindow::EnumWindowsProc(HWND hWnd, LPARAM lParam)
     if (!IsWindowVisible(hWnd) || !IsWindowEnabled(hWnd) || GetWindowTextLengthA(hWnd) == 0)
         return TRUE;
     Workwindow *self = (Workwindow *)lParam;
-    if (!self->className.empty() && classNameGetter(hWnd).compare(self->className) != 0)
+    if (!self->className.empty() && Helper::classNameGetter(hWnd).compare(self->className) != 0)
         return TRUE;
-    if (!self->title.empty() && titleGetter(hWnd).compare(self->title) != 0)
+    if (!self->title.empty() && Helper::titleGetter(hWnd).compare(self->title) != 0)
         return TRUE;
     self->hWnd = hWnd;
     return FALSE;
@@ -310,9 +129,9 @@ BOOL CALLBACK Workwindow::EnumChildProc(HWND hWnd, LPARAM lParam)
     if (!IsWindowVisible(hWnd) || !IsWindowEnabled(hWnd))
         return TRUE;
     Workwindow *self = (Workwindow *)lParam;
-    if (!self->childClassName.empty() && classNameGetter(hWnd).compare(self->childClassName) != 0)
+    if (!self->childClassName.empty() && Helper::classNameGetter(hWnd).compare(self->childClassName) != 0)
         return TRUE;
-    if (!self->childTitle.empty() && titleGetter(hWnd).compare(self->childTitle) != 0)
+    if (!self->childTitle.empty() && Helper::titleGetter(hWnd).compare(self->childTitle) != 0)
         return TRUE;
     self->hWnd = hWnd;
     return FALSE;
@@ -339,20 +158,20 @@ void Workwindow::setWorkwindow(const Napi::CallbackInfo &info)
         {
             hWnd = (HWND)info[0].As<Napi::Number>().Int64Value();
             if (info[1].IsBuffer())
-                childClassName = bufferToWstring(info[1]);
+                childClassName = Helper::bufferToWstring(info[1]);
             if (info[2].IsBuffer())
-                childTitle = bufferToWstring(info[2]);
+                childTitle = Helper::bufferToWstring(info[2]);
         }
         else
         {
             if (info[0].IsBuffer())
-                title = bufferToWstring(info[0]);
+                title = Helper::bufferToWstring(info[0]);
             if (info[1].IsBuffer())
-                className = bufferToWstring(info[1]);
+                className = Helper::bufferToWstring(info[1]);
             if (info[2].IsBuffer())
-                childClassName = bufferToWstring(info[2]);
+                childClassName = Helper::bufferToWstring(info[2]);
             if (info[3].IsBuffer())
-                childTitle = bufferToWstring(info[3]);
+                childTitle = Helper::bufferToWstring(info[3]);
         }
         if (hWnd == NULL)
             EnumWindows(EnumWindowsProc, (LPARAM)this);
@@ -379,7 +198,7 @@ Napi::Value Workwindow::refresh(const Napi::CallbackInfo &info)
 
 Napi::Value Workwindow::getWorkwindow(const Napi::CallbackInfo &info)
 {
-    return windowGetter(hWnd, info.Env());
+    return Helper::windowGetter(hWnd, info.Env());
 }
 
 void Workwindow::setWindowView(const Napi::CallbackInfo &info, const Napi::Value &value)

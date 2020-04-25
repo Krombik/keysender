@@ -184,29 +184,29 @@ Napi::Object Hardware::Init(Napi::Env env, Napi::Object exports)
 {
     Napi::HandleScope scope(env);
     Napi::Function func = DefineClass(
-        env, "Hardware", {
-                             InstanceMethod("_getPos", &Hardware::getMousePos),
-                             InstanceMethod("_toggleMb", &Hardware::toggleMb),
-                             InstanceMethod("_move", &Hardware::move),
-                             InstanceMethod("_scrollWheel", &Hardware::scrollWheel),
-                             InstanceMethod("_toggleKey", &Hardware::toggleKey),
-                             InstanceMethod("_printChar", &Hardware::printChar),
-                             InstanceMethod("_isOpen", &Hardware::isOpen),
-                             InstanceMethod("_isForeground", &Hardware::isForeground),
-                             InstanceMethod("_setForeground", &Hardware::setForeground),
-                             InstanceMethod("_capture", &Hardware::capture),
-                             InstanceMethod("_getColor", &Hardware::getColor),
-                             InstanceMethod("_kill", &Hardware::kill),
-                             InstanceMethod("_close", &Hardware::close),
-                             InstanceMethod("_refresh", &Hardware::refresh),
-                             InstanceMethod("_setWorkwindow", &Hardware::setWorkwindow),
-                             InstanceMethod("_getWorkwindow", &Hardware::getWorkwindow),
-                             InstanceAccessor("_lastCoords", &Hardware::getLastCoords, NULL),
-                             InstanceAccessor("_saveMode", NULL, &Hardware::setSaveMode),
-                             InstanceAccessor("_windowView", &Hardware::getWindowView, &Hardware::setWindowView),
-                         });
+        env, "_Hardware", {
+                              InstanceMethod("_getPos", &Hardware::getMousePos),
+                              InstanceMethod("_toggleMb", &Hardware::toggleMb),
+                              InstanceMethod("_move", &Hardware::move),
+                              InstanceMethod("_scrollWheel", &Hardware::scrollWheel),
+                              InstanceMethod("_toggleKey", &Hardware::toggleKey),
+                              InstanceMethod("_printChar", &Hardware::printChar),
+                              InstanceMethod("_isOpen", &Hardware::isOpen),
+                              InstanceMethod("_isForeground", &Hardware::isForeground),
+                              InstanceMethod("_setForeground", &Hardware::setForeground),
+                              InstanceMethod("_capture", &Hardware::capture),
+                              InstanceMethod("_getColor", &Hardware::getColor),
+                              InstanceMethod("_kill", &Hardware::kill),
+                              InstanceMethod("_close", &Hardware::close),
+                              InstanceMethod("_refresh", &Hardware::refresh),
+                              InstanceMethod("_setWorkwindow", &Hardware::setWorkwindow),
+                              InstanceMethod("_getWorkwindow", &Hardware::getWorkwindow),
+                              InstanceAccessor("_lastCoords", &Hardware::getLastCoords, NULL),
+                              InstanceAccessor("_saveMode", NULL, &Hardware::setSaveMode),
+                              InstanceAccessor("_windowView", &Hardware::getWindowView, &Hardware::setWindowView),
+                          });
     constructor = Napi::Persistent(func);
     constructor.SuppressDestruct();
-    exports.Set("Hardware", func);
+    exports.Set("_Hardware", func);
     return exports;
 }
