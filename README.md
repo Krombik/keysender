@@ -45,6 +45,7 @@
     - [.delete](#delete)
     - [unregisterAll](#unregisterall)
     - [deleteAll](#deleteall)
+  - [textToImg](#texttoimg)
   - [getAllWindows](#getallwindows)
   - [getWindowChildren](#getwindowchildren)
   - [getScreenSize](#getscreensize)
@@ -76,7 +77,7 @@ const obj = new Hardware(null, "Notepad"); // find Notepad handle by className a
 new GlobalHotkey({ // register hotkey
   key: "num+",
   isEnabled() {
-    return (obj.workwindow.isOpen() ? true : obj.workwindow.refresh()) && obj.workwindow.isForeground(); // if "Notepad" is open and foreground - do {action}
+    return (obj.workwindow.isOpen() || obj.workwindow.refresh()) && obj.workwindow.isForeground(); // if "Notepad" is open and foreground - do {action}
   },
   actionArgs: [ // something like watcher for {size}
     {
@@ -101,7 +102,7 @@ new GlobalHotkey({ // register hotkey
 new GlobalHotkey({ // register hotkey
   key: "num-",
   isEnabled() {
-    return (obj.workwindow.isOpen() ? true : obj.workwindow.refresh()) && obj.workwindow.isForeground(); // if "Notepad" is open and foreground - do {action}
+    return (obj.workwindow.isOpen() || obj.workwindow.refresh()) && obj.workwindow.isForeground(); // if "Notepad" is open and foreground - do {action}
   },
   actionArgs: [ // something like watcher for {size}
     {
@@ -914,6 +915,38 @@ new GlobalHotkey({
     }
 });
 GlobalHotkey.deleteAll();
+```
+
+## textToImg
+```ts
+textToImg(text: string, path: string, fontSize: number, options?: textToImgOptions): img;
+```
+Draws text using the specified font (supports .ttf and .otf only).
+| Argument | Description | Default Value |
+| --- | --- | --- |
+| text | text to draw |  |
+| path | path to font |  |
+| fontSize | font size in px |  |
+| options | object with options |  |
+Options object:
+| field | Description | Default Value |
+| --- | --- | --- |
+| enableActualHeight | if true - height of returned img be equal to {fontSize} (some characters may be trimmed top or bottom) | false |
+| enableAntiAliasing | if true - anti-aliasing enabled | true |
+| color | text color, could be [r, g, b] or "rrggbb" or number | 0xffffff (white) |
+| backgroundColor | background color, could be [r, g, b] or "rrggbb" or number | 0 (black) |
+| format | color format of return data, could be "rgba", "bgra", "grey" | "rgba" |
+Returns object {data, width, height}.
+| field | Description |
+| --- | --- |
+| data | Buffer with pixels |
+| width | width of drawn text |
+| height | height of drawn text |
+```js
+const { textToImg } = require("keysender");
+const img1 = textToImg("Hello World!", "./path/to/font.ttf", 12);
+const img2 = textToImg("Hello World!", "./path/to/font.otf", 24, { enableAntiAliasing: false, format: "grey" });
+const img3 = textToImg("Hello World!", "./path/to/font.otf", 36, { enableActualHeight: true, color: "ff0000", backgroundColor: [0, 255, 0] });
 ```
 
 ## getAllWindows
