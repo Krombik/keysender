@@ -48,14 +48,3 @@ export declare interface workwindow extends EventEmitter<workwindowEvent> {
     /** Closes current workwindow by sending close message. */
     close(): void;
 }
-
-/** @returns object {width, height} with screen size. */
-export declare function getScreenSize(): size;
-
-/** @returns array with objects {handle, title, className} of all open windows. */
-export declare function getAllWindows(): windowInfo[];
-
-/** @returns array with objects {handle, title, className} of all {parentHandle} children. */
-export declare function getWindowChildren(parentHandle: number): windowInfo[];
-/** @returns array with objects {handle, title, className} with all children of window with {parentTitle} and/or {parentClassName}. */
-export declare function getWindowChildren(parentTitle: string | null, parentClassName?: string | null): windowInfo[];

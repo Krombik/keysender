@@ -4,7 +4,7 @@ const { Workwindow } = require('./src/js/workwindow');
 const { Keyboard } = require('./src/js/keyboard');
 const { Mouse } = require('./src/js/mouse');
 const { sleep } = require('./src/js/sleep');
-const { getAllWindows, getWindowChildren, textToImg } = require('./src/js/textToImg');
+const { getAllWindows, getWindowChildren, textToImg } = require('./src/js/utilities');
 
 module.exports = {
     vkToString,

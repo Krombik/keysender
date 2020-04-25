@@ -93,7 +93,6 @@ bool Helper::getKeyCode(Napi::Value key, UINT *keyCode)
 
 Napi::Object Helper::imgGetter(Napi::Env env, uint8_t *pixels, int height, int width, std::string format, uint8_t threshold)
 {
-    Napi::Value data;
     size_t size = height * width * 4;
     Napi::Object img = Napi::Object::New(env);
     if (format == "grey")
@@ -101,31 +100,22 @@ Napi::Object Helper::imgGetter(Napi::Env env, uint8_t *pixels, int height, int w
         std::vector<uint8_t> greyscale;
         for (size_t i = 0; i < size; i += 4)
             greyscale.push_back(pixels[i] * 0.114 + pixels[i + 1] * 0.587 + pixels[i + 2] * 0.299);
-        data = Napi::Buffer<uint8_t>::Copy(env, greyscale.data(), greyscale.size());
+        img["data"] = Napi::Buffer<uint8_t>::Copy(env, greyscale.data(), greyscale.size());
     }
     else if (format == "rgba")
     {
         for (size_t i = 0; i < size; i += 4)
-        {
             std::swap(pixels[i], pixels[i + 2]);
-            if (pixels[i + 3] != 255)
-                pixels[i + 3] = 255;
-        }
-        data = Napi::Buffer<uint8_t>::Copy(env, pixels, size);
+        img["data"] = Napi::Buffer<uint8_t>::Copy(env, pixels, size);
     }
     else if (format == "bgra")
-    {
-        for (size_t i = 0; i < size; i += 4)
-            if (pixels[i + 3] != 255)
-                pixels[i + 3] = 255;
-        data = Napi::Buffer<uint8_t>::Copy(env, pixels, size);
-    }
+        img["data"] = Napi::Buffer<uint8_t>::Copy(env, pixels, size);
     else if (format == "monochrome")
     {
         std::vector<uint8_t> monochrome;
         for (size_t i = 0; i < size; i += 4)
             monochrome.push_back(pixels[i] * 0.114 + pixels[i + 1] * 0.587 + pixels[i + 2] * 0.299 < threshold ? 0 : 255);
-        data = Napi::Buffer<uint8_t>::Copy(env, monochrome.data(), monochrome.size());
+        img["data"] = Napi::Buffer<uint8_t>::Copy(env, monochrome.data(), monochrome.size());
     }
     else
     {
@@ -133,7 +123,6 @@ Napi::Object Helper::imgGetter(Napi::Env env, uint8_t *pixels, int height, int w
             .ThrowAsJavaScriptException();
         return img;
     }
-    img["data"] = data;
     img["width"] = width;
     img["height"] = height;
     return img;

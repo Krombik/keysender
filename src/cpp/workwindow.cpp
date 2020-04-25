@@ -65,6 +65,8 @@ Napi::Value Workwindow::capture(const Napi::CallbackInfo &info)
     HDC memDC = CreateCompatibleDC(context);
     HBITMAP section = CreateDIBSection(context, &bi, DIB_RGB_COLORS, (void **)&pixels, 0, 0);
     DeleteObject(SelectObject(memDC, section));
+    SetBkMode(memDC, OPAQUE);
+    SetBkColor(memDC, 0);
     BitBlt(memDC, 0, 0, width, height, context, rect.left, rect.top, SRCCOPY);
     DeleteDC(memDC);
     Napi::Object img = Helper::imgGetter(env, pixels, height, width, format, threshold);

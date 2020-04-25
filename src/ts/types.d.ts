@@ -42,7 +42,14 @@ export declare type hotkeyOptions<S extends any[], A extends any[]> = {
     action(...args: A): boolean | Promise<boolean>;
     finalizerCallback?(...args: A): void | Promise<void>;
     delay?: number;
-})
+});
+export declare type textToImgOptions = {
+    enableActualHeight?: boolean;
+    enableAntiAliasing?: boolean;
+    color?: number | string | [uint8, uint8, uint8];
+    backgroundColor?: number | string | [uint8, uint8, uint8];
+    format?: "rgba" | "bgra" | "grey";
+}
 export declare interface EventEmitter<event> {
     addListener(event: event | string, listener: (...args: any[]) => void): this;
     on(event: event | string, listener: (...args: any[]) => void): this;

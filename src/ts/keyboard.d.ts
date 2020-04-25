@@ -1,8 +1,5 @@
 import { EventEmitter, randomFromRange, keyboardButton, keyboardEvent } from './types.d'
 
-/** @returns string name of {virtualKey} */
-export declare function vkToString(virtualKey: number): keyboardButton;
-
 export declare interface keyboard extends EventEmitter<keyboardEvent> {
     keyTogglerDelay: number | randomFromRange;
     keySenderDelay: number | randomFromRange;

@@ -85,9 +85,6 @@ Napi::Value textToImg(const Napi::CallbackInfo &info)
     SetBkColor(memDC, (COLORREF)options.Get("backgroundColor").As<Napi::Number>().Int32Value());
     DrawTextW(memDC, text.data(), text.size(), &rect, fontFormat);
     DeleteDC(memDC);
-    // for (size_t i = 0; i < size; i += 4)
-    //     if (pixels[i + 3] != 255)
-    //         pixels[i + 3] = 255;
     Napi::Object img = Helper::imgGetter(env, pixels, rect.bottom, rect.right, options.Get("format").As<Napi::String>(), 200);
     DeleteObject(mhFont);
     RemoveFontResourceExW(path.data(), FR_PRIVATE | FR_NOT_ENUM, 0);
