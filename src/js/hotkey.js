@@ -18,9 +18,11 @@ module.exports.GlobalHotkey = class extends _GlobalHotkey {
         let isWorking = false;
         if (mode === "once") {
             funcToSend = async () => {
-                if (isEnabled && !(await isEnabled.apply(this))) return;
+                if (isWorking || (isEnabled && !(await isEnabled.apply(this)))) return;
                 if (actionArgs) stateChecker();
+                isWorking = true;
                 await action.apply(this, args);
+                isWorking = false;
             }
         } else if (mode === "toggle") {
             funcToSend = async () => {

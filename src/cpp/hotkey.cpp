@@ -74,7 +74,7 @@ Hotkey::Hotkey(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Hotkey>(info)
         };
     else if (mode == "once")
         hotkeyState = [&]() -> bool {
-            return env.Undefined();
+            return true;
         };
     else
     {
