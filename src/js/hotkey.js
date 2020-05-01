@@ -3,7 +3,7 @@ const isEqual = require('lodash.isequal');
 module.exports.GlobalHotkey = class extends _GlobalHotkey {
     constructor(options) {
         const { key, isEnabled, actionArgs, action, mode = "once", delay = 0, finalizerCallback } = options;
-        let funcToSend;
+        let funcToSend = () => { };
         const state = [];
         const args = actionArgs ? actionArgs.map((item, index) => item.argSetter(state[index] = item.stateGetter())) : [];
         const stateChecker = () => {
@@ -15,36 +15,40 @@ module.exports.GlobalHotkey = class extends _GlobalHotkey {
                 }
             });
         }
+        let isWorking = false;
         if (mode === "once") {
             funcToSend = async () => {
-                if (isEnabled && !(await isEnabled())) return;
+                if (isEnabled && !(await isEnabled.apply(this))) return;
                 if (actionArgs) stateChecker();
-                await action(...args);
+                await action.apply(this, args);
             }
         } else if (mode === "toggle") {
-            let togglerState = false;
             funcToSend = async () => {
-                if (togglerState = !togglerState) {
-                    if (isEnabled && !(await isEnabled())) {
-                        togglerState = false;
+                if (this.hotkeyState = !this.hotkeyState) {
+                    if (isWorking || (isEnabled && !(await isEnabled.apply(this)))) {
+                        this.hotkeyState = false;
                         return;
                     }
                     if (actionArgs) stateChecker();
-                    while (togglerState && await action(...args))
+                    isWorking = true;
+                    while (this.hotkeyState && await action.apply(this, args))
                         await new Promise(_ => setTimeout(_, delay));
-                    togglerState = false;
-                    if (finalizerCallback) await finalizerCallback(...args);
+                    if (finalizerCallback) await finalizerCallback.apply(this, args);
+                    this.hotkeyState = false;
+                    isWorking = false;
                 }
             }
         } else if (mode === "hold") {
             funcToSend = async () => {
-                if (isEnabled && !(await isEnabled())) return;
+                if (isWorking || (isEnabled && !(await isEnabled.apply(this)))) return;
                 if (actionArgs) stateChecker();
-                while (this._isButtonPressed() && await action(...args))
+                isWorking = true;
+                while (this.hotkeyState && await action.apply(this, args))
                     await new Promise(_ => setTimeout(_, delay));
-                if (finalizerCallback) await finalizerCallback(...args);
+                if (finalizerCallback) await finalizerCallback.apply(this, args);
+                isWorking = false;
             }
         }
-        super(key, funcToSend);
+        super(key, mode, funcToSend);
     }
 }

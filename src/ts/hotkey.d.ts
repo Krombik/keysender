@@ -52,6 +52,9 @@ export declare class GlobalHotkey<stateTypes, argsTypes> {
      * });
      */
     constructor(options: hotkeyOptions<stateTypes extends any[] ? stateTypes : [stateTypes], argsTypes extends any[] ? argsTypes : [argsTypes]>);
+    /** if {options.mode} is "hold" - state of {options.key} (true if {options.key} is pressed, false if it isn't),
+     *  if {options.mode} is "toggle" - state of toggler */
+    readonly hotkeyState: boolean;
     /** Reassigns hotkey to {newKey}, if some hotkey already registered for {newKey}, {unregister} previous hotkey and registers new hotkey */
     reassignment(newKey: keyboardRegularButton | number): void;
     /** Unregister hotkey, hotkey can be reassignment by {reassignment} method. */

@@ -50,9 +50,9 @@ void Hotkey::messagesGetter(TsfnContext *context)
 Hotkey::Hotkey(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Hotkey>(info)
 {
     Napi::Env env = info.Env();
-    if (info.Length() != 2 || (!info[0].IsString() && !info[0].IsNumber()) || !info[1].IsFunction())
+    if (info.Length() != 3 || (!info[0].IsString() && !info[0].IsNumber()) || !info[1].IsString() || !info[2].IsFunction())
     {
-        Napi::Error::New(env, "Expected 2 arguments: String || Number, Function")
+        Napi::Error::New(env, "Expected 3 arguments: String || Number, String, Function")
             .ThrowAsJavaScriptException();
         return;
     }
@@ -63,17 +63,41 @@ Hotkey::Hotkey(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Hotkey>(info)
             .ThrowAsJavaScriptException();
         return;
     }
+    std::string mode = info[1].As<Napi::String>();
+    if (mode == "toggle")
+        hotkeyState = [&]() -> bool {
+            return togglerState;
+        };
+    else if (mode == "hold")
+        hotkeyState = [&]() -> bool {
+            return GetKeyState((*it)->keyCode) < 0;
+        };
+    else if (mode == "once")
+        hotkeyState = [&]() -> bool {
+            return env.Undefined();
+        };
+    else
+    {
+        Napi::Error::New(env, "Wrong mode")
+            .ThrowAsJavaScriptException();
+        return;
+    }
     if (!hotkeyPointers.empty())
         unregisterDuplicate(keyCode);
     it = hotkeyPointers.insert(hotkeyPointers.end(), new TsfnContext);
     (*it)->keyCode = keyCode;
-    (*it)->tsfn = Napi::ThreadSafeFunction::New(env, info[1].As<Napi::Function>(), "F", 0, 1);
+    (*it)->tsfn = Napi::ThreadSafeFunction::New(env, info[2].As<Napi::Function>(), "F", 0, 1);
     CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)messagesGetter, (*it), NULL, NULL);
 }
 
-Napi::Value Hotkey::isButtonPressed(const Napi::CallbackInfo &info)
+Napi::Value Hotkey::getHotkeyState(const Napi::CallbackInfo &info)
 {
-    return Napi::Boolean::New(info.Env(), GetKeyState((*it)->keyCode) < 0);
+    return Napi::Boolean::New(info.Env(), hotkeyState());
+}
+
+void Hotkey::setHotkeyState(const Napi::CallbackInfo &info, const Napi::Value &value)
+{
+    togglerState = bool(info[0].As<Napi::Boolean>());
 }
 
 void Hotkey::reassignmentHotkey(const Napi::CallbackInfo &info)
@@ -143,7 +167,7 @@ Napi::Object Hotkey::Init(Napi::Env env, Napi::Object exports)
                                                                 InstanceMethod("unregister", &Hotkey::unregisterHotkey),
                                                                 InstanceMethod("delete", &Hotkey::deleteHotkey),
                                                                 InstanceMethod("reassignment", &Hotkey::reassignmentHotkey),
-                                                                InstanceMethod("_isButtonPressed", &Hotkey::isButtonPressed),
+                                                                InstanceAccessor("hotkeyState", &Hotkey::getHotkeyState, &Hotkey::setHotkeyState),
                                                                 StaticMethod("unregisterAll", &Hotkey::unregisterAllHotkeys),
                                                                 StaticMethod("deleteAll", &Hotkey::deleteAllHotkeys),
                                                             });

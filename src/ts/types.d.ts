@@ -1,3 +1,4 @@
+import { GlobalHotkey } from "./hotkey.d"
 declare type from = number;
 declare type to = number;
 export declare type randomFromRange = [from, to];
@@ -28,19 +29,22 @@ export declare type pos = {
     y: number;
 }
 type actionArgs<S extends any[], A extends any[]> = {
-    [i in keyof S]: { stateGetter(): S[i], argSetter(item: S[i]): A[i extends keyof A ? i : never] }
+    [i in keyof S]: {
+        stateGetter(): S[i],
+        argSetter(item: S[i]): A[i extends keyof A ? i : never]
+    }
 }
 export declare type hotkeyOptions<S extends any[], A extends any[]> = {
     key: keyboardRegularButton | number;
-    isEnabled?(): boolean | Promise<boolean>;
+    isEnabled?(this: GlobalHotkey<S, A>): boolean | Promise<boolean>;
     actionArgs?: actionArgs<S, A>;
 } & ({
     mode?: "once";
-    action(...args: A): void | Promise<void>;
+    action(this: GlobalHotkey<S, A>, ...args: A): void | Promise<void>;
 } | {
     mode: "toggle" | "hold";
-    action(...args: A): boolean | Promise<boolean>;
-    finalizerCallback?(...args: A): void | Promise<void>;
+    action(this: GlobalHotkey<S, A>, ...args: A): boolean | Promise<boolean>;
+    finalizerCallback?(this: GlobalHotkey<S, A>, ...args: A): void | Promise<void>;
     delay?: number;
 });
 export declare type textToImgOptions = {

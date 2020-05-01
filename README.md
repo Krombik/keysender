@@ -40,6 +40,7 @@
       - [.colorAt](#colorat)      
     - [EventEmitter](#eventemitter)
   - [GlobalHotkey](#globalhotkey)
+    - [.hotkeyState](#hotkeystate)
     - [.reassignment](#reassignment)
     - [.unregister](#unregister)
     - [.delete](#delete)
@@ -696,21 +697,24 @@ obj.keyboard.sendKeyAsync("b");
 ## GlobalHotkey
 ```ts
 type actionArgs<S extends any[], A extends any[]> = {
-    [i in keyof S]: { stateGetter(): S[i], argSetter(item: S[i]): A[i extends keyof A ? i : never] }
+    [i in keyof S]: { 
+        stateGetter(): S[i], 
+        argSetter(item: S[i]): A[i extends keyof A ? i : never] 
+    }
 }
 type hotkeyOptions<S extends any[], A extends any[]> = {
     key: keyboardRegularButton | number;
-    isEnabled?(): boolean | Promise<boolean>;
+    isEnabled?(this: GlobalHotkey<S, A>): boolean | Promise<boolean>;
     actionArgs?: actionArgs<S, A>;
     mode?: "once";
-    action(...args: A): void | Promise<void>;
+    action(this: GlobalHotkey<S, A>, ...args: A): void | Promise<void>;
 } | {
     key: keyboardRegularButton | number;
-    isEnabled?(): boolean | Promise<boolean>;
+    isEnabled?(this: GlobalHotkey<S, A>): boolean | Promise<boolean>;
     actionArgs?: actionArgs<S, A>;
     mode: "toggle" | "hold";
-    action(...args: A): boolean | Promise<boolean>;
-    finalizerCallback?(...args: A): void | Promise<void>;
+    action(this: GlobalHotkey<S, A>, ...args: A): boolean | Promise<boolean>;
+    finalizerCallback?(this: GlobalHotkey<S, A>, ...args: A): void | Promise<void>;
     delay?: number;
 };
 constructor(options: hotkeyOptions<stateTypes extends any[] ? stateTypes : [stateTypes], argsTypes extends any[] ? argsTypes : [argsTypes]>);
@@ -747,7 +751,7 @@ new GlobalHotkey({ // logs "hi" every 50 milliseconds after "num/" is pressed un
     key: "num/", 
     action() {
         i++;
-        if (i>50) return false;
+        if (i > 50) return false;
         console.log("hi")
         return true
     }, 
@@ -821,6 +825,37 @@ new GlobalHotkey<[stateType], [argType]>({
         await obj.mouse.moveToAsync(...size);
         await obj.mouse.clickAsync();
     },
+});
+```
+
+### hotkeyState
+```ts
+readonly hotkeyState: boolean;
+```
+if {options.mode} is "hold" - state of {options.key} (true if {options.key} is pressed, false if it isn't),
+if {options.mode} is "toggle" - state of toggler.
+```js
+const { GlobalHotkey } = require("keysender");
+const text = "hello world!";
+let i = 0;
+new GlobalHotkey({
+    key: "num-",
+    async action() {
+        while (i < text.length && this.hotkeyState) {
+            console.log(text[i]);
+            i++;
+            await new Promise(_ => setTimeout(_, 250));
+        }
+        return false;
+    },
+    finalizerCallback() {
+        if (this.hotkeyState)
+            console.log("I done");
+        else
+            console.log("I not done");
+        i = 0;
+    },
+    mode: "toggle"
 });
 ```
 
