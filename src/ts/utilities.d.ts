@@ -1,4 +1,11 @@
-import { keyboardButton, randomFromRange, size, windowInfo, img, textToImgOptions } from './types.d'
+import {
+  KeyboardButtonType,
+  RandomFromRangeType,
+  SizeType,
+  WindowInfoType,
+  ImageType,
+  textToImgOptions,
+} from "./types.d";
 
 /**
  * Draws text using the specified font (supports .ttf and .otf only).
@@ -18,21 +25,31 @@ import { keyboardButton, randomFromRange, size, windowInfo, img, textToImgOption
  * if not provided defaults to "rgba".
  * @returns object {data, width, height}.
  */
-export declare function textToImg(text: string, path: string, fontSize: number, options?: textToImgOptions): img;
+export declare function textToImg(
+  text: string,
+  path: string,
+  fontSize: number,
+  options?: textToImgOptions
+): ImageType;
 
 /** @returns string name of {virtualKey} */
-export declare function vkToString(virtualKey: number): keyboardButton;
+export declare function vkToString(virtualKey: number): KeyboardButtonType;
 
 /** Pause current thread for {ms} milliseconds. */
-export declare function sleep(ms: number | randomFromRange): void;
+export declare function sleep(ms: number | RandomFromRangeType): void;
 
 /** @returns object {width, height} with screen size. */
-export declare function getScreenSize(): size;
+export declare function getScreenSize(): SizeType;
 
 /** @returns array with objects {handle, title, className} of all open windows. */
-export declare function getAllWindows(): windowInfo[];
+export declare function getAllWindows(): WindowInfoType[];
 
 /** @returns array with objects {handle, title, className} of all {parentHandle} children. */
-export declare function getWindowChildren(parentHandle: number): windowInfo[];
+export declare function getWindowChildren(
+  parentHandle: number
+): WindowInfoType[];
 /** @returns array with objects {handle, title, className} with all children of window with {parentTitle} and/or {parentClassName}. */
-export declare function getWindowChildren(parentTitle: string | null, parentClassName?: string | null): windowInfo[];
+export declare function getWindowChildren(
+  parentTitle: string | null,
+  parentClassName?: string | null
+): WindowInfoType[];
