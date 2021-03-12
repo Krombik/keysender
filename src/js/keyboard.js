@@ -1,5 +1,6 @@
-const { sleep, sleepAsync } = require("./sleep");
+const { sleep, sleepAsync } = require("./helpers");
 const { EventEmitter } = require("events");
+
 module.exports.Keyboard = (ClassName) =>
   class extends ClassName {
     get keyboard() {

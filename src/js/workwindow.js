@@ -1,9 +1,6 @@
-const { Buffer } = require("buffer");
 const { EventEmitter } = require("events");
-const stringsToBuffers = (args) =>
-  args.map((item) =>
-    typeof item === "string" ? Buffer.from(item, "ucs2") : item
-  );
+const { stringsToBuffers } = require("./helpers");
+
 module.exports.Workwindow = (ClassName) =>
   class extends ClassName {
     constructor(...args) {
@@ -22,9 +19,11 @@ module.exports.Workwindow = (ClassName) =>
           },
           get() {
             const workwindow = self._getWorkwindow();
-            workwindow.className = workwindow.className.toString("ucs2");
-            workwindow.title = workwindow.title.toString("ucs2");
-            return workwindow;
+            return {
+              ...workwindow,
+              className: workwindow.className.toString("ucs2"),
+              title: workwindow.title.toString("ucs2"),
+            };
           },
           refresh() {
             return self._refresh();
@@ -49,13 +48,13 @@ module.exports.Workwindow = (ClassName) =>
             this.emit("capture", img);
             return img;
           },
-          colorAt(x, y, returnType = "string") {
+          colorAt(x, y, returnType) {
             let color = self._getColor(x, y);
             color = [color & 0xff, (color >> 8) & 0xff, (color >> 16) & 0xff];
-            if (returnType === "string") return hex(...color);
             if (returnType === "array") return color;
             if (returnType === "number")
               return (color[0] << 16) | (color[1] << 8) | color[2];
+            return hex(...color);
           },
           kill() {
             self._kill();

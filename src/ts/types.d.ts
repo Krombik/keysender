@@ -208,7 +208,7 @@ export declare type HotkeyOptions<S extends any[], A extends any[]> = {
 
 export type RgbType = [red: number, green: number, blue: number];
 
-export declare type textToImgOptions = {
+export declare type TextToImgOptions = {
   enableActualHeight?: boolean;
   enableAntiAliasing?: boolean;
   color?: number | string | RgbType;

@@ -8,7 +8,7 @@ const { GlobalHotkey } = require("./src/js/hotkey");
 const { Workwindow } = require("./src/js/workwindow");
 const { Keyboard } = require("./src/js/keyboard");
 const { Mouse } = require("./src/js/mouse");
-const { sleep } = require("./src/js/sleep");
+const { sleep } = require("./src/js/helpers");
 const {
   getAllWindows,
   getWindowChildren,

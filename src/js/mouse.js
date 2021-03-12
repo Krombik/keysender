@@ -1,5 +1,6 @@
-const { sleep, sleepAsync, random } = require("./sleep");
+const { sleep, sleepAsync, random } = require("./helpers");
 const { EventEmitter } = require("events");
+
 module.exports.Mouse = (ClassName) =>
   class extends ClassName {
     get mouse() {

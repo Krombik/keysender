@@ -4,7 +4,7 @@ import {
   SizeType,
   WindowInfoType,
   ImageType,
-  textToImgOptions,
+  TextToImgOptions,
 } from "./types.d";
 
 /**
@@ -29,7 +29,7 @@ export declare function textToImg(
   text: string,
   path: string,
   fontSize: number,
-  options?: textToImgOptions
+  options?: TextToImgOptions
 ): ImageType;
 
 /** @returns string name of {virtualKey} */

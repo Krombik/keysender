@@ -1,12 +1,13 @@
 const { _GlobalHotkey } = require("../../build/Release/key_sender.node");
 const isEqual = require("lodash.isequal");
+
 module.exports.GlobalHotkey = class extends _GlobalHotkey {
   constructor({
     key,
     isEnabled,
     actionArgs,
     action,
-    mode = "once",
+    mode,
     delay = 0,
     finalizerCallback,
   }) {
@@ -28,17 +29,8 @@ module.exports.GlobalHotkey = class extends _GlobalHotkey {
     let isWorking = false;
     super(
       key,
-      mode,
-      mode === "once"
-        ? async () => {
-            if (isWorking || (isEnabled && !(await isEnabled.apply(this))))
-              return;
-            if (actionArgs) stateChecker();
-            isWorking = true;
-            await action.apply(this, args);
-            isWorking = false;
-          }
-        : mode === "toggle"
+      mode || "once",
+      mode === "toggle"
         ? async () => {
             if ((this.hotkeyState = !this.hotkeyState)) {
               if (isWorking || (isEnabled && !(await isEnabled.apply(this)))) {
@@ -65,7 +57,14 @@ module.exports.GlobalHotkey = class extends _GlobalHotkey {
             if (finalizerCallback) await finalizerCallback.apply(this, args);
             isWorking = false;
           }
-        : () => {}
+        : async () => {
+            if (isWorking || (isEnabled && !(await isEnabled.apply(this))))
+              return;
+            if (actionArgs) stateChecker();
+            isWorking = true;
+            await action.apply(this, args);
+            isWorking = false;
+          }
     );
   }
 };
