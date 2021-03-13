@@ -259,11 +259,13 @@ Napi::Value Workwindow::getWindowView(const Napi::CallbackInfo &info)
     if (hWnd != NULL)
     {
         RECT rect;
+        POINT point = {0, 0};
         GetClientRect(hWnd, &rect);
-        windowInfo["x"] = rect.left;
-        windowInfo["y"] = rect.top;
-        windowInfo["width"] = rect.right - rect.left;
-        windowInfo["height"] = rect.bottom - rect.top;
+        ClientToScreen(hWnd, &point);
+        windowInfo["x"] = point.x;
+        windowInfo["y"] = point.y;
+        windowInfo["width"] = rect.right;
+        windowInfo["height"] = rect.bottom;
     }
     return windowInfo;
 }
