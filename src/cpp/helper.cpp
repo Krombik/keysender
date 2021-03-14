@@ -105,7 +105,10 @@ Napi::Object Helper::imgGetter(Napi::Env env, uint8_t *pixels, int height, int w
     else if (format == "rgba")
     {
         for (size_t i = 0; i < size; i += 4)
+        {
             std::swap(pixels[i], pixels[i + 2]);
+            pixels[i + 3] = 255;
+        }
         img["data"] = Napi::Buffer<uint8_t>::Copy(env, pixels, size);
     }
     else if (format == "bgra")

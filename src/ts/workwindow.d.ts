@@ -46,6 +46,7 @@ export declare interface workwindow extends EventEmitter<WorkwindowEventType> {
    * @param part - position of top left corner and size to be capture
    * @param format - color format of return data, could be "rgba", "bgra", "grey", "monochrome"
    * if not provided defaults to "rgba".
+   * Note: the bgra format has the best performance, but the alpha channel of pixels is not always 255.
    * @param threshold - color limit for "monochrome" format, if the pixel value is smaller than the threshold, it is set to 0, otherwise it is set to 255
    * if not provided defaults to 127.
    * @returns object {data, width, height}.

@@ -58,19 +58,17 @@ Napi::Value Workwindow::capture(const Napi::CallbackInfo &info)
             height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
         }
     }
-    const uint32_t size = width * height * 4;
     HDC context = GetDC(hWnd);
     MAKEBITMAPINFO bi(height, width);
     uint8_t *pixels;
     HDC memDC = CreateCompatibleDC(context);
     HBITMAP section = CreateDIBSection(context, &bi, DIB_RGB_COLORS, (void **)&pixels, 0, 0);
     DeleteObject(SelectObject(memDC, section));
-    SetBkMode(memDC, OPAQUE);
-    SetBkColor(memDC, 0);
     BitBlt(memDC, 0, 0, width, height, context, rect.left, rect.top, SRCCOPY);
     DeleteDC(memDC);
     Napi::Object img = Helper::imgGetter(env, pixels, height, width, format, threshold);
     DeleteObject(section);
+    ReleaseDC(hWnd, context);
     return img;
 }
 

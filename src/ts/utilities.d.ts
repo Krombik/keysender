@@ -23,6 +23,7 @@ import {
  * if not provided defaults to 0(black).
  * @param options.format - color format of return data, could be "rgba", "bgra", "grey",
  * if not provided defaults to "rgba".
+ * Note: bgra format has the best performance, but alpha chanel of each pixel is 0.
  * @returns object {data, width, height}.
  */
 export declare function textToImg(

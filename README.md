@@ -899,7 +899,7 @@ Capture screenshot of current workwindow (even if it background) or desktop.
 | Argument | Description | Default Value |
 | --- | --- | --- |
 | part | object {x, y, height, width} with position and size to be captured | |
-| format | color format of returned image, could be "rgba", "bgra", "grey" or "monochrome" | "rgba" |
+| format | color format of returned image, could be "rgba", "bgra", "grey" or "monochrome" <br/> Note: the bgra format has the best performance, but the alpha channel of pixels is not always 255. | "rgba" |
 | threshold | color limit for "monochrome" format, if the pixel value is smaller than the threshold, it is set to 0, otherwise it is set to 255 | 127 |
 Returns object {data, width, height}.
 | field | Description |
@@ -1291,7 +1291,7 @@ Options object:
 | enableAntiAliasing | if true - anti-aliasing enabled | true |
 | color | text color, could be [r, g, b] or "rrggbb" or number | 0xffffff (white) |
 | backgroundColor | background color, could be [r, g, b] or "rrggbb" or number | 0 (black) |
-| format | color format of return data, could be "rgba", "bgra", "grey" | "rgba" |
+| format | color format of return data, could be "rgba", "bgra", "grey" <br/> Note: bgra format has the best performance, but alpha chanel of each pixel is 0 | "rgba" |
 Returns object {data, width, height}.
 | field | Description |
 | --- | --- |

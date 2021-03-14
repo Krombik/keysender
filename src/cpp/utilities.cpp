@@ -68,7 +68,7 @@ Napi::Value textToImg(const Napi::CallbackInfo &info)
     AddFontResourceExW(path.data(), FR_PRIVATE | FR_NOT_ENUM, 0);
     HFONT mhFont = CreateFontW(-fontSize, NULL, NULL, NULL, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_ONLY_PRECIS,
                                CLIP_DEFAULT_PRECIS, fontQuality, DEFAULT_PITCH | FF_DONTCARE, fontName.data());
-    HDC memDC = CreateCompatibleDC(CreateDC(NULL, NULL, NULL, NULL));
+    HDC memDC = CreateCompatibleDC(NULL);
     SelectObject(memDC, mhFont);
     DrawTextW(memDC, text.data(), text.size(), &rect, DT_CALCRECT | fontFormat);
     if (bool(options.Get("enableActualHeight").As<Napi::Boolean>()))

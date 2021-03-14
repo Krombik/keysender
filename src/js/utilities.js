@@ -18,10 +18,11 @@ module.exports = {
         enableAntiAliasing: true,
         format: "rgba",
         ...options,
-        color: options.color ? rgbToBgr(options.color) : 0xffffff,
-        backgroundColor: options.backgroundColor
-          ? rgbToBgr(options.backgroundColor)
-          : 0,
+        color: options.color !== undefined ? rgbToBgr(options.color) : 0xffffff,
+        backgroundColor:
+          options.backgroundColor !== undefined
+            ? rgbToBgr(options.backgroundColor)
+            : 0,
       }
     );
   },
