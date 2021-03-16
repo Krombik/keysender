@@ -124,12 +124,12 @@ new GlobalHotkey({
 
 # Syntax
 
-#### keyboardButton
+#### KeyboardButton
 
 [toggleKey](#togglekey), [sendKey](#sendkey), [sendKeys](#sendkeys), [GlobalHotkey](#globalhotkey) supports for following keys or numbers([virtual key codes](https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes))
 
 ```ts
-type keyboardRegularButton =
+type KeyboardRegularButton =
   | "backspace"
   | "tab"
   | "enter"
@@ -228,7 +228,7 @@ type keyboardRegularButton =
   | "numlock"
   | "scrolllock"
   | ";"
-  | "+"
+  | "="
   | ","
   | "-"
   | "."
@@ -238,7 +238,7 @@ type keyboardRegularButton =
   | "|"
   | "]"
   | "'";
-type keyboardSpecButton =
+type KeyboardSpecButton =
   | "alt"
   | "ctrl"
   | "shift"
@@ -250,7 +250,7 @@ type keyboardSpecButton =
   | "ralt"
   | "lwin"
   | "rwin";
-type keyboardButton = keyboardRegularButton | keyboardSpecButton;
+type KeyboardButton = KeyboardRegularButton | KeyboardSpecButton;
 ```
 
 ## Hardware and Virtual
@@ -316,8 +316,8 @@ obj.keyboard.keySenderDelay = [25, 50];
 #### toggleKey
 
 ```ts
-toggleKey(key: keyboardButton | number | keyboardButton[] | number[], state?: boolean, delay?: number | randomFromRange): void;
-toggleKeyAsync(key: keyboardButton | number | keyboardButton[] | number[], state?: boolean, delay?: number | randomFromRange): Promise<void>;
+toggleKey(key: KeyboardButton | number | KeyboardButton[] | number[], state?: boolean, delay?: number | randomFromRange): void;
+toggleKeyAsync(key: KeyboardButton | number | KeyboardButton[] | number[], state?: boolean, delay?: number | randomFromRange): Promise<void>;
 ```
 
 Toggles key or combination of keys to provided state.
@@ -352,8 +352,8 @@ console.log(
 #### sendKey
 
 ```ts
-sendKey(key: keyboardButton | number | keyboardButton[] | number[], afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): void;
-sendKeyAsync(key: keyboardButton | number | keyboardButton[] | number[], afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): Promise<void>;
+sendKey(key: KeyboardButton | number | KeyboardButton[] | number[], afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): void;
+sendKeyAsync(key: KeyboardButton | number | KeyboardButton[] | number[], afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): Promise<void>;
 ```
 
 Press and release key or combination of keys.
@@ -389,8 +389,8 @@ console.log(
 #### sendKeys
 
 ```ts
-sendKeys(keys: keyboardButton[] | number[], afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): void;
-sendKeysAsync(keys: keyboardButton[] | number[], afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): Promise<void>;
+sendKeys(keys: KeyboardButton[] | number[], afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): void;
+sendKeysAsync(keys: KeyboardButton[] | number[], afterPressDelay?: number | randomFromRange, afterReleaseDelay?: number | randomFromRange): Promise<void>;
 ```
 
 Press and release array of keys.
@@ -925,7 +925,7 @@ desktop.workwindow.colorAt(25, 25); // returns screen color in [25, 25] in "rrgg
 EventEmitter available for every sendInput method from [keyboard](#keyboard) and [mouse](#mouse) modules and capture method from [workwindow](#workwindow) module.
 
 ```ts
-type keyboardEvent =
+type KeyboardEvent =
   | "beforePrintText"
   | "beforeToggleKey"
   | "beforeSendKey"
@@ -934,7 +934,7 @@ type keyboardEvent =
   | "afterToggleKey"
   | "afterSendKey"
   | "afterSendKeys";
-type mouseEvent =
+type MouseEvent =
   | "beforeToggle"
   | "beforeClick"
   | "beforeMoveTo"
@@ -947,7 +947,7 @@ type mouseEvent =
   | "afterMoveCurveTo"
   | "afterMove"
   | "afterScrollWheel";
-type workwindowEvent = "capture";
+type WorkwindowEvent = "capture";
 ```
 
 Example:
@@ -1191,7 +1191,7 @@ foo.setState((prevState)=>prevState + 'some data');
 ### reassignment
 
 ```ts
-reassignment(newHotkey: keyboardRegularButton | number): void;
+reassignment(newHotkey: KeyboardRegularButton | number): void;
 ```
 
 Reassignments hotkey.
@@ -1384,7 +1384,7 @@ console.log(getScreenSize()); // object {width, height}
 ## vkToString
 
 ```ts
-vkToString(virtualKey: number): keyboardButton;
+vkToString(virtualKey: number): KeyboardButton;
 ```
 
 Returns string name of {virtualKey}.

@@ -241,7 +241,7 @@ const std::map<std::string, UINT> Helper::keysDef = {
     {"lalt", VK_LMENU},
     {"ralt", VK_RMENU},
     {";", VK_OEM_1},
-    {"+", VK_OEM_PLUS},
+    {"=", VK_OEM_PLUS},
     {",", VK_OEM_COMMA},
     {"-", VK_OEM_MINUS},
     {".", VK_OEM_PERIOD},

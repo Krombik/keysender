@@ -102,7 +102,7 @@ export declare type KeyboardRegularButtonType =
   | "numlock"
   | "scrolllock"
   | ";"
-  | "+"
+  | "="
   | ","
   | "-"
   | "."
