@@ -210,10 +210,7 @@ export declare type HotkeyOptions<
           prevState: State,
           prevProps: Props
         ): Props;
-        updateState?(
-          this: This,
-          currState: State extends {} ? Partial<State> : State
-        ): State;
+        updateState?(this: This, currState: State): State;
         initialState?: State extends {} ? Partial<State> : State;
         initialProps?: Props;
       },
