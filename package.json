@@ -1,6 +1,6 @@
 {
   "name": "keysender",
-  "version": "1.5.6",
+  "version": "1.6.0",
   "description": "Node.js keyboard and mouse inputs emulator, global hotkey register for Windows",
   "keywords": [
     "automation",
@@ -32,11 +32,9 @@
   },
   "homepage": "https://github.com/Krombik/keysender#readme",
   "dependencies": {
-    "node-addon-api": "3.1.0",
-    "lodash.isequal": "4.5.0"
+    "node-addon-api": "3.1.0"
   },
   "devDependencies": {
-    "@types/lodash.isequal": "4.5.2",
     "@types/node": "14.14.34"
   },
   "typings": "index.d.ts"

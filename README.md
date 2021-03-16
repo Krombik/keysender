@@ -42,6 +42,8 @@
     - [EventEmitter](#eventemitter)
   - [GlobalHotkey](#globalhotkey)
     - [.hotkeyState](#hotkeystate)
+    - [.getState](#getstate)
+    - [.setState](#setstate)
     - [.reassignment](#reassignment)
     - [.unregister](#unregister)
     - [.delete](#delete)
@@ -87,36 +89,6 @@ const { Hardware, GlobalHotkey } = require("keysender");
 const obj = new Hardware(null, "Notepad"); // find Notepad handle by className and set it as workwindow
 new GlobalHotkey({
   // register hotkey
-  key: "num+",
-  isEnabled() {
-    return (
-      (obj.workwindow.isOpen() || obj.workwindow.refresh()) &&
-      obj.workwindow.isForeground()
-    ); // if "Notepad" is open and foreground - do {action}
-  },
-  actionArgs: [
-    // something like watcher for {size}
-    {
-      stateGetter() {
-        const { height, width } = obj.workwindow.getView();
-        return { height, width }; // returns current {size}
-      },
-      argSetter: (size) => [size.width / 2, size.height / 2], // change {middleCoords} if current {size} not equal to previous size
-    },
-  ],
-  action(middleCoords) {
-    obj.workwindow.setView({ x: 0, y: 0 }); // move workwindow to top left corner of the screen
-    obj.mouse.moveCurveTo(...middleCoords); // makes human similar mouse movement from current cursor position to middle of "Notepad" window
-    obj.keyboard.printText("hello"); // instantly types "hello"
-    obj.keyboard.sendKey("space", 50); // press key "space", sleep for 50 milliseconds, release key "space"
-    obj.keyboard.sendKeys("world".split(""), [25, 50], 50); // press key "w", sleep for random from range [25, 50] milliseconds, release key "w", sleep for 50 milliseconds, press key "o", sleep for random from range [25, 50] milliseconds, release key "o", sleep for 50 milliseconds, ..., release key "d"
-    obj.keyboard.sendKey(["ctrl", "s"], 50); // press key combination "ctrl+s", sleep for 50 milliseconds, release key combination
-    obj.workwindow.close(); // close "Notepad" window
-  },
-});
-// or
-new GlobalHotkey({
-  // register hotkey
   key: "num-",
   isEnabled() {
     return (
@@ -124,24 +96,28 @@ new GlobalHotkey({
       obj.workwindow.isForeground()
     ); // if "Notepad" is open and foreground - do {action}
   },
-  actionArgs: [
-    // something like watcher for {size}
-    {
-      stateGetter() {
-        const { height, width } = obj.workwindow.getView();
-        return { height, width }; // returns current {size}
-      },
-      argSetter: (size) => [size.width / 2, size.height / 2], // change {middleCoords} if current {size} not equal to previous size
-    },
-  ],
-  async action(middleCoords) {
+  getProps(state, prevState, prevProps) {
+    console.log(state, prevState, prevProps);
+    if (
+      !prevProps ||
+      state.height !== prevState.height ||
+      state.width !== prevState.width
+    )
+      return [state.width / 2, state.height / 2];
+    return prevProps;
+  },
+  updateState(state) {
+    const { height, width } = obj.workwindow.getView();
+    return { height, width };
+  },
+  async action(props) {
     obj.workwindow.setView({ x: 0, y: 0 }); // move workwindow to top left corner of the screen
-    await obj.mouse.moveCurveToAsync(...middleCoords); // makes human similar mouse movement from current cursor position to middle of "Notepad" window
+    await obj.mouse.moveCurveToAsync(...props); // makes human similar mouse movement from current cursor position to middle of"Notepad" window
     await obj.keyboard.printTextAsync("hello"); // instantly types "hello"
     await obj.keyboard.sendKeyAsync("space", 50); // press key "space", await for 50 milliseconds, release key "space"
-    await obj.keyboard.sendKeysAsync("world".split(""), [25, 50], 50); // press key "w", await for random from range [25, 50] milliseconds, release key "w", await for 50 milliseconds, press key "o", await for random from range [25, 50] milliseconds, release key "o", await for 50 milliseconds, ..., release key "d"
-    await obj.keyboard.sendKeyAsync(["ctrl", "s"], 50); // press key combination "ctrl+s", await for 50 milliseconds, release key combination
-    obj.workwindow.close(); // close "Notepad" window
+    await obj.keyboard.sendKeysAsync("world".split(""), [25, 50], 50); // press key "w", await for random from range [25, 50]milliseconds, release key "w", await for 50 milliseconds, press key "o", await for random from range [25, 50] milliseconds,release key "o", await for 50 milliseconds, ..., release key "d"
+    await obj.keyboard.sendKeyAsync(["ctrl", "s"], 50); // press key combination "ctrl+s", await for 50 milliseconds, releasekey combination
+    // obj.workwindow.close(); // close "Notepad" window
   },
 });
 ```
@@ -996,28 +972,40 @@ obj.keyboard.sendKeyAsync("b");
 ## GlobalHotkey
 
 ```ts
-type actionArgs<S extends any[], A extends any[]> = {
-    [i in keyof S]: {
-        stateGetter(): S[i],
-        argSetter(item: S[i]): A[i extends keyof A ? i : never]
+type HotkeyOptions<
+  Props,
+  State,
+  This = GlobalHotkey<Props, State>
+> = {
+  key: KeyboardRegularButtonType | number;
+  isEnabled?(this: This): boolean | Promise<boolean>;
+} & (
+  | {
+      mode?: "once";
+      action(this: This, props: Props): void | Promise<void>;
     }
-}
-type hotkeyOptions<S extends any[], A extends any[]> = {
-    key: keyboardRegularButton | number;
-    isEnabled?(this: GlobalHotkey<S, A>): boolean | Promise<boolean>;
-    actionArgs?: actionArgs<S, A>;
-    mode?: "once";
-    action(this: GlobalHotkey<S, A>, ...args: A): void | Promise<void>;
-} | {
-    key: keyboardRegularButton | number;
-    isEnabled?(this: GlobalHotkey<S, A>): boolean | Promise<boolean>;
-    actionArgs?: actionArgs<S, A>;
-    mode: "toggle" | "hold";
-    action(this: GlobalHotkey<S, A>, ...args: A): boolean | Promise<boolean>;
-    finalizerCallback?(this: GlobalHotkey<S, A>, ...args: A): void | Promise<void>;
-    delay?: number;
-};
-constructor(options: hotkeyOptions<stateTypes extends any[] ? stateTypes : [stateTypes], argsTypes extends any[] ? argsTypes : [argsTypes]>);
+  | {
+      mode: "toggle" | "hold";
+      action(this: This, props: Props): boolean | Promise<boolean>;
+      finalizerCallback?(this: This, props: Props): void | Promise<void>;
+      delay?: number;
+    }
+) &
+  (
+    | {
+        getProps(
+          this: This,
+          state: State,
+          prevState: State,
+          prevProps: Props
+        ): Props;
+        updateState?(this: This, currState: State): State;
+        initialState?: State extends {} ? Partial<State> : State;
+        initialProps?: Props;
+      }
+    | { getProps?: undefined }
+  );
+constructor(options: HotkeyOptions<Props, State>);
 ```
 
 Registers hotkey, if some hotkey already registered for this {options.key}, [unregister](#unregister) previous hotkey and registers new hotkey.
@@ -1026,10 +1014,13 @@ Registers hotkey, if some hotkey already registered for this {options.key}, [unr
 | key | hotkey | | required |
 | mode | if "once" - {options.action} will call one time for each {options.key} press, if "hold" - {options.action} will repeat every {options.delay} milliseconds while {options.key} is pressed or {options.action} returns true, if "toggle" - {options.action} starts repeat repeat every {options.delay} milliseconds after {options.key} first time pressed and stops after {options.key} second time pressed or {options.action} returns false | "once" | |
 | isEnabled | function to check if hotkey is need to be executing | | |
-| actionArgs | something like watcher for arguments of {options.action} and {options.finalizerCallback}, i.e. array with objects { stateGetter: () => stateType, argSetter: (item: stateType) => argType }, where stateGetter is function for gets current state, argSetter - function to change arg value if state getting by stateGetter is different from the previous state, see an example for a better understanding. | | |
 | action | function to be call after hotkey was pressed | | required |
 | finalizerCallback | if {options.mode} is "hold" or "toggle" - function to be call after hotkey work is end | | |
 | delay | if {options.mode} is "hold" or "toggle" - sets delay between {options.action} calls | 0 | |
+| getProps | function for updating the {options.action} argument (see example below), executed once before starting {options.action}. |  |  |
+| updateState | state update function for {options.getProps}, use this for some uncontrollable things like window resizing |  |  |
+| initialProps | props for first {options.getProps} call |  |  |
+| initialState | state for first {options.getProps} and {options.updateState} call |  |  |
 
 ```js
 const { GlobalHotkey } = require("keysender");
@@ -1091,41 +1082,27 @@ const bar = new GlobalHotkey({ // unregister prev "num+" hotkey {foo} (but it st
         console.log("hello");
     }
 });
-```
-
-```ts
-import { Hardware, GlobalHotkey } from "keysender";
-/**Code described below registers hotkey "num +", takes first {stateValue} of "Notepad" {height, width} and returns [width / 2, height / 2] as arg for {action}.
- * When "num +" will be pressed {isEnabled} will check is "Notepad" open,
- * if it's not open, it try to find it again,
- * if it still isn't open hotkey do nothing do nothing,
- * if it's open {stateGetter} gets {height, width} of "Notepad" and compares it with previous {stateValue},
- * if they are not equal sets new value [width / 2, height / 2] for argument of {action}, based on current {stateValue},
- * if they are equal, argument of {action} is not change,
- * after this it do {action} - moves mouse cursor to middle of "Notepad" window and makes left mouse click.
- */
 const obj = new Hardware(null, "Notepad");
-type stateType = {
-  height: number;
-  width: number;
-};
-type argType = [number, number];
-new GlobalHotkey<[stateType], [argType]>({
+new GlobalHotkey({
   key: "num+",
-  isEnabled() {
-    return obj.workwindow.isOpen() ? true : obj.workwindow.refresh();
+  isEnabled() { //check if window open, if it closed - stopping here.
+    return obj.workwindow.isOpen();
   },
-  actionArgs: [
-    {
-      stateGetter() {
-        const { height, width } = obj.workwindow.getView();
-        return { height, width };
-      },
-      argSetter: (size) => [size.width / 2, size.height / 2],
-    },
-  ],
-  async action(size) {
-    await obj.mouse.moveToAsync(...size);
+  getProps(state, prevState, prevProps) {
+    if ( // check is something changing after previous hotkey pressing or is it first call
+      !prevProps ||
+      state.height !== prevState.height ||
+      state.width !== prevState.width
+    )
+      return [state.width / 2, state.height / 2];
+    return prevProps;
+  },
+  updateState(state) {
+    const { height, width } = obj.workwindow.getView();
+    return { height, width };
+  },
+  async action(props) {
+    await obj.mouse.moveToAsync(...props);
     await obj.mouse.clickAsync();
   },
 });
@@ -1161,6 +1138,54 @@ new GlobalHotkey({
   },
   mode: "toggle",
 });
+```
+
+## getState
+
+```ts
+getState(): State;
+```
+
+Note: available only if {options.getProps} exist
+
+```js 
+const foo = new GlobalHotkey({
+  key: "num+",
+  getProps(state, prevState, prevProps) {
+    // some code here...
+  },
+  async action(props) {
+    // some action here
+  },
+});
+
+const currState= foo.getState();
+```
+
+## setState
+
+```ts
+setState: {
+  (newState: State): void;
+  (setStateFunc: (prevState: State) => State): void;
+};
+```
+
+Note: available only if {options.getProps} exist
+
+```js 
+const foo = new GlobalHotkey({
+  key: "num+",
+  getProps(state, prevState, prevProps) {
+    // some code here...
+  },
+  async action(props) {
+    // some action here
+  },
+});
+
+foo.setState('some data');
+foo.setState((prevState)=>prevState + 'some data');
 ```
 
 ### reassignment

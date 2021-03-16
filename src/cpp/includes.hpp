@@ -1,6 +1,7 @@
 #pragma once
 #ifndef INCLUDES_H
 #define INCLUDES_H
+#define NAPI_VERSION 5
 
 #include <napi.h>
 #include <windows.h>

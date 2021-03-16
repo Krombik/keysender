@@ -4,7 +4,7 @@ import {
   MouseButtonType,
   MouseEventType,
   PositionType,
-} from "./types.d";
+} from "./types";
 export declare interface mouse extends EventEmitter<MouseEventType> {
   buttonTogglerDelay: number | RandomFromRangeType;
   /** If saveMode is enable every mouse move method first back to last known coordinates ([0, 0] on first move), by default - disable. */

@@ -1,4 +1,5 @@
-import { GlobalHotkey } from "./hotkey.d";
+import { MergeTypes } from "./helpers";
+import { GlobalHotkey } from "./hotkey";
 
 export declare type RandomFromRangeType = [from: number, to: number];
 
@@ -179,32 +180,46 @@ export declare type PositionType = {
   y: number;
 };
 
-type HotkeyActionArgsType<S extends any[], A extends any[]> = {
-  [i in keyof S]: {
-    stateGetter(): S[i];
-    argSetter(item: S[i]): A[i extends keyof A ? i : never];
-  };
-};
-
-export declare type HotkeyOptions<S extends any[], A extends any[]> = {
+export declare type HotkeyOptions<
+  Props,
+  State,
+  This = GlobalHotkey<Props, State>
+> = {
   key: KeyboardRegularButtonType | number;
-  isEnabled?(this: GlobalHotkey<S, A>): boolean | Promise<boolean>;
-  actionArgs?: HotkeyActionArgsType<S, A>;
-} & (
-  | {
+  isEnabled?(this: This): boolean | Promise<boolean>;
+} & MergeTypes<
+  [
+    {
       mode?: "once";
-      action(this: GlobalHotkey<S, A>, ...args: A): void | Promise<void>;
-    }
-  | {
+      action(this: This, props: Props): void | Promise<void>;
+    },
+    {
       mode: "toggle" | "hold";
-      action(this: GlobalHotkey<S, A>, ...args: A): boolean | Promise<boolean>;
-      finalizerCallback?(
-        this: GlobalHotkey<S, A>,
-        ...args: A
-      ): void | Promise<void>;
+      action(this: This, props: Props): boolean | Promise<boolean>;
+      finalizerCallback?(this: This, props: Props): void | Promise<void>;
       delay?: number;
     }
-);
+  ]
+> &
+  MergeTypes<
+    [
+      {
+        getProps(
+          this: This,
+          state: State,
+          prevState: State,
+          prevProps: Props
+        ): Props;
+        updateState?(
+          this: This,
+          currState: State extends {} ? Partial<State> : State
+        ): State;
+        initialState?: State extends {} ? Partial<State> : State;
+        initialProps?: Props;
+      },
+      { getProps?: undefined }
+    ]
+  >;
 
 export type RgbType = [red: number, green: number, blue: number];
 

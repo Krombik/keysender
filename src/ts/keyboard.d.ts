@@ -3,7 +3,7 @@ import {
   RandomFromRangeType,
   KeyboardButtonType,
   KeyboardEventType,
-} from "./types.d";
+} from "./types";
 
 export declare interface keyboard extends EventEmitter<KeyboardEventType> {
   keyTogglerDelay: number | RandomFromRangeType;

@@ -6,7 +6,7 @@ import {
   WindowInfoType,
   WorkwindowEventType,
   RgbType,
-} from "./types.d";
+} from "./types";
 export declare interface workwindow extends EventEmitter<WorkwindowEventType> {
   /** Sets current workwindow by {handle}. */
   set(handle?: number): void;

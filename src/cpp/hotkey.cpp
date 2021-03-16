@@ -47,7 +47,7 @@ void Hotkey::messagesGetter(TsfnContext *context)
     }
 }
 
-Hotkey::Hotkey(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Hotkey>(info)
+void Hotkey::registerHotkey(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
     if (info.Length() != 3 || (!info[0].IsString() && !info[0].IsNumber()) || !info[1].IsString() || !info[2].IsFunction())
@@ -164,6 +164,7 @@ Napi::Object Hotkey::Init(Napi::Env env, Napi::Object exports)
 {
     Napi::HandleScope scope(env);
     Napi::Function func = DefineClass(env, "_GlobalHotkey", {
+                                                                InstanceMethod("_register", &Hotkey::registerHotkey),
                                                                 InstanceMethod("unregister", &Hotkey::unregisterHotkey),
                                                                 InstanceMethod("delete", &Hotkey::deleteHotkey),
                                                                 InstanceMethod("reassignment", &Hotkey::reassignmentHotkey),

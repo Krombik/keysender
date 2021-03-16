@@ -122,8 +122,8 @@ void Hardware::mover(POINT coords, bool isAbsolute)
     }
     if (isAbsolute)
     {
-        ip.mi.dx = ((coords.x + 1) << 16) / GetSystemMetrics(SM_CXSCREEN);
-        ip.mi.dy = ((coords.y + 1) << 16) / GetSystemMetrics(SM_CYSCREEN);
+        ip.mi.dx = ((coords.x - GetSystemMetrics(SM_XVIRTUALSCREEN) + 1) << 16) / GetSystemMetrics(SM_CXVIRTUALSCREEN);
+        ip.mi.dy = ((coords.y - GetSystemMetrics(SM_YVIRTUALSCREEN) + 1) << 16) / GetSystemMetrics(SM_CYVIRTUALSCREEN);
         ip.mi.dwFlags |= MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESK;
     }
     else

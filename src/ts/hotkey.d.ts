@@ -1,9 +1,6 @@
-import { KeyboardRegularButtonType, HotkeyOptions } from "./types.d";
+import { KeyboardRegularButtonType, HotkeyOptions } from "./types";
 
-export declare class GlobalHotkey<
-  StateTypes extends any[],
-  ArgsTypes extends any[]
-> {
+export declare class GlobalHotkey<Props = unknown, State = unknown> {
   /** Registers hotkey, if some hotkey already registered for this {options.key}, {unregister} previous hotkey and registers new hotkey.
    * @param options.key - hotkey.
    * @param options.mode - if "once" - {options.action} will call one time for each {options.key} press,
@@ -11,54 +8,52 @@ export declare class GlobalHotkey<
    * if "toggle" - {options.action} starts repeat repeat every {options.delay} milliseconds after {options.key} first time pressed and stops after {options.key} second time pressed or {options.action} returns false,
    * if not provided defaults to "once".
    * @param options.isEnabled - function to check if hotkey is need to be executing.
-   * @param options.actionArgs - something like watcher for arguments of {options.action} and {options.finalizerCallback}, i.e. array with objects { stateGetter: () => stateType, argSetter: (item: stateType) => argType },
-   * where stateGetter is function for gets current state, argSetter - function to change arg value if state getting by stateGetter is different from the previous state, see an example for a better understanding.
    * @param options.action - function to be call after hotkey was pressed.
    * @param options.finalizerCallback - if {options.mode} is "hold" or "toggle" - function to be call after hotkey work is end.
    * @param options.delay - if {options.mode} is "hold" or "toggle" - sets delay between {options.action} calls,
    * if not provided defaults to 0.
+   * @param options.getProps - function for updating the {options.action} argument (see example below), executed once before starting {options.action}.
+   * @param options.updateState - state update function for {options.getProps}, use this for some uncontrollable things like window resizing
+   * @param options.initialProps - props for first {options.getProps} call
+   * @param options.initialState - state for first {options.getProps} and {options.updateState} call
    *
-   * Code described below registers hotkey "num+", takes first {stateValue} of "Notepad" {height, width} and returns [width / 2, height / 2] as argument for {action}.
-   * When "num +" will be pressed {isEnabled} will check is "Notepad" open,
-   * if it's not open, it try to find it again,
-   * if it still isn't open hotkey do nothing do nothing,
-   * if it's open {stateGetter} gets {height, width} of "Notepad" and compares it with previous {stateValue},
-   * if they are not equal sets new value [width / 2, height / 2] for argument of {action}, based on current {stateValue},
-   * if they are equal, argument of {action} is not change,
-   * after this it do {action} - moves mouse cursor to middle of "Notepad" window and makes left mouse click.
    * @example
-   * const obj = new Hardware(getWindow(null, "Notepad"));
-   * type stateType = {
-   *     height: number,
-   *     width: number
-   * }
-   * type argType = [number, number];
-   * new GlobalHotkey<[stateType], [argType]>({
-   *     key: "num+",
-   *     isEnabled() {
-   *         if (!obj.workwindow.isOpen())
-   *             obj.workwindow.set(getWindow(null, "Notepad"));
-   *         return obj.workwindow.isOpen();
-   *     },
-   *     actionArgs: [
-   *         {
-   *             stateGetter() {
-   *                 const { height, width } = obj.workwindow.getInfo();
-   *                 return ({ height, width });
-   *             },
-   *             argSetter: size => ([size.width / 2, size.height / 2])
-   *         }
-   *     ],
-   *     async action(size) {
-   *         await obj.mouse.moveToAsync(...size);
-   *         await obj.mouse.clickAsync();
-   *     },
+   * const obj = new Hardware(null, "Notepad");
+   * new GlobalHotkey({
+   *   key: "num+",
+   *   isEnabled() {
+   *     return obj.workwindow.isOpen(); //check if window open, if it closed - stopping here.
+   *   },
+   *   getProps(state, prevState, prevProps) {
+   *     if (   // check is something changing after previous hotkey pressing or is it first call
+   *       !prevProps ||
+   *       state.height !== prevState.height ||
+   *       state.width !== prevState.width
+   *     )
+   *       return [state.width / 2, state.height / 2];
+   *     return prevProps;
+   *   },
+   *   updateState(state) {
+   *     const { height, width } = obj.workwindow.getView();
+   *     return { height, width };
+   *   },
+   *   async action(props) {
+   *     await obj.mouse.moveToAsync(...props);
+   *     await obj.mouse.clickAsync();
+   *   },
    * });
    */
-  constructor(options: HotkeyOptions<StateTypes, ArgsTypes>);
+  constructor(options: HotkeyOptions<Props, State>);
   /** if {options.mode} is "hold" - state of {options.key} (true if {options.key} is pressed, false if it isn't),
    *  if {options.mode} is "toggle" - state of toggler */
   readonly hotkeyState: boolean;
+  /** Note: available only if {options.getProps} exist */
+  setState: {
+    (newState: State): void;
+    (setStateFunc: (prevState: State) => State): void;
+  };
+  /** Note: available only if {options.getProps} exist */
+  getState(): State;
   /** Reassigns hotkey to {newKey}, if some hotkey already registered for {newKey}, {unregister} previous hotkey and registers new hotkey */
   reassignment(newKey: KeyboardRegularButtonType | number): void;
   /** Unregister hotkey, hotkey can be reassignment by {reassignment} method. */

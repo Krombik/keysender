@@ -7,7 +7,7 @@
 class Hotkey : public Napi::ObjectWrap<Hotkey>
 {
 public:
-    Hotkey(const Napi::CallbackInfo &info);
+    Hotkey(const Napi::CallbackInfo &info) : Napi::ObjectWrap<Hotkey>(info){};
     void deleteHotkey(const Napi::CallbackInfo &info);
     void unregisterHotkey(const Napi::CallbackInfo &info);
     void reassignmentHotkey(const Napi::CallbackInfo &info);
@@ -21,6 +21,7 @@ public:
 private:
     std::set<TsfnContext *>::iterator it;
     bool togglerState = false;
+    void registerHotkey(const Napi::CallbackInfo &info);
     static Napi::FunctionReference constructor;
     static std::set<TsfnContext *> hotkeyPointers;
     static void messagesGetter(TsfnContext *context);

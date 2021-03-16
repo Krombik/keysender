@@ -1,68 +1,85 @@
 const { _GlobalHotkey } = require("../../build/Release/key_sender.node");
-const isEqual = require("lodash.isequal");
 
 module.exports.GlobalHotkey = class extends _GlobalHotkey {
   constructor({
     key,
     isEnabled,
-    actionArgs,
     action,
     mode,
     delay = 0,
     finalizerCallback,
+    getProps,
+    updateState,
+    initialState,
+    initialProps,
   }) {
-    const state = [];
-    const args = actionArgs
-      ? actionArgs.map((item, index) =>
-          item.argSetter((state[index] = item.stateGetter()))
-        )
-      : [];
-    const stateChecker = () => {
-      actionArgs.forEach((item, index) => {
-        const currValue = item.stateGetter();
-        if (!isEqual(currValue, state[index])) {
-          state[index] = currValue;
-          args[index] = item.argSetter(currValue);
-        }
-      });
-    };
+    super();
     let isWorking = false;
-    super(
+    const _action = action.bind(this);
+    let getCurrentProps;
+    let prevProps = initialProps;
+    if (getProps) {
+      let state = initialState;
+      let prevState = initialState;
+      const _getProps = getProps && getProps.bind(this);
+      const _updateState = updateState && updateState.bind(this);
+      getCurrentProps = (_updateState
+        ? function () {
+            const currSate = _updateState(state);
+            const currProps = _getProps(currSate, prevState, prevProps);
+            prevProps = currProps;
+            prevState = state || currSate;
+            state = currSate;
+            return currProps;
+          }
+        : function () {
+            const currProps = _getProps(state, prevState, prevProps);
+            prevState = state;
+            prevProps = currProps;
+            return currProps;
+          }
+      ).bind(this);
+
+      this.setState = (arg) =>
+        (state = typeof arg === "function" ? arg(state) : arg);
+      this.getState = () => state;
+    }
+    const _isEnabled = isEnabled && isEnabled.bind(this);
+    const _finalizerCallback =
+      finalizerCallback && finalizerCallback.bind(this);
+    this._register(
       key,
       mode || "once",
       mode === "toggle"
         ? async () => {
             if ((this.hotkeyState = !this.hotkeyState)) {
-              if (isWorking || (isEnabled && !(await isEnabled.apply(this)))) {
+              if (isWorking || (_isEnabled && !(await _isEnabled()))) {
                 this.hotkeyState = false;
                 return;
               }
-              if (actionArgs) stateChecker();
               isWorking = true;
-              while (this.hotkeyState && (await action.apply(this, args)))
+              const props = getCurrentProps && getCurrentProps();
+              while (this.hotkeyState && (await _action(props)))
                 await new Promise((_) => setTimeout(_, delay));
-              if (finalizerCallback) await finalizerCallback.apply(this, args);
+              if (_finalizerCallback) await _finalizerCallback(props);
               this.hotkeyState = false;
               isWorking = false;
             }
           }
         : mode === "hold"
         ? async () => {
-            if (isWorking || (isEnabled && !(await isEnabled.apply(this))))
-              return;
-            if (actionArgs) stateChecker();
+            if (isWorking || (_isEnabled && !(await _isEnabled()))) return;
             isWorking = true;
-            while (this.hotkeyState && (await action.apply(this, args)))
+            const props = getCurrentProps && getCurrentProps();
+            while (this.hotkeyState && (await _action(props)))
               await new Promise((_) => setTimeout(_, delay));
-            if (finalizerCallback) await finalizerCallback.apply(this, args);
+            if (_finalizerCallback) await _finalizerCallback(props);
             isWorking = false;
           }
         : async () => {
-            if (isWorking || (isEnabled && !(await isEnabled.apply(this))))
-              return;
-            if (actionArgs) stateChecker();
+            if (isWorking || (_isEnabled && !(await _isEnabled()))) return;
             isWorking = true;
-            await action.apply(this, args);
+            await _action(getCurrentProps && getCurrentProps());
             isWorking = false;
           }
     );

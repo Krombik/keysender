@@ -5,7 +5,7 @@ import {
   WindowInfoType,
   ImageType,
   TextToImgOptions,
-} from "./types.d";
+} from "./types";
 
 /**
  * Draws text using the specified font (supports .ttf and .otf only).

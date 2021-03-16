@@ -1,6 +1,6 @@
-import { keyboard } from "./src/ts/keyboard.d";
-import { mouse } from "./src/ts/mouse.d";
-import { workwindow } from "./src/ts/workwindow.d";
+import { keyboard } from "./src/ts/keyboard";
+import { mouse } from "./src/ts/mouse";
+import { workwindow } from "./src/ts/workwindow";
 
 declare class Worker {
   /** Sets current workwindow by {handle}. */
@@ -41,8 +41,8 @@ export {
   getWindowChildren,
   sleep,
   textToImg,
-} from "./src/ts/utilities.d";
+} from "./src/ts/utilities";
 
-export { GlobalHotkey } from "./src/ts/hotkey.d";
+export { GlobalHotkey } from "./src/ts/hotkey";
 
-export * from "./src/ts/types.d";
+export * from "./src/ts/types";
