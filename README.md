@@ -42,6 +42,7 @@
     - [EventEmitter](#eventemitter)
   - [GlobalHotkey](#globalhotkey)
     - [.hotkeyState](#hotkeystate)
+    - [.stop](#stop)
     - [.getState](#getstate)
     - [.setState](#setstate)
     - [.reassignment](#reassignment)
