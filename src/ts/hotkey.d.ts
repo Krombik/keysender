@@ -44,9 +44,17 @@ export declare class GlobalHotkey<Props = unknown, State = unknown> {
    * });
    */
   constructor(options: HotkeyOptions<Props, State>);
-  /** if {options.mode} is "hold" - state of {options.key} (true if {options.key} is pressed, false if it isn't),
-   *  if {options.mode} is "toggle" - state of toggler */
+  /**
+   * if {options.mode} is "hold" - state of {options.key} (true if {options.key} is pressed, false if it isn't),
+   * if {options.mode} is "toggle" - state of toggler,
+   * if {options.mode} is "once" - always true.
+   */
   readonly hotkeyState: boolean;
+  /**
+   * Stops the loop of {option.action} executing.
+   * Note: works only if {options.mode} equals to "toggle".
+   */
+  stop(): void;
   /** Note: available only if {options.getProps} exist */
   setState: {
     (newState: State): void;

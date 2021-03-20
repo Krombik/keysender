@@ -1012,15 +1012,15 @@ Registers hotkey, if some hotkey already registered for this {options.key}, [unr
 | field | Description | Default Value | |
 | --- | --- | --- | --- |
 | key | hotkey | | required |
-| mode | if "once" - {options.action} will call one time for each {options.key} press, if "hold" - {options.action} will repeat every {options.delay} milliseconds while {options.key} is pressed or {options.action} returns true, if "toggle" - {options.action} starts repeat repeat every {options.delay} milliseconds after {options.key} first time pressed and stops after {options.key} second time pressed or {options.action} returns false | "once" | |
+| mode | if "once" - {options.action} will call one time for each {options.key} press,<br /> if "hold" - {options.action} will repeat every {options.delay} milliseconds while {options.key} is pressed or {options.action} returns true,<br /> if "toggle" - {options.action} starts repeat repeat every {options.delay} milliseconds after {options.key} first time pressed and stops after {options.key} second time pressed or {options.action} returns false | "once" | |
 | isEnabled | function to check if hotkey is need to be executing | | |
 | action | function to be call after hotkey was pressed | | required |
 | finalizerCallback | if {options.mode} is "hold" or "toggle" - function to be call after hotkey work is end | | |
 | delay | if {options.mode} is "hold" or "toggle" - sets delay between {options.action} calls | 0 | |
-| getProps | function for updating the {options.action} argument (see example below), executed once before starting {options.action}. |  |  |
-| updateState | state update function for {options.getProps}, use this for some uncontrollable things like window resizing |  |  |
-| initialProps | props for first {options.getProps} call |  |  |
-| initialState | state for first {options.getProps} and {options.updateState} call |  |  |
+| getProps | function for updating the {options.action} argument (see example below), executed once before starting {options.action}. | | |
+| updateState | state update function for {options.getProps}, use this for some uncontrollable things like window resizing | | |
+| initialProps | props for first {options.getProps} call | | |
+| initialState | state for first {options.getProps} and {options.updateState} call | | |
 
 ```js
 const { GlobalHotkey } = require("keysender");
@@ -1114,8 +1114,9 @@ new GlobalHotkey({
 readonly hotkeyState: boolean;
 ```
 
-if {options.mode} is "hold" - state of {options.key} (true if {options.key} is pressed, false if it isn't),
-if {options.mode} is "toggle" - state of toggler.
+if {options.mode} is "hold" - state of {options.key} (true if {options.key} is pressed, false if it isn't),<br />
+if {options.mode} is "toggle" - state of toggler,<br />
+if {options.mode} is "once" - always true.
 
 ```js
 const { GlobalHotkey } = require("keysender");
@@ -1140,6 +1141,33 @@ new GlobalHotkey({
 });
 ```
 
+## stop
+
+```ts
+stop(): void;
+```
+
+Stops the loop of {option.action} executing.<br />
+Note: works only if {options.mode} equals to "toggle".
+
+```js
+const foo = new GlobalHotkey({
+  key: "num-",
+  mode: "toggle",
+  action() {
+    // some action here
+    return true;
+  },
+});
+
+new GlobalHotkey({
+  key: "num+",
+  action() {
+    foo.stop();
+  },
+});
+```
+
 ## getState
 
 ```ts
@@ -1148,7 +1176,7 @@ getState(): State;
 
 Note: available only if {options.getProps} exist
 
-```js 
+```js
 const foo = new GlobalHotkey({
   key: "num+",
   getProps(state, prevState, prevProps) {
@@ -1159,7 +1187,7 @@ const foo = new GlobalHotkey({
   },
 });
 
-const currState= foo.getState();
+const currState = foo.getState();
 ```
 
 ## setState
@@ -1173,7 +1201,7 @@ setState: {
 
 Note: available only if {options.getProps} exist
 
-```js 
+```js
 const foo = new GlobalHotkey({
   key: "num+",
   getProps(state, prevState, prevProps) {
@@ -1184,8 +1212,8 @@ const foo = new GlobalHotkey({
   },
 });
 
-foo.setState('some data');
-foo.setState((prevState)=>prevState + 'some data');
+foo.setState("some data");
+foo.setState((prevState) => prevState + "some data");
 ```
 
 ### reassignment

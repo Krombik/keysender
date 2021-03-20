@@ -40,8 +40,9 @@ module.exports.GlobalHotkey = class extends _GlobalHotkey {
           }
       ).bind(this);
 
-      this.setState = (arg) =>
-        (state = typeof arg === "function" ? arg(state) : arg);
+      this.setState = (arg) => {
+        state = typeof arg === "function" ? arg(state) : arg;
+      };
       this.getState = () => state;
     }
     const _isEnabled = isEnabled && isEnabled.bind(this);
@@ -83,5 +84,8 @@ module.exports.GlobalHotkey = class extends _GlobalHotkey {
             isWorking = false;
           }
     );
+  }
+  stop() {
+    this.hotkeyState = false;
   }
 };
