@@ -16,7 +16,6 @@ public:
     static BOOL CALLBACK EnumChildrenProc(HWND hWnd, LPARAM lParam);
     static bool getKeyCode(Napi::Value key, UINT *keyCode);
     static const std::map<std::string, UINT> keysDef;
-    static Napi::Object imgGetter(Napi::Env env, uint8_t *pixels, int height, int width, std::string format, uint8_t threshold);
 };
 
 #endif

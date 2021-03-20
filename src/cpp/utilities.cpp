@@ -85,10 +85,35 @@ Napi::Value textToImg(const Napi::CallbackInfo &info)
     SetBkColor(memDC, (COLORREF)options.Get("backgroundColor").As<Napi::Number>().Int32Value());
     DrawTextW(memDC, text.data(), text.size(), &rect, fontFormat);
     DeleteDC(memDC);
-    Napi::Object img = Helper::imgGetter(env, pixels, rect.bottom, rect.right, options.Get("format").As<Napi::String>(), 200);
+    Napi::Object img = Napi::Object::New(env);
+    size_t size = rect.bottom * rect.right * 4;
+    std::string format = options.Get("format").As<Napi::String>();
+    if (format == "rgba")
+    {
+        for (size_t i = 0; i < size; i += 4)
+        {
+            std::swap(pixels[i], pixels[i + 2]);
+            pixels[i + 3] = 255;
+        }
+    }
+    else if (format == "grey")
+    {
+        size_t j = 0;
+        for (size_t i = 0; i < size; i += 4, j++)
+            pixels[j] = pixels[i] * 0.114 + pixels[i + 1] * 0.587 + pixels[i + 2] * 0.299;
+        memcpy(pixels, pixels, j);
+        size = j;
+    }
+    img["width"] = rect.right;
+    img["height"] = rect.bottom;
+    Napi::Buffer<uint8_t> imgData = Napi::Buffer<uint8_t>::New(env, pixels, size);
+    imgData.AddFinalizer([](Napi::Env env, HBITMAP section) {
+        DeleteObject(section);
+    },
+                         section);
+    img["data"] = imgData;
     DeleteObject(mhFont);
     RemoveFontResourceExW(path.data(), FR_PRIVATE | FR_NOT_ENUM, 0);
-    DeleteObject(section);
     return img;
 }
 

@@ -61,14 +61,50 @@ Napi::Value Workwindow::capture(const Napi::CallbackInfo &info)
     HDC context = GetDC(hWnd);
     MAKEBITMAPINFO bi(height, width);
     uint8_t *pixels;
-    HDC memDC = CreateCompatibleDC(context);
     HBITMAP section = CreateDIBSection(context, &bi, DIB_RGB_COLORS, (void **)&pixels, 0, 0);
+    if (pixels == nullptr)
+    {
+        return env.Undefined();
+    }
+    HDC memDC = CreateCompatibleDC(context);
     DeleteObject(SelectObject(memDC, section));
     BitBlt(memDC, 0, 0, width, height, context, rect.left, rect.top, SRCCOPY);
     DeleteDC(memDC);
-    Napi::Object img = Helper::imgGetter(env, pixels, height, width, format, threshold);
-    DeleteObject(section);
     ReleaseDC(hWnd, context);
+    Napi::Object img = Napi::Object::New(env);
+    size_t size = height * width * 4;
+    if (format == "rgba")
+    {
+        for (size_t i = 0; i < size; i += 4)
+        {
+            std::swap(pixels[i], pixels[i + 2]);
+            pixels[i + 3] = 255;
+        }
+    }
+    else if (format == "grey")
+    {
+        size_t j = 0;
+        for (size_t i = 0; i < size; i += 4, j++)
+            pixels[j] = pixels[i] * 0.114 + pixels[i + 1] * 0.587 + pixels[i + 2] * 0.299;
+        memcpy(pixels, pixels, j);
+        size = j;
+    }
+    else if (format == "monochrome")
+    {
+        size_t j = 0;
+        for (size_t i = 0; i < size; i += 4, j++)
+            pixels[j] = pixels[i] * 0.114 + pixels[i + 1] * 0.587 + pixels[i + 2] * 0.299 < threshold ? 0 : 255;
+        memcpy(pixels, pixels, j);
+        size = j;
+    }
+    img["width"] = width;
+    img["height"] = height;
+    Napi::Buffer<uint8_t> imgData = Napi::Buffer<uint8_t>::New(env, pixels, size);
+    imgData.AddFinalizer([](Napi::Env env, HBITMAP section) {
+        DeleteObject(section);
+    },
+                         section);
+    img["data"] = imgData;
     return img;
 }
 
@@ -94,7 +130,10 @@ Napi::Value Workwindow::getColor(const Napi::CallbackInfo &info)
             .ThrowAsJavaScriptException();
         return env.Undefined();
     }
-    return Napi::Number::New(env, GetPixel(GetDC(hWnd), x, y));
+    HDC context = GetDC(hWnd);
+    unsigned int color = GetPixel(context, x, y);
+    ReleaseDC(hWnd, context);
+    return Napi::Number::New(env, color);
 }
 
 void Workwindow::kill(const Napi::CallbackInfo &info)
