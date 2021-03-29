@@ -52,9 +52,10 @@ export declare class GlobalHotkey<Props = unknown, State = unknown> {
   readonly hotkeyState: boolean;
   /**
    * Stops the loop of {option.action} executing.
+   * @param reason - reason to {options.finalizerCallback}, if not provided defaults to "stopped".
    * Note: works only if {options.mode} equals to "toggle".
    */
-  stop(): void;
+  stop(reason?: string): void;
   /** Note: available only if {options.getProps} exist */
   setState: {
     (newState: State): void;

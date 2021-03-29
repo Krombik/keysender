@@ -62,8 +62,14 @@ module.exports.GlobalHotkey = class extends _GlobalHotkey {
               const props = getCurrentProps && getCurrentProps();
               while (this.hotkeyState && (await _action(props)))
                 await new Promise((_) => setTimeout(_, delay));
-              if (_finalizerCallback) await _finalizerCallback(props);
+              if (_finalizerCallback)
+                await _finalizerCallback(
+                  props,
+                  _finalizerCallback.length > 1 &&
+                    (this._reason || (this.hotkeyState ? "ended" : "toggled"))
+                );
               this.hotkeyState = false;
+              this._reason = undefined;
               isWorking = false;
             }
           }
@@ -72,9 +78,27 @@ module.exports.GlobalHotkey = class extends _GlobalHotkey {
             if (isWorking || (_isEnabled && !(await _isEnabled()))) return;
             isWorking = true;
             const props = getCurrentProps && getCurrentProps();
-            while (this.hotkeyState && (await _action(props)))
-              await new Promise((_) => setTimeout(_, delay));
-            if (_finalizerCallback) await _finalizerCallback(props);
+            if (_finalizerCallback) {
+              if (_finalizerCallback.length < 2) {
+                while (this.hotkeyState && (await _action(props)))
+                  await new Promise((_) => setTimeout(_, delay));
+                await _finalizerCallback(props);
+              } else {
+                let hotkeyState;
+                while (
+                  (hotkeyState = this.hotkeyState) &&
+                  (await _action(props))
+                )
+                  await new Promise((_) => setTimeout(_, delay));
+                await _finalizerCallback(
+                  props,
+                  hotkeyState ? "ended" : "released"
+                );
+              }
+            } else {
+              while (this.hotkeyState && (await _action(props)))
+                await new Promise((_) => setTimeout(_, delay));
+            }
             isWorking = false;
           }
         : async () => {
@@ -85,7 +109,8 @@ module.exports.GlobalHotkey = class extends _GlobalHotkey {
           }
     );
   }
-  stop() {
+  stop(reason = "stopped") {
     this.hotkeyState = false;
+    this._reason = reason;
   }
 };

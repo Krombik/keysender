@@ -196,7 +196,11 @@ export declare type HotkeyOptions<
     {
       mode: "toggle" | "hold";
       action(this: This, props: Props): boolean | Promise<boolean>;
-      finalizerCallback?(this: This, props: Props): void | Promise<void>;
+      finalizerCallback?(
+        this: This,
+        props: Props,
+        reason: "toggle" | "released" | "ended" | String
+      ): void | Promise<void>;
       delay?: number;
     }
   ]

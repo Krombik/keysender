@@ -1016,7 +1016,7 @@ Registers hotkey, if some hotkey already registered for this {options.key}, [unr
 | mode | if "once" - {options.action} will call one time for each {options.key} press,<br /> if "hold" - {options.action} will repeat every {options.delay} milliseconds while {options.key} is pressed or {options.action} returns true,<br /> if "toggle" - {options.action} starts repeat repeat every {options.delay} milliseconds after {options.key} first time pressed and stops after {options.key} second time pressed or {options.action} returns false | "once" | |
 | isEnabled | function to check if hotkey is need to be executing | | |
 | action | function to be call after hotkey was pressed | | required |
-| finalizerCallback | if {options.mode} is "hold" or "toggle" - function to be call after hotkey work is end | | |
+| finalizerCallback | if {options.mode} is "hold" or "toggle" - function to be call after hotkey work is end,<br /> first param is props, the second - reason of ending,<br /> if {options.mode} is "hold": reason can be "ended" (if {options.action} returned false) or "released" (if {options.hotkey} was released);<br /> if {options.mode} is "toggle": reason can be "ended" (if {options.action} returned false) or "toggled" (if {options.hotkey} was toggled) or reason from [stop](#stop) method | | |
 | delay | if {options.mode} is "hold" or "toggle" - sets delay between {options.action} calls | 0 | |
 | getProps | function for updating the {options.action} argument (see example below), executed once before starting {options.action}. | | |
 | updateState | state update function for {options.getProps}, use this for some uncontrollable things like window resizing | | |
@@ -1073,8 +1073,8 @@ new GlobalHotkey({ // logs "hi" every 50 milliseconds while "num-" is pressed, l
     },
     mode: "hold",
     delay: 50,
-    async finalizerCallback() {
-        console.log("bye");
+    async finalizerCallback(props, reason) {
+        console.log(reason);
     }
 });
 const bar = new GlobalHotkey({ // unregister prev "num+" hotkey {foo} (but it still could be reassignment) and register new hotkey "num+" {bar}
@@ -1145,11 +1145,14 @@ new GlobalHotkey({
 ## stop
 
 ```ts
-stop(): void;
+stop(reason: string): void;
 ```
 
 Stops the loop of {option.action} executing.<br />
 Note: works only if {options.mode} equals to "toggle".
+| Argument | Description | Default Value |
+| --- | --- | --- |
+| reason | reason to {options.finalizerCallback} | "stopped" |
 
 ```js
 const foo = new GlobalHotkey({
@@ -1159,12 +1162,17 @@ const foo = new GlobalHotkey({
     // some action here
     return true;
   },
+  finalizerCallback(_, reason) {
+    if (reason === "someReason") {
+      console.log("stopped");
+    }
+  },
 });
 
 new GlobalHotkey({
   key: "num+",
   action() {
-    foo.stop();
+    foo.stop("someReason");
   },
 });
 ```
