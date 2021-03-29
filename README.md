@@ -1145,7 +1145,7 @@ new GlobalHotkey({
 ## stop
 
 ```ts
-stop(reason: string): void;
+stop(reason?: string): Promise<void>;
 ```
 
 Stops the loop of {option.action} executing.<br />
@@ -1171,8 +1171,9 @@ const foo = new GlobalHotkey({
 
 new GlobalHotkey({
   key: "num+",
-  action() {
-    foo.stop("someReason");
+  async action() {
+    await foo.stop("someReason");
+    console.log("you se this message after finalizerCallback message");
   },
 });
 ```

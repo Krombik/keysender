@@ -55,7 +55,7 @@ export declare class GlobalHotkey<Props = unknown, State = unknown> {
    * @param reason - reason to {options.finalizerCallback}, if not provided defaults to "stopped".
    * Note: works only if {options.mode} equals to "toggle".
    */
-  stop(reason?: string): void;
+  stop(reason?: string): Promise<void>;
   /** Note: available only if {options.getProps} exist */
   setState: {
     (newState: State): void;

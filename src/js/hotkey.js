@@ -14,6 +14,7 @@ module.exports.GlobalHotkey = class extends _GlobalHotkey {
     initialProps,
   }) {
     super();
+    this._canceled = undefined;
     let isWorking = false;
     const _action = action.bind(this);
     let getCurrentProps;
@@ -58,6 +59,10 @@ module.exports.GlobalHotkey = class extends _GlobalHotkey {
                 this.hotkeyState = false;
                 return;
               }
+              let resolve;
+              this._canceled = new Promise((_resolve) => {
+                resolve = _resolve;
+              });
               isWorking = true;
               const props = getCurrentProps && getCurrentProps();
               while (this.hotkeyState && (await _action(props)))
@@ -71,6 +76,8 @@ module.exports.GlobalHotkey = class extends _GlobalHotkey {
               this.hotkeyState = false;
               this._reason = undefined;
               isWorking = false;
+              resolve();
+              this._canceled = undefined;
             }
           }
         : mode === "hold"
@@ -109,8 +116,11 @@ module.exports.GlobalHotkey = class extends _GlobalHotkey {
           }
     );
   }
-  stop(reason = "stopped") {
-    this.hotkeyState = false;
-    this._reason = reason;
+  async stop(reason = "stopped") {
+    if (this.hotkeyState) {
+      this._reason = reason;
+      this.hotkeyState = false;
+      await this._canceled;
+    }
   }
 };
