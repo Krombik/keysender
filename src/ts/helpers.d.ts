@@ -1,4 +1,4 @@
-import EventEmitter = require("node:events");
+import EventEmitter = require("events");
 
 type MergeTypesFromArray<T extends {}[]> = T[keyof T extends string
   ? keyof T
