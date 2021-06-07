@@ -1,11 +1,12 @@
 import {
-  EventEmitter,
+  GenericEventEmitter,
   RandomFromRangeType,
   KeyboardButtonType,
   KeyboardEventType,
 } from "./types";
 
-export declare interface keyboard extends EventEmitter<KeyboardEventType> {
+export declare interface Keyboard
+  extends GenericEventEmitter<KeyboardEventType> {
   keyTogglerDelay: number | RandomFromRangeType;
   keySenderDelay: number | RandomFromRangeType;
   /** Prints text.

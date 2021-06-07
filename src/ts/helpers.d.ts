@@ -1,9 +1,3 @@
-export type NotUnknown<U, M> = U | M extends unknown
-  ? M extends unknown
-    ? U
-    : M
-  : U | M;
-
 type MergeTypesFromArray<T extends {}[]> = T[keyof T extends string
   ? keyof T
   : never];

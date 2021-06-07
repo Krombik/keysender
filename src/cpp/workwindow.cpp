@@ -5,7 +5,7 @@ Napi::Value Workwindow::capture(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
     RECT rect = {0, 0, 0, 0};
-    int16_t width, height;
+    int width, height;
     std::string format = "rgba";
     uint8_t threshold = 127;
     if (info[0].IsObject())
@@ -100,9 +100,8 @@ Napi::Value Workwindow::capture(const Napi::CallbackInfo &info)
     img["width"] = width;
     img["height"] = height;
     Napi::Buffer<uint8_t> imgData = Napi::Buffer<uint8_t>::New(env, pixels, size);
-    imgData.AddFinalizer([](Napi::Env env, HBITMAP section) {
-        DeleteObject(section);
-    },
+    imgData.AddFinalizer([](Napi::Env env, HBITMAP section)
+                         { DeleteObject(section); },
                          section);
     img["data"] = imgData;
     return img;

@@ -8,12 +8,17 @@ module.exports.Workwindow = (ClassName) =>
       this._setWorkwindow(...stringsToBuffers(args));
     }
     get workwindow() {
-      const self = this;
       const add0 = (item) => (item.length > 1 ? item : "0" + item);
+
       const hex = (...rgb) =>
         rgb.reduce((hex, color) => hex + add0(color.toString(16)), "");
+
+      const self = this;
+
+      const _this = new EventEmitter();
+
       Object.defineProperty(this, "workwindow", {
-        value: Object.assign(new EventEmitter(), {
+        value: Object.assign(_this, {
           set(...args) {
             self._setWorkwindow(...stringsToBuffers(args));
           },
@@ -45,7 +50,7 @@ module.exports.Workwindow = (ClassName) =>
           },
           capture(...args) {
             const img = self._capture(...args);
-            this.emit("capture", img);
+            _this.emit("capture", img);
             return img;
           },
           colorAt(x, y, returnType) {
@@ -64,6 +69,7 @@ module.exports.Workwindow = (ClassName) =>
           },
         }),
       });
+
       return this.workwindow;
     }
   };

@@ -222,39 +222,30 @@ export declare type HotkeyOptions<
     ]
   >;
 
-export type RgbType = [red: number, green: number, blue: number];
+export type RGB = [red: number, green: number, blue: number];
 
 export declare type TextToImgOptions = {
   enableActualHeight?: boolean;
   enableAntiAliasing?: boolean;
-  color?: number | string | RgbType;
-  backgroundColor?: number | string | RgbType;
+  color?: number | string | RGB;
+  backgroundColor?: number | string | RGB;
   format?: "rgba" | "bgra" | "grey";
 };
 
-export declare interface EventEmitter<event> {
-  addListener(event: event | string, listener: (...args: any[]) => void): this;
-  on(event: event | string, listener: (...args: any[]) => void): this;
-  once(event: event | string, listener: (...args: any[]) => void): this;
-  removeListener(
-    event: event | string,
-    listener: (...args: any[]) => void
-  ): this;
-  off(event: event | string, listener: (...args: any[]) => void): this;
-  removeAllListeners(event?: event | string): this;
+export declare interface GenericEventEmitter<Event extends string> {
+  addListener(event: Event, listener: (...args: any[]) => void): this;
+  on(event: Event, listener: (...args: any[]) => void): this;
+  once(event: Event, listener: (...args: any[]) => void): this;
+  removeListener(event: Event, listener: (...args: any[]) => void): this;
+  off(event: Event, listener: (...args: any[]) => void): this;
+  removeAllListeners(event?: Event): this;
   setMaxListeners(n: number): this;
   getMaxListeners(): number;
-  listeners(event: event | string): Function[];
-  rawListeners(event: event | string): Function[];
-  emit(event: event | string, ...args: any[]): boolean;
-  listenerCount(type: event | string): number;
-  prependListener(
-    event: event | string,
-    listener: (...args: any[]) => void
-  ): this;
-  prependOnceListener(
-    event: event | string,
-    listener: (...args: any[]) => void
-  ): this;
-  eventNames(): Array<event | string>;
+  listeners(event: Event): Function[];
+  rawListeners(event: Event): Function[];
+  emit(event: Event, ...args: any[]): boolean;
+  listenerCount(type: Event): number;
+  prependListener(event: Event, listener: (...args: any[]) => void): this;
+  prependOnceListener(event: Event, listener: (...args: any[]) => void): this;
+  eventNames(): Event[];
 }

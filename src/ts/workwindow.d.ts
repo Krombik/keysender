@@ -1,13 +1,14 @@
 import {
-  EventEmitter,
+  GenericEventEmitter,
   PositionType,
   SizeType,
   ImageType,
   WindowInfoType,
   WorkwindowEventType,
-  RgbType,
+  RGB,
 } from "./types";
-export declare interface workwindow extends EventEmitter<WorkwindowEventType> {
+export declare interface Workwindow
+  extends GenericEventEmitter<WorkwindowEventType> {
   /** Sets current workwindow by {handle}. */
   set(handle?: number): void;
   /** Finds the first window with {title} and/or {className} and sets it as current workwindow. */
@@ -66,7 +67,7 @@ export declare interface workwindow extends EventEmitter<WorkwindowEventType> {
    * if not provided defaults to "string".
    * @returns pixel color in [x, y] from current workwindow (or screen if {handle} is 0). */
   colorAt(x: number, y: number, returnType?: "string"): string;
-  colorAt(x: number, y: number, returnType: "array"): RgbType;
+  colorAt(x: number, y: number, returnType: "array"): RGB;
   colorAt(x: number, y: number, returnType: "number"): number;
   /** Terminates current workwindow by killing it's thread. */
   kill(): void;

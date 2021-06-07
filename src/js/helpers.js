@@ -6,10 +6,14 @@ const random = (min, max) =>
   min < max ? Math.floor(Math.random() * (max + 1 - min)) + min : min;
 
 module.exports = {
+  DEFAULT_DELAY: 35,
+
   random,
 
   sleepAsync: (ms) =>
-    new Promise((_) => setTimeout(_, Array.isArray(ms) ? random(...ms) : ms)),
+    new Promise((res) =>
+      setTimeout(res, Array.isArray(ms) ? random(...ms) : ms)
+    ),
 
   sleep(arg) {
     const ms = !Array.isArray(arg) ? arg : random(...arg);
@@ -26,6 +30,7 @@ module.exports = {
   rgbToBgr(color) {
     if (typeof color === "string") {
       color = parseInt(color, 16);
+
       return (
         ((color & 0xff) << 16) |
         (((color >> 8) & 0xff) << 8) |
@@ -42,6 +47,7 @@ module.exports = {
         ((color >> 16) & 0xff)
       );
     }
+
     return undefined;
   },
 

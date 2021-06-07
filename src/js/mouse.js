@@ -1,20 +1,27 @@
-const { sleep, sleepAsync, random } = require("./helpers");
+const { sleep, sleepAsync, random, DEFAULT_DELAY } = require("./helpers");
 const { EventEmitter } = require("events");
 
 module.exports.Mouse = (ClassName) =>
   class extends ClassName {
     get mouse() {
       const self = this;
+
+      const _this = new EventEmitter();
+
       const choice = (...items) =>
         items[Math.round(Math.random() * (items.length - 1))];
+
       const tremor = (probability) =>
         Math.random() <= probability ? choice(-1, 1) : 0;
+
       const curveDotMaker = (start, end, deviation, sign) =>
         Math.round(
           start + (end - start) / 2 + sign * (end - start) * 0.01 * deviation
         );
+
       const firstCurveDotMaker = (start, end, deviation, sign) =>
         Math.round(start + sign * (end - start) * 0.01 * deviation);
+
       const curveMaker = (t, start, curveDot1, curveDot2, end) =>
         Math.floor(
           Math.pow(1 - t, 3) * start +
@@ -22,6 +29,7 @@ module.exports.Mouse = (ClassName) =>
             3 * (1 - t) * t * t * curveDot2 +
             t * t * t * end
         );
+
       const humanCurve = (xE, yE, speed, deviation) => {
         const { x, y } = self._lastCoords;
         if (x != xE && y != yE) {
@@ -129,9 +137,10 @@ module.exports.Mouse = (ClassName) =>
         }
         return [[x, y]];
       };
+
       Object.defineProperty(this, "mouse", {
-        value: Object.assign(new EventEmitter(), {
-          buttonTogglerDelay: 35,
+        value: Object.assign(_this, {
+          buttonTogglerDelay: DEFAULT_DELAY,
           enableSaveMode(bool) {
             self._saveMode = bool;
           },
@@ -141,105 +150,106 @@ module.exports.Mouse = (ClassName) =>
           toggle(
             isButtonDown,
             button = "left",
-            buttonTogglerDelay = this.buttonTogglerDelay
+            buttonTogglerDelay = _this.buttonTogglerDelay
           ) {
-            this.emit("beforeToggle", ...arguments);
+            _this.emit("beforeToggle", ...arguments);
             self._toggleMb(button, isButtonDown);
             sleep(buttonTogglerDelay);
-            this.emit("afterToggle", ...arguments);
+            _this.emit("afterToggle", ...arguments);
           },
           async toggleAsync(
             isButtonDown,
             button = "left",
-            buttonTogglerDelay = this.buttonTogglerDelay
+            buttonTogglerDelay = _this.buttonTogglerDelay
           ) {
-            this.emit("beforeToggle", ...arguments);
+            _this.emit("beforeToggle", ...arguments);
             self._toggleMb(button, isButtonDown);
             await sleepAsync(buttonTogglerDelay);
-            this.emit("afterToggle", ...arguments);
+            _this.emit("afterToggle", ...arguments);
           },
           click(
             button = "left",
-            buttonTogglerDelay = this.buttonTogglerDelay,
+            buttonTogglerDelay = _this.buttonTogglerDelay,
             buttonSenderDelay = 0
           ) {
-            this.emit("beforeClick", ...arguments);
+            _this.emit("beforeClick", ...arguments);
             self._toggleMb(button, true);
             sleep(buttonTogglerDelay);
             self._toggleMb(button, false);
             sleep(buttonSenderDelay);
-            this.emit("afterClick", ...arguments);
+            _this.emit("afterClick", ...arguments);
           },
           async clickAsync(
             button = "left",
-            buttonTogglerDelay = this.buttonTogglerDelay,
+            buttonTogglerDelay = _this.buttonTogglerDelay,
             buttonSenderDelay = 0
           ) {
-            this.emit("beforeClick", ...arguments);
+            _this.emit("beforeClick", ...arguments);
             self._toggleMb(button, true);
             await sleepAsync(buttonTogglerDelay);
             self._toggleMb(button, false);
             await sleepAsync(buttonSenderDelay);
-            this.emit("afterClick", ...arguments);
+            _this.emit("afterClick", ...arguments);
           },
           moveTo(x, y, delay = 0) {
-            this.emit("beforeMoveTo", ...arguments);
+            _this.emit("beforeMoveTo", ...arguments);
             self._move(x, y, true);
             sleep(delay);
-            this.emit("afterMoveTo", ...arguments);
+            _this.emit("afterMoveTo", ...arguments);
           },
           async moveToAsync(x, y, delay = 0) {
-            this.emit("beforeMoveTo", ...arguments);
+            _this.emit("beforeMoveTo", ...arguments);
             self._move(x, y, true);
             await sleepAsync(delay);
-            this.emit("afterMoveTo", ...arguments);
+            _this.emit("afterMoveTo", ...arguments);
           },
           moveCurveTo(x, y, speed = 5, deviation = 30) {
-            this.emit("beforeMoveCurveTo", ...arguments);
+            _this.emit("beforeMoveCurveTo", ...arguments);
             const sleepTime =
               speed >= 1 ? 1 : speed !== "max" ? Math.round(1 / speed) : 0;
             humanCurve(x, y, speed, deviation).forEach((dot) => {
               self._move(dot[0], dot[1], true);
               sleep(sleepTime);
             });
-            this.emit("afterMoveCurveTo", ...arguments);
+            _this.emit("afterMoveCurveTo", ...arguments);
           },
           async moveCurveToAsync(x, y, speed = 5, deviation = 30) {
-            this.emit("beforeMoveCurveTo", ...arguments);
+            _this.emit("beforeMoveCurveTo", ...arguments);
             const sleepTime =
               speed >= 1 ? 1 : speed !== "max" ? Math.round(1 / speed) : 0;
             for (const dot of humanCurve(x, y, speed, deviation)) {
               self._move(dot[0], dot[1], true);
               await sleepAsync(sleepTime);
             }
-            this.emit("afterMoveCurveTo", ...arguments);
+            _this.emit("afterMoveCurveTo", ...arguments);
           },
           move(x, y, delay = 0) {
-            this.emit("beforeMove", ...arguments);
+            _this.emit("beforeMove", ...arguments);
             self._move(x, y, false);
             sleep(delay);
-            this.emit("afterMove", ...arguments);
+            _this.emit("afterMove", ...arguments);
           },
           async moveAsync(x, y, delay = 0) {
-            this.emit("beforeMove", ...arguments);
+            _this.emit("beforeMove", ...arguments);
             self._move(x, y, false);
             await sleepAsync(delay);
-            this.emit("afterMove", ...arguments);
+            _this.emit("afterMove", ...arguments);
           },
           scrollWheel(count, wheelTogglerDelay = 0) {
-            this.emit("beforeScrollWheel", ...arguments);
+            _this.emit("beforeScrollWheel", ...arguments);
             self._scrollWheel(count);
             sleep(wheelTogglerDelay);
-            this.emit("afterScrollWheel", ...arguments);
+            _this.emit("afterScrollWheel", ...arguments);
           },
           async scrollWheelAsync(count, wheelTogglerDelay = 0) {
-            this.emit("beforeScrollWheel", ...arguments);
+            _this.emit("beforeScrollWheel", ...arguments);
             self._scrollWheel(count);
             await sleepAsync(wheelTogglerDelay);
-            this.emit("afterScrollWheel", ...arguments);
+            _this.emit("afterScrollWheel", ...arguments);
           },
         }),
       });
+
       return this.mouse;
     }
   };

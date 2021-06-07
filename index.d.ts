@@ -1,6 +1,6 @@
-import { keyboard } from "./src/ts/keyboard";
-import { mouse } from "./src/ts/mouse";
-import { workwindow } from "./src/ts/workwindow";
+import { Keyboard } from "./src/ts/keyboard";
+import { Mouse } from "./src/ts/mouse";
+import { Workwindow } from "./src/ts/workwindow";
 
 declare class Worker {
   /** Sets current workwindow by {handle}. */
@@ -21,11 +21,11 @@ declare class Worker {
     childTitle?: string | null
   );
   /** Provides methods to synthesize keystrokes. */
-  declare keyboard: keyboard;
+  declare keyboard: Keyboard;
   /** Provides methods to synthesize mouse motions, and button clicks. */
-  declare mouse: mouse;
+  declare mouse: Mouse;
   /** Provides methods to work with workwindow. */
-  declare workwindow: workwindow;
+  declare workwindow: Workwindow;
 }
 
 /** Provides methods implementations on hardware level. */
