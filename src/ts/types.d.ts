@@ -1,5 +1,8 @@
-import { MergeTypes } from "./helpers";
+import { EventType, MergeTypes } from "./helpers";
 import { GlobalHotkey } from "./hotkey";
+import Keyboard from "./keyboard";
+import Mouse from "./mouse";
+import Workwindow from "./workwindow";
 
 export declare type RandomFromRangeType = [from: number, to: number];
 
@@ -132,31 +135,11 @@ export declare type KeyboardButtonType =
 
 export declare type MouseButtonType = "left" | "right" | "middle";
 
-export declare type KeyboardEventType =
-  | "beforePrintText"
-  | "beforeToggleKey"
-  | "beforeSendKey"
-  | "beforeSendKeys"
-  | "afterPrintText"
-  | "afterToggleKey"
-  | "afterSendKey"
-  | "afterSendKeys";
+export declare type KeyboardEventType = EventType<Keyboard>;
 
-export declare type MouseEventType =
-  | "beforeToggle"
-  | "beforeClick"
-  | "beforeMoveTo"
-  | "beforeMoveCurveTo"
-  | "beforeMove"
-  | "beforeScrollWheel"
-  | "afterToggle"
-  | "afterClick"
-  | "afterMoveTo"
-  | "afterMoveCurveTo"
-  | "afterMove"
-  | "afterScrollWheel";
+export declare type MouseEventType = EventType<Mouse>;
 
-export declare type WorkwindowEventType = "capture";
+export declare type WorkwindowEventType = EventType<Workwindow>;
 
 export declare type ImageType = {
   data: Buffer;
@@ -231,21 +214,3 @@ export declare type TextToImgOptions = {
   backgroundColor?: number | string | RGB;
   format?: "rgba" | "bgra" | "grey";
 };
-
-export declare interface GenericEventEmitter<Event extends string> {
-  addListener(event: Event, listener: (...args: any[]) => void): this;
-  on(event: Event, listener: (...args: any[]) => void): this;
-  once(event: Event, listener: (...args: any[]) => void): this;
-  removeListener(event: Event, listener: (...args: any[]) => void): this;
-  off(event: Event, listener: (...args: any[]) => void): this;
-  removeAllListeners(event?: Event): this;
-  setMaxListeners(n: number): this;
-  getMaxListeners(): number;
-  listeners(event: Event): Function[];
-  rawListeners(event: Event): Function[];
-  emit(event: Event, ...args: any[]): boolean;
-  listenerCount(type: Event): number;
-  prependListener(event: Event, listener: (...args: any[]) => void): this;
-  prependOnceListener(event: Event, listener: (...args: any[]) => void): this;
-  eventNames(): Event[];
-}

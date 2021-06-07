@@ -1,12 +1,7 @@
-import {
-  GenericEventEmitter,
-  RandomFromRangeType,
-  KeyboardButtonType,
-  KeyboardEventType,
-} from "./types";
+import { GenericEventEmitter } from "./helpers";
+import { RandomFromRangeType, KeyboardButtonType } from "./types";
 
-export declare interface Keyboard
-  extends GenericEventEmitter<KeyboardEventType> {
+interface _Keyboard {
   keyTogglerDelay: number | RandomFromRangeType;
   keySenderDelay: number | RandomFromRangeType;
   /** Prints text.
@@ -103,3 +98,11 @@ export declare interface Keyboard
     afterReleaseDelay?: number | RandomFromRangeType
   ): Promise<void>;
 }
+
+type Keyboard = _Keyboard &
+  GenericEventEmitter<
+    _Keyboard,
+    "printText" | "toggleKey" | "sendKey" | "sendKeys"
+  >;
+
+export default Keyboard;

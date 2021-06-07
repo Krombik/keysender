@@ -1,14 +1,13 @@
+import { GenericEventEmitter } from "./helpers";
 import {
-  GenericEventEmitter,
   PositionType,
   SizeType,
   ImageType,
   WindowInfoType,
-  WorkwindowEventType,
   RGB,
 } from "./types";
-export declare interface Workwindow
-  extends GenericEventEmitter<WorkwindowEventType> {
+
+interface _Workwindow {
   /** Sets current workwindow by {handle}. */
   set(handle?: number): void;
   /** Finds the first window with {title} and/or {className} and sets it as current workwindow. */
@@ -74,3 +73,8 @@ export declare interface Workwindow
   /** Closes current workwindow by sending close message. */
   close(): void;
 }
+
+type Workwindow = _Workwindow &
+  GenericEventEmitter<{ capture(img: ImageType): void }, "capture", true>;
+
+export default Workwindow;

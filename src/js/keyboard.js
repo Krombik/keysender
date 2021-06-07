@@ -15,25 +15,25 @@ module.exports.Keyboard = (ClassName) =>
           keyTogglerDelay: DEFAULT_DELAY,
           keySenderDelay: DEFAULT_DELAY,
           printText(text, keySenderDelay = 0) {
-            _this.emit("beforePrintText", ...arguments);
+            _this.emit("before-printText", ...arguments);
             for (var i = 0; i < text.length - 1; i++) {
               self._printChar(text.codePointAt(i));
               sleep(keySenderDelay);
             }
             self._printChar(text.codePointAt(i));
-            _this.emit("afterPrintText", ...arguments);
+            _this.emit("after-printText", ...arguments);
           },
           async printTextAsync(text, keySenderDelay = 0) {
-            _this.emit("beforePrintText", ...arguments);
+            _this.emit("before-printText", ...arguments);
             for (var i = 0; i < text.length - 1; i++) {
               self._printChar(text.codePointAt(i));
               await sleepAsync(keySenderDelay);
             }
             self._printChar(text.codePointAt(i));
-            _this.emit("afterPrintText", ...arguments);
+            _this.emit("after-printText", ...arguments);
           },
           toggleKey(key, isKeyDown = true, delay = _this.keyTogglerDelay) {
-            _this.emit("beforeToggleKey", ...arguments);
+            _this.emit("before-toggleKey", ...arguments);
             if (Array.isArray(key)) {
               let last = key.length - 1;
               if (isKeyDown)
@@ -50,14 +50,14 @@ module.exports.Keyboard = (ClassName) =>
               self._toggleKey(key, isKeyDown);
               sleep(delay);
             }
-            _this.emit("afterToggleKey", ...arguments);
+            _this.emit("after-toggleKey", ...arguments);
           },
           async toggleKeyAsync(
             key,
             isKeyDown = true,
             delay = _this.keyTogglerDelay
           ) {
-            _this.emit("beforeToggleKey", ...arguments);
+            _this.emit("before-toggleKey", ...arguments);
             if (Array.isArray(key)) {
               let last = key.length - 1;
               if (isKeyDown)
@@ -74,14 +74,14 @@ module.exports.Keyboard = (ClassName) =>
               self._toggleKey(key, isKeyDown);
               await sleepAsync(delay);
             }
-            _this.emit("afterToggleKey", ...arguments);
+            _this.emit("after-toggleKey", ...arguments);
           },
           sendKey(
             key,
             keyTogglerDelay = _this.keyTogglerDelay,
             keySenderDelay = 0
           ) {
-            _this.emit("beforeSendKey", ...arguments);
+            _this.emit("before-sendKey", ...arguments);
             if (Array.isArray(key)) {
               const last = key.length - 1;
               key.forEach((key, index) => {
@@ -98,14 +98,14 @@ module.exports.Keyboard = (ClassName) =>
               self._toggleKey(key, false);
               sleep(keySenderDelay);
             }
-            _this.emit("afterSendKey", ...arguments);
+            _this.emit("after-sendKey", ...arguments);
           },
           async sendKeyAsync(
             key,
             keyTogglerDelay = _this.keyTogglerDelay,
             keySenderDelay = 0
           ) {
-            _this.emit("beforeSendKey", ...arguments);
+            _this.emit("before-sendKey", ...arguments);
             if (Array.isArray(key)) {
               const last = key.length - 1;
               for (let i = 0; i <= last; i++) {
@@ -122,7 +122,7 @@ module.exports.Keyboard = (ClassName) =>
               self._toggleKey(key, false);
               await sleepAsync(keySenderDelay);
             }
-            _this.emit("afterSendKey", ...arguments);
+            _this.emit("after-sendKey", ...arguments);
           },
           sendKeys(
             keys,
@@ -131,14 +131,14 @@ module.exports.Keyboard = (ClassName) =>
               ? _this.keySenderDelay
               : keyTogglerDelay
           ) {
-            _this.emit("beforeSendKeys", ...arguments);
+            _this.emit("before-sendKeys", ...arguments);
             keys.forEach((key, index) => {
               self._toggleKey(key, true);
               sleep(keyTogglerDelay);
               self._toggleKey(key, false);
               if (index !== keys.length - 1) sleep(keySenderDelay);
             });
-            _this.emit("afterSendKeys", ...arguments);
+            _this.emit("after-sendKeys", ...arguments);
           },
           async sendKeysAsync(
             keys,
@@ -147,14 +147,14 @@ module.exports.Keyboard = (ClassName) =>
               ? _this.keySenderDelay
               : keyTogglerDelay
           ) {
-            _this.emit("beforeSendKeys", ...arguments);
+            _this.emit("before-sendKeys", ...arguments);
             for (let i = 0; i < keys.length; i++) {
               self._toggleKey(keys[i], true);
               await sleepAsync(keyTogglerDelay);
               self._toggleKey(keys[i], false);
               if (i !== keys.length - 1) await sleepAsync(keySenderDelay);
             }
-            _this.emit("afterSendKeys", ...arguments);
+            _this.emit("after-sendKeys", ...arguments);
           },
         }),
       });

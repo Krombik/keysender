@@ -1,11 +1,7 @@
-import {
-  GenericEventEmitter,
-  RandomFromRangeType,
-  MouseButtonType,
-  MouseEventType,
-  PositionType,
-} from "./types";
-export declare interface Mouse extends GenericEventEmitter<MouseEventType> {
+import { GenericEventEmitter } from "./helpers";
+import { RandomFromRangeType, MouseButtonType, PositionType } from "./types";
+
+interface _Mouse {
   buttonTogglerDelay: number | RandomFromRangeType;
   /** If saveMode is enable every mouse move method first back to last known coordinates ([0, 0] on first move), by default - disable. */
   enableSaveMode(bool: boolean): void;
@@ -139,3 +135,11 @@ export declare interface Mouse extends GenericEventEmitter<MouseEventType> {
     delay?: number | RandomFromRangeType
   ): Promise<void>;
 }
+
+type Mouse = _Mouse &
+  GenericEventEmitter<
+    _Mouse,
+    "toggle" | "click" | "moveTo" | "moveCurveTo" | "move" | "scrollWheel"
+  >;
+
+export default Mouse;
