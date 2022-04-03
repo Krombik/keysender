@@ -148,8 +148,8 @@ module.exports.Mouse = (ClassName) =>
             return self._getPos();
           },
           toggle(
-            isButtonDown,
             button = "left",
+            isButtonDown,
             buttonTogglerDelay = _this.buttonTogglerDelay
           ) {
             _this.emit("before-toggle", ...arguments);
@@ -158,8 +158,8 @@ module.exports.Mouse = (ClassName) =>
             _this.emit("after-toggle", ...arguments);
           },
           async toggleAsync(
-            isButtonDown,
             button = "left",
+            isButtonDown,
             buttonTogglerDelay = _this.buttonTogglerDelay
           ) {
             _this.emit("before-toggle", ...arguments);
