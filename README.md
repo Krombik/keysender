@@ -500,8 +500,8 @@ toggleAsync(state: boolean, button?: mouseButton, delay?: number | randomFromRan
 Switch mouse button state.
 | Argument | Description | Default Value |
 | --- | --- | --- |
-| state | key state selection: **true** for press, **false** for release | true |
 | button | name of mouse button | "left" |
+| state | key state selection: **true** for press, **false** for release | true |
 | delay | milliseconds to sleep/await after switching mouse button state | [buttonTogglerDelay](#buttontogglerdelay) |
 
 ```js
