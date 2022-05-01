@@ -1,6 +1,6 @@
 {
   "name": "keysender",
-  "version": "1.6.5",
+  "version": "2.0.0",
   "description": "Node.js keyboard and mouse inputs emulator, global hotkey register for Windows",
   "keywords": [
     "automation",
@@ -16,10 +16,20 @@
     "ahk",
     "uopilot"
   ],
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "type": "module",
+  "source": "src/index.ts",
+  "exports": {
+    "require": "./dist/keysender.cjs",
+    "default": "./dist/keysender.modern.js"
   },
+  "main": "./dist/keysender.cjs",
+  "module": "./dist/keysender.module.js",
+  "unpkg": "./dist/keysender.umd.js",
+  "scripts": {
+    "build": "microbundle build --target node",
+    "start": "microbundle watch --target node"
+  },
+  "types": "./dist/index.d.ts",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Krombik/keysender.git"
@@ -32,10 +42,12 @@
   },
   "homepage": "https://github.com/Krombik/keysender#readme",
   "dependencies": {
-    "node-addon-api": "3.2.1"
+    "node-addon-api": "^4.3.0"
   },
   "devDependencies": {
-    "@types/node": "15.12.1"
-  },
-  "typings": "index.d.ts"
+    "@types/node": "^17.0.30",
+    "typescript": "^4.6.4",
+    "microbundle": "^0.15.0",
+    "better-typescript-lib": "^2.1.0"
+  }
 }
