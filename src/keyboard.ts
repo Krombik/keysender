@@ -1,6 +1,6 @@
 import { DEFAULT_DELAY, MICRO_DELAY } from "./constants";
 import { Delay, KeyboardButton } from "./types";
-import { Worker } from "./types/key_sender";
+import { Worker } from "./addon";
 import { sleep } from "./utils";
 
 const handleKeyboard = (worker: Worker) => {

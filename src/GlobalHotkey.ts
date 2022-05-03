@@ -2,7 +2,7 @@ import { DEFAULT_DELAY } from "./constants";
 import { Delay, KeyboardRegularButton } from "./types";
 import { noop, sleep } from "./utils";
 
-import { _GlobalHotkey } from "../build/Release/key_sender.node";
+import { _GlobalHotkey } from "./addon";
 
 type Reason = "toggle" | "released" | "ended" | String;
 

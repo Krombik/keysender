@@ -1,8 +1,8 @@
 import { Position, RGB, Size, WindowInfo } from "./types";
-import { Worker } from "./types/key_sender";
+import { Worker } from "./addon";
 import { stringsToBuffers } from "./utils";
 
-export interface SetWorkwindow {
+type SetWorkwindow = {
   /** Sets current workwindow by `handle`. */
   (handle?: number): void;
   /** Finds the first window with `title` and/or `className` and sets it as current workwindow. */
@@ -20,21 +20,23 @@ export interface SetWorkwindow {
     childClassName: string | null,
     childTitle?: string | null
   ): void;
-}
+};
 
-export const handleSetWorkwindow = (worker: Worker) =>
-  ((...args: any[]) => {
+export const handleSetWorkwindow =
+  (worker: Worker): SetWorkwindow =>
+  (...args: any[]) => {
     worker.setWorkwindow(...stringsToBuffers(args));
-  }) as SetWorkwindow;
+  };
 
-interface ColorAt {
-  /** @param returnType - type of return value, "string" for hexadecimal color representation "rrggbb", "array" for array representation of color [r,g,b], "number" for color representation in decimal
+type ColorAt = {
+  /**
+   * @param format - type of return value, "string" for hexadecimal color representation "rrggbb", "array" for array representation of color [r,g,b], "number" for color representation in decimal
    * if not provided defaults to "string".
-   * @returns pixel color in [x, y] from current workwindow (or screen if {handle} is 0). */
-  (x: number, y: number, returnType?: "string"): string;
-  (x: number, y: number, returnType: "array"): RGB;
-  (x: number, y: number, returnType: "number"): number;
-}
+   * @returns pixel color in [x, y] of current workwindow (or screen if `handle` was unset). */
+  (x: number, y: number, format?: "string"): string;
+  (x: number, y: number, format: "array"): RGB;
+  (x: number, y: number, format: "number"): number;
+};
 
 const handleWorkwindow = (worker: Worker) => {
   const add0 = (item: string) => (item.length > 1 ? item : "0" + item);
@@ -52,22 +54,28 @@ const handleWorkwindow = (worker: Worker) => {
     };
   };
 
-  const colorAt = ((x, y, returnType) => {
-    const t = worker.getColor(x, y);
+  const colorAt: ColorAt = (
+    x: number,
+    y: number,
+    format?: "string" | "array" | "number"
+  ): any => {
+    const bgr = worker.getColor(x, y);
 
-    const color: RGB = [t & 0xff, (t >> 8) & 0xff, (t >> 16) & 0xff];
+    const r = bgr & 0xff;
+    const g = (bgr >> 8) & 0xff;
+    const b = (bgr >> 16) & 0xff;
 
-    switch (returnType) {
+    switch (format) {
       case "array":
-        return color;
+        return [r, g, b];
 
       case "number":
-        return (color[0] << 16) | (color[1] << 8) | color[2];
+        return (r << 16) | (g << 8) | b;
 
       default:
-        return hex(...color);
+        return hex(r, g, b);
     }
-  }) as ColorAt;
+  };
 
   return {
     refresh: worker.refresh,

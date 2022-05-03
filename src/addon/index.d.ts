@@ -4,9 +4,8 @@ import {
   Position,
   Size,
   Image,
-  WindowInfo,
   KeyboardRegularButton,
-} from ".";
+} from "../types";
 
 export class Worker {
   getPos(): Position;
@@ -67,34 +66,32 @@ export class Worker {
   windowView: Position & Size;
 }
 
-declare module "*key_sender.node" {
-  export { Worker as _Hardware };
+export { Worker as _Hardware };
 
-  export { Worker as _Virtual };
+export { Worker as _Virtual };
 
-  export class _GlobalHotkey {
-    private _register(
-      key: KeyboardRegularButton | number,
-      mode: "once" | "toggle" | "hold",
-      action: () => Promise<void> | void
-    );
+export class _GlobalHotkey {
+  protected _register(
+    key: KeyboardRegularButton | number,
+    mode: "once" | "toggle" | "hold",
+    action: () => Promise<void> | void
+  ): void;
 
-    /** Reassigns hotkey to {newKey}, if some hotkey already registered for {newKey}, {unregister} previous hotkey and registers new hotkey */
-    reassignment(newKey: KeyboardRegularButton | number): void;
-    /** Unregister hotkey, hotkey can be reassignment by {reassignment} method. */
-    unregister(): void;
-    /** Unregister all hotkeys, hotkeys can be reassignment by {reassignment} method. */
-    static unregisterAll(): void;
-    /** Delete hotkey. */
-    delete(): void;
-    /** Delete all hotkeys. */
-    static deleteAll(): void;
+  /** Reassigns hotkey to {newKey}, if some hotkey already registered for {newKey}, {unregister} previous hotkey and registers new hotkey */
+  reassignment(newKey: KeyboardRegularButton | number): void;
+  /** Unregister hotkey, hotkey can be reassignment by {reassignment} method. */
+  unregister(): void;
+  /** Unregister all hotkeys, hotkeys can be reassignment by {reassignment} method. */
+  static unregisterAll(): void;
+  /** Delete hotkey. */
+  delete(): void;
+  /** Delete all hotkeys. */
+  static deleteAll(): void;
 
-    /**
-     * if `options.mode` is `"hold"` - state of `options.key` (true if `options.key` is pressed, false if it isn't),
-     * if {options.mode} is "toggle" - state of toggler,
-     * if {options.mode} is "once" - always true.
-     */
-    hotkeyState: boolean;
-  }
+  /**
+   * if `options.mode` is `"hold"` - state of `options.key` (true if `options.key` is pressed, false if it isn't),
+   * if `options.mode` is "toggle" - state of toggler,
+   * if `options.mode` is "once" - always true.
+   */
+  hotkeyState: boolean;
 }

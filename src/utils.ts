@@ -1,5 +1,5 @@
 import { Delay } from "./types";
-import { Worker } from "./types/key_sender";
+import { Worker } from "./addon";
 
 export const random = (min: number, max: number) =>
   min < max ? Math.floor(Math.random() * (max + 1 - min)) + min : min;
@@ -24,7 +24,7 @@ export const stringsToBuffers = <T extends any[]>(args: T) => {
 export const lazyGetters = <T extends {}>(
   self: T,
   worker: Worker,
-  args: { key: string; handleModule: (worker: Worker) => any }[]
+  args: { key: keyof T; handleModule: (worker: Worker) => any }[]
 ) => {
   for (let i = args.length; i--; ) {
     const { key, handleModule } = args[i];

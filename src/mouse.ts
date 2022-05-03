@@ -1,6 +1,6 @@
 import { DEFAULT_DELAY } from "./constants";
 import { Delay, MouseButton } from "./types";
-import { Worker } from "./types/key_sender";
+import { Worker } from "./addon";
 import { random, sleep } from "./utils";
 
 const handleMouse = (worker: Worker) => {

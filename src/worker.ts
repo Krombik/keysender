@@ -1,6 +1,6 @@
 import handleKeyboard from "./keyboard";
 import handleMouse from "./mouse";
-import { Worker } from "./types/key_sender";
+import { Worker } from "./addon";
 import { lazyGetters } from "./utils";
 import handleWorkwindow, { handleSetWorkwindow } from "./workwindow";
 
