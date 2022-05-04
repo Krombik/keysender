@@ -1,15 +1,15 @@
-import { DEFAULT_DELAY } from "./constants";
-import { Delay, MouseButton } from "./types";
-import { Worker } from "./addon";
-import { random, sleep } from "./utils";
+import { DEFAULT_DELAY } from "../constants";
+import { Delay, MouseButton } from "../types";
+import { Worker } from "../addon";
+import { random, sleep } from "../utils";
 
 const handleMouse = (worker: Worker) => {
-  const getSign = () => (Math.random() > 0.5 ? 1 : -1);
+  const _getSign = () => (Math.random() > 0.5 ? 1 : -1);
 
-  const tremor = (probability: number) =>
-    Math.random() <= probability ? getSign() : 0;
+  const _tremor = (probability: number) =>
+    Math.random() <= probability ? _getSign() : 0;
 
-  const curveDotMaker = (
+  const _curveDotMaker = (
     start: number,
     end: number,
     deviation: number,
@@ -19,14 +19,14 @@ const handleMouse = (worker: Worker) => {
       start + (end - start) / 2 + sign * (end - start) * 0.01 * deviation
     );
 
-  const firstCurveDotMaker = (
+  const _firstCurveDotMaker = (
     start: number,
     end: number,
     deviation: number,
     sign: 1 | -1
   ) => Math.round(start + sign * (end - start) * 0.01 * deviation);
 
-  const curveMaker = (
+  const _curveMaker = (
     t: number,
     start: number,
     curveDot1: number,
@@ -47,7 +47,7 @@ const handleMouse = (worker: Worker) => {
     );
   };
 
-  const humanCurve = (
+  const _humanCurve = (
     xE: number,
     yE: number,
     speed: number,
@@ -91,66 +91,66 @@ const handleMouse = (worker: Worker) => {
       const dotIterator = speedMultiplier / parts;
 
       if (partsLeft !== partsTotal) {
-        curveDotX1 = curveDotMaker(
+        curveDotX1 = _curveDotMaker(
           xPartStart,
           xPartEnd,
           random(deviation / 3, deviation),
-          getSign()
+          _getSign()
         );
 
-        curveDotY1 = curveDotMaker(
+        curveDotY1 = _curveDotMaker(
           yPartStart,
           yPartEnd,
           random(deviation / 3, deviation / 2),
-          getSign()
+          _getSign()
         );
 
-        curveDotX2 = curveDotMaker(
+        curveDotX2 = _curveDotMaker(
           xPartStart,
           xPartEnd,
           random(0, deviation),
-          getSign()
+          _getSign()
         );
 
-        curveDotY2 = curveDotMaker(
+        curveDotY2 = _curveDotMaker(
           yPartStart,
           yPartEnd,
           random(0, deviation / 2),
-          getSign()
+          _getSign()
         );
       } else {
-        curveDotX1 = firstCurveDotMaker(
+        curveDotX1 = _firstCurveDotMaker(
           xPartStart,
           xPartEnd,
           random(deviation / 2, deviation),
           1
         );
 
-        curveDotY1 = firstCurveDotMaker(
+        curveDotY1 = _firstCurveDotMaker(
           yPartStart,
           yPartEnd,
           random(deviation / 4, deviation / 3),
           1
         );
 
-        curveDotX2 = firstCurveDotMaker(
+        curveDotX2 = _firstCurveDotMaker(
           xPartStart,
           xPartEnd,
           random(deviation / 2, deviation),
-          getSign()
+          _getSign()
         );
 
-        curveDotY2 = firstCurveDotMaker(
+        curveDotY2 = _firstCurveDotMaker(
           yPartStart,
           yPartEnd,
           random(deviation / 2, deviation),
-          getSign()
+          _getSign()
         );
       }
       for (let t = 0; t < 1.00001; t += dotIterator) {
         const curr = [
-          curveMaker(t, xPartStart, curveDotX1, curveDotX2, xPartEnd),
-          curveMaker(t, yPartStart, curveDotY1, curveDotY2, yPartEnd),
+          _curveMaker(t, xPartStart, curveDotX1, curveDotX2, xPartEnd),
+          _curveMaker(t, yPartStart, curveDotY1, curveDotY2, yPartEnd),
         ];
 
         const prev = path[path.length - 1];
@@ -195,7 +195,7 @@ const handleMouse = (worker: Worker) => {
     for (let i = 1; i < l; i++) {
       const item = path[i];
 
-      arr.push([item[0], item[1] + tremor(speed / 15)]);
+      arr.push([item[0], item[1] + _tremor(speed / 15)]);
     }
 
     arr.push([xE, yE]);
@@ -223,7 +223,7 @@ const handleMouse = (worker: Worker) => {
     return toggle(button, false, buttonSenderDelay);
   };
 
-  const moveTo = async (x: number, y: number, delay: Delay = 0) => {
+  const moveTo = (x: number, y: number, delay: Delay = 0) => {
     worker.move(x, y, true);
 
     return sleep(delay);
@@ -237,7 +237,7 @@ const handleMouse = (worker: Worker) => {
   ) => {
     const sleepTime = speed >= 1 ? 1 : Math.round(1 / speed);
 
-    const curve = humanCurve(x, y, speed, deviation);
+    const curve = _humanCurve(x, y, speed, deviation);
 
     for (let i = 0; i < curve.length; i++) {
       const dot = curve[i];

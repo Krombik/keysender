@@ -1,25 +1,27 @@
-import { DEFAULT_DELAY, MICRO_DELAY } from "./constants";
-import { Delay, KeyboardButton } from "./types";
-import { Worker } from "./addon";
-import { sleep } from "./utils";
+import { DEFAULT_DELAY, MICRO_DELAY } from "../constants";
+import { Delay, KeyboardButton } from "../types";
+import { Worker } from "../addon";
+import { sleep } from "../utils";
 
 const handleKeyboard = (worker: Worker) => {
-  const toggleKeys = async (keys: KeyboardButton[], state: boolean) => {
+  const _toggleKey = (key: KeyboardButton, state: boolean) => {
+    worker.toggleKey(key, state);
+
+    return sleep(MICRO_DELAY);
+  };
+
+  const _toggleKeys = async (keys: KeyboardButton[], state: boolean) => {
     const l = keys.length - 1;
 
     if (state) {
       for (let i = 0; i < l; i++) {
-        worker.toggleKey(keys[i], true);
-
-        await sleep(MICRO_DELAY);
+        await _toggleKey(keys[i], true);
       }
 
       worker.toggleKey(keys[l], true);
     } else {
       for (let i = l; i--; ) {
-        worker.toggleKey(keys[i], false);
-
-        await sleep(MICRO_DELAY);
+        await _toggleKey(keys[i], false);
       }
 
       worker.toggleKey(keys[0], false);
@@ -44,7 +46,7 @@ const handleKeyboard = (worker: Worker) => {
     delay: Delay = DEFAULT_DELAY
   ) => {
     if (Array.isArray(key)) {
-      toggleKeys(key, state);
+      await _toggleKeys(key, state);
     } else {
       worker.toggleKey(key, state);
     }
@@ -58,11 +60,11 @@ const handleKeyboard = (worker: Worker) => {
     keySenderDelay: Delay = 0
   ) => {
     if (Array.isArray(key)) {
-      toggleKeys(key, true);
+      await _toggleKeys(key, true);
 
       await sleep(keyTogglerDelay);
 
-      toggleKeys(key, false);
+      await _toggleKeys(key, false);
     } else {
       worker.toggleKey(key, true);
 
@@ -77,13 +79,16 @@ const handleKeyboard = (worker: Worker) => {
   const sendKeys = async (
     keys: (KeyboardButton | KeyboardButton[])[],
     keyTogglerDelay: Delay = DEFAULT_DELAY,
-    keySenderDelay: Delay = DEFAULT_DELAY
+    keySenderDelay: Delay = DEFAULT_DELAY,
+    delay: Delay = 0
   ) => {
     const l = keys.length - 1;
 
     for (let i = 0; i < l; i++) {
       await sendKey(keys[i], keyTogglerDelay, keySenderDelay);
     }
+
+    return sendKey(keys[l], keyTogglerDelay, delay);
   };
 
   return {

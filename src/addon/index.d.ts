@@ -5,7 +5,14 @@ import {
   Size,
   Image,
   KeyboardRegularButton,
+  TextToImgOptions,
 } from "../types";
+
+export type AddonWindowInfo = {
+  handle: number;
+  title: Buffer;
+  className: Buffer;
+};
 
 export class Worker {
   getPos(): Position;
@@ -57,7 +64,7 @@ export class Worker {
     childTitle?: Buffer | null
   ): void;
 
-  getWorkwindow(): { handle: number; title: Buffer; className: Buffer };
+  getWorkwindow(): AddonWindowInfo;
 
   get lastCoords(): Position;
 
@@ -95,3 +102,25 @@ export class _GlobalHotkey {
    */
   hotkeyState: boolean;
 }
+
+export const _textToImg: (
+  text: Buffer,
+  path: Buffer,
+  fontName: Buffer,
+  fontSize: number,
+  options?: TextToImgOptions
+) => Image;
+
+export const _getAllWindows: () => AddonWindowInfo[];
+
+export function _getWindowChildren(parentHandle: number): AddonWindowInfo[];
+export function _getWindowChildren(
+  parentTitle: Buffer | null,
+  parentClassName?: Buffer | null
+): AddonWindowInfo[];
+
+/** @returns string name of `virtualKey` */
+export declare function vkToString(virtualKey: number): KeyboardButton;
+
+/** @returns object {width, height} with screen size. */
+export declare function getScreenSize(): Size;

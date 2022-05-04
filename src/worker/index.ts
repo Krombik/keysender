@@ -1,7 +1,7 @@
 import handleKeyboard from "./keyboard";
 import handleMouse from "./mouse";
-import { Worker } from "./addon";
-import { lazyGetters } from "./utils";
+import { Worker } from "../addon";
+import { lazyGetters } from "../utils";
 import handleWorkwindow, { handleSetWorkwindow } from "./workwindow";
 
 const handleWorker = (WorkerClass: typeof Worker) =>

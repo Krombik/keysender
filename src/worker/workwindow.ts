@@ -1,6 +1,6 @@
-import { Position, RGB, Size, WindowInfo } from "./types";
-import { Worker } from "./addon";
-import { stringsToBuffers } from "./utils";
+import { Position, RGB, Size } from "../types";
+import { Worker } from "../addon";
+import { normalizeWindowInfo, stringsToBuffers } from "../utils";
 
 type SetWorkwindow = {
   /** Sets current workwindow by `handle`. */
@@ -39,20 +39,10 @@ type ColorAt = {
 };
 
 const handleWorkwindow = (worker: Worker) => {
-  const add0 = (item: string) => (item.length > 1 ? item : "0" + item);
+  const _add0 = (item: string) => (item.length > 1 ? item : "0" + item);
 
-  const hex = (...rgb: RGB) =>
-    rgb.reduce((hex, color) => hex + add0(color.toString(16)), "");
-
-  const get = (): WindowInfo => {
-    const workwindow = worker.getWorkwindow();
-
-    return {
-      ...workwindow,
-      className: workwindow.className.toString("ucs2"),
-      title: workwindow.title.toString("ucs2"),
-    };
-  };
+  const _hex = (...rgb: RGB) =>
+    rgb.reduce((hex, color) => hex + _add0(color.toString(16)), "");
 
   const colorAt: ColorAt = (
     x: number,
@@ -73,7 +63,7 @@ const handleWorkwindow = (worker: Worker) => {
         return (r << 16) | (g << 8) | b;
 
       default:
-        return hex(r, g, b);
+        return _hex(r, g, b);
     }
   };
 
@@ -96,7 +86,7 @@ const handleWorkwindow = (worker: Worker) => {
       return worker.windowView;
     },
 
-    get,
+    get: () => normalizeWindowInfo(worker.getWorkwindow()),
     colorAt,
   };
 };
