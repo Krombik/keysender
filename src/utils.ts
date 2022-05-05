@@ -123,7 +123,7 @@ export const getFontName = (path: string) => {
         fontFullName[i] = data.getUint16(charPos);
       }
 
-      return Buffer.from(String.fromCodePoint(...fontFullName), "ucs2");
+      return Buffer.from(fontFullName);
     }
 
     offset += 6;

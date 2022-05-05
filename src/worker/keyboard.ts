@@ -28,6 +28,11 @@ const handleKeyboard = (worker: Worker) => {
     }
   };
 
+  /**
+   * Prints given text
+   * @param text - string to print
+   * @param [delay=0] - milliseconds to await after each char typing (excluding last), if not provided defaults to `0`
+   */
   const printText = async (text: string, delay: Delay = 0) => {
     const l = text.length - 1;
 
@@ -40,6 +45,12 @@ const handleKeyboard = (worker: Worker) => {
     worker.printChar(text.codePointAt(i)!);
   };
 
+  /**
+   * Toggling key or combination of keys to provided state
+   * @param key - key or array with combination of keys
+   * @param state - key state selection: `true` for press, `false` for release
+   * @param [delay=35]- milliseconds to await after key toggling, if not provided defaults to `35`
+   */
   const toggleKey = async (
     key: KeyboardButton | KeyboardButton[],
     state: boolean,
@@ -54,41 +65,54 @@ const handleKeyboard = (worker: Worker) => {
     return sleep(delay);
   };
 
+  /**
+   * Pressing and releasing key or combination of keys
+   * @param key - key or array with combination of keys
+   * @param [delayAfterPress=35] - milliseconds to await after key pressed, if not provided defaults to `35`
+   * @param [delayAfterRelease=0] - milliseconds to await after key released, if not provided defaults to `0`
+   */
   const sendKey = async (
     key: KeyboardButton | KeyboardButton[],
-    keyTogglerDelay: Delay = DEFAULT_DELAY,
-    keySenderDelay: Delay = 0
+    delayAfterPress: Delay = DEFAULT_DELAY,
+    delayAfterRelease: Delay = 0
   ) => {
     if (Array.isArray(key)) {
       await _toggleKeys(key, true);
 
-      await sleep(keyTogglerDelay);
+      await sleep(delayAfterPress);
 
       await _toggleKeys(key, false);
     } else {
       worker.toggleKey(key, true);
 
-      await sleep(keyTogglerDelay);
+      await sleep(delayAfterPress);
 
       worker.toggleKey(key, false);
     }
 
-    return sleep(keySenderDelay);
+    return sleep(delayAfterRelease);
   };
 
+  /**
+   * Pressing and releasing array of keys or combinations of keys
+   * @param keys - array with keys.
+   * @param [delayAfterPress=35] - milliseconds to await after each key pressed, if not provided defaults to `35`
+   * @param [delayAfterRelease=35] - milliseconds to await after each key released (excluding last), if not provided defaults to `35`
+   * @param [delay=0] - milliseconds to await after last key released, if not provided defaults to `0`
+   */
   const sendKeys = async (
     keys: (KeyboardButton | KeyboardButton[])[],
-    keyTogglerDelay: Delay = DEFAULT_DELAY,
-    keySenderDelay: Delay = DEFAULT_DELAY,
+    delayAfterPress: Delay = DEFAULT_DELAY,
+    delayAfterRelease: Delay = DEFAULT_DELAY,
     delay: Delay = 0
   ) => {
     const l = keys.length - 1;
 
     for (let i = 0; i < l; i++) {
-      await sendKey(keys[i], keyTogglerDelay, keySenderDelay);
+      await sendKey(keys[i], delayAfterPress, delayAfterRelease);
     }
 
-    return sendKey(keys[l], keyTogglerDelay, delay);
+    return sendKey(keys[l], delayAfterPress, delay);
   };
 
   return {

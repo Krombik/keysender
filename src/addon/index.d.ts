@@ -15,6 +15,7 @@ export type AddonWindowInfo = {
 };
 
 export class Worker {
+  /** @returns current cursor position relative to workwindow. */
   getPos(): Position;
 
   toggleMb(button: MouseButton, state: boolean): void;

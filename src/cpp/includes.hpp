@@ -3,19 +3,20 @@
 #define INCLUDES_H
 #define NAPI_VERSION 5
 
+#include <Wingdi.h>
 #include <napi.h>
 #include <windows.h>
-#include <iostream>
-#include <map>
-#include <vector>
-#include <thread>
+
+#include <algorithm>
+#include <array>
 #include <chrono>
 #include <cmath>
-#include <array>
-#include <algorithm>
-#include <iterator>
-#include <set>
-#include <Wingdi.h>
 #include <functional>
+#include <iostream>
+#include <iterator>
+#include <map>
+#include <set>
+#include <thread>
+#include <vector>
 
 #endif

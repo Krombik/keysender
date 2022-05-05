@@ -1,94 +1,117 @@
 #include "helper.hpp"
 
-BOOL CALLBACK Helper::EnumWindowsProc(HWND hWnd, LPARAM lParam)
-{
-    if (!IsWindowVisible(hWnd) || !IsWindowEnabled(hWnd) || GetWindowTextLengthA(hWnd) == 0)
-        return TRUE;
-    WindowInfo *windowInfo = (WindowInfo *)lParam;
-    if (!windowInfo->className.empty() && classNameGetter(hWnd).compare(windowInfo->className) != 0)
-        return TRUE;
-    if (!windowInfo->title.empty() && titleGetter(hWnd).compare(windowInfo->title) != 0)
-        return TRUE;
-    windowInfo->hWnd = hWnd;
-    return FALSE;
-}
-
-BOOL CALLBACK Helper::EnumAllWindowsProc(HWND hWnd, LPARAM lParam)
-{
-    if (!IsWindowVisible(hWnd) || !IsWindowEnabled(hWnd) || GetWindowTextLengthA(hWnd) == 0)
-        return TRUE;
-    (*reinterpret_cast<std::vector<HWND> *>(lParam)).push_back(hWnd);
+BOOL CALLBACK Helper::EnumWindowsProc(HWND hWnd, LPARAM lParam) {
+  if (!IsWindowVisible(hWnd) || !IsWindowEnabled(hWnd) || GetWindowTextLengthA(hWnd) == 0) {
     return TRUE;
-}
+  }
 
-BOOL CALLBACK Helper::EnumChildrenProc(HWND hWnd, LPARAM lParam)
-{
-    if (!IsWindowVisible(hWnd) || !IsWindowEnabled(hWnd))
-        return TRUE;
-    (*reinterpret_cast<std::vector<HWND> *>(lParam)).push_back(hWnd);
+  WindowInfo *windowInfo = (WindowInfo *)lParam;
+
+  if (!windowInfo->className.empty() && classNameGetter(hWnd).compare(windowInfo->className) != 0) {
     return TRUE;
+  }
+
+  if (!windowInfo->title.empty() && titleGetter(hWnd).compare(windowInfo->title) != 0) {
+    return TRUE;
+  }
+
+  windowInfo->hWnd = hWnd;
+
+  return FALSE;
 }
 
-std::wstring Helper::bufferToWstring(Napi::Value val)
-{
-    Napi::Buffer<wchar_t> buffer = val.As<Napi::Buffer<wchar_t>>();
-    std::wstring wstr;
-    for (size_t i = 0; i < buffer.ByteLength(); i += 2)
-        wstr.push_back(wchar_t(buffer.Get(i).As<Napi::Number>().Int32Value() | (buffer.Get(i + 1).As<Napi::Number>().Int32Value() << 8)));
-    return wstr;
+BOOL CALLBACK Helper::EnumAllWindowsProc(HWND hWnd, LPARAM lParam) {
+  if (!IsWindowVisible(hWnd) || !IsWindowEnabled(hWnd) || GetWindowTextLengthA(hWnd) == 0) {
+    return TRUE;
+  }
+
+  (*reinterpret_cast<std::vector<HWND> *>(lParam)).push_back(hWnd);
+
+  return TRUE;
 }
 
-std::wstring Helper::classNameGetter(HWND hWnd)
-{
-    std::wstring className;
-    className.resize(256);
-    GetClassNameW(hWnd, &className[0], className.size());
-    className.resize(std::distance(className.begin(), std::search_n(className.begin(), className.end(), 2, 0)));
-    className.shrink_to_fit();
-    return className;
+BOOL CALLBACK Helper::EnumChildrenProc(HWND hWnd, LPARAM lParam) {
+  if (!IsWindowVisible(hWnd) || !IsWindowEnabled(hWnd)) {
+    return TRUE;
+  }
+
+  (*reinterpret_cast<std::vector<HWND> *>(lParam)).push_back(hWnd);
+
+  return TRUE;
 }
 
-std::wstring Helper::titleGetter(HWND hWnd)
-{
-    std::wstring title;
-    title.resize(GetWindowTextLengthA(hWnd) + 1);
-    GetWindowTextW(hWnd, &title[0], title.size());
-    title.pop_back();
-    return title;
+std::wstring Helper::bufferToWstring(Napi::Value val) {
+  Napi::Buffer<wchar_t> buffer = val.As<Napi::Buffer<wchar_t>>();
+
+  std::wstring wstr;
+
+  for (size_t i = 0; i < buffer.ByteLength(); i += 2) {
+    wstr.push_back(wchar_t(buffer.Get(i).As<Napi::Number>().Int32Value() | (buffer.Get(i + 1).As<Napi::Number>().Int32Value() << 8)));
+  }
+
+  return wstr;
 }
 
-Napi::Object Helper::windowGetter(HWND hWnd, Napi::Env env)
-{
-    Napi::Object window = Napi::Object::New(env);
-    window["handle"] = HandleToLong(hWnd);
-    window["title"] = Napi::Buffer<wchar_t>::New(env, 0);
-    window["className"] = Napi::Buffer<wchar_t>::New(env, 0);
-    if (hWnd != NULL)
-    {
-        uint8_t titleLength = GetWindowTextLengthA(hWnd);
-        if (titleLength > 0)
-        {
-            std::wstring title = titleGetter(hWnd);
-            window["title"] = Napi::Buffer<wchar_t>::Copy(env, title.data(), title.size());
-        }
-        std::wstring className = classNameGetter(hWnd);
-        window["className"] = Napi::Buffer<wchar_t>::Copy(env, className.data(), className.size());
+std::wstring Helper::classNameGetter(HWND hWnd) {
+  std::wstring className;
+
+  className.resize(256);
+
+  GetClassNameW(hWnd, &className[0], className.size());
+
+  className.resize(std::distance(className.begin(), std::search_n(className.begin(), className.end(), 2, 0)));
+
+  className.shrink_to_fit();
+
+  return className;
+}
+
+std::wstring Helper::titleGetter(HWND hWnd) {
+  std::wstring title;
+
+  title.resize(GetWindowTextLengthA(hWnd) + 1);
+
+  GetWindowTextW(hWnd, &title[0], title.size());
+
+  title.pop_back();
+
+  return title;
+}
+
+Napi::Object Helper::windowGetter(HWND hWnd, Napi::Env env) {
+  Napi::Object window = Napi::Object::New(env);
+
+  window["handle"] = HandleToLong(hWnd);
+  window["title"] = Napi::Buffer<wchar_t>::New(env, 0);
+  window["className"] = Napi::Buffer<wchar_t>::New(env, 0);
+
+  if (hWnd != NULL) {
+    uint8_t titleLength = GetWindowTextLengthA(hWnd);
+
+    if (titleLength > 0) {
+      std::wstring title = titleGetter(hWnd);
+      window["title"] = Napi::Buffer<wchar_t>::Copy(env, title.data(), title.size());
     }
-    return window;
+
+    std::wstring className = classNameGetter(hWnd);
+
+    window["className"] = Napi::Buffer<wchar_t>::Copy(env, className.data(), className.size());
+  }
+
+  return window;
 }
 
-bool Helper::getKeyCode(Napi::Value key, UINT *keyCode)
-{
-    if (key.IsNumber())
-        *keyCode = key.As<Napi::Number>();
-    else
-    {
-        const std::string keyName = key.As<Napi::String>();
-        if (keysDef.count(keyName) == 0)
-            return false;
-        *keyCode = keysDef.at(keyName);
-    }
-    return true;
+bool Helper::getKeyCode(Napi::Value key, UINT *keyCode) {
+  if (key.IsNumber()) {
+    *keyCode = key.As<Napi::Number>();
+  } else {
+    const std::string keyName = key.As<Napi::String>();
+    if (keysDef.count(keyName) == 0)
+      return false;
+    *keyCode = keysDef.at(keyName);
+  }
+
+  return true;
 }
 
 const std::map<std::string, UINT> Helper::keysDef = {

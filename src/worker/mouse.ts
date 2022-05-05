@@ -85,7 +85,7 @@ const handleMouse = (worker: Worker) => {
 
     let yPartEnd = y + yPartLength * parts;
 
-    do {
+    while (true) {
       let curveDotX1, curveDotX2, curveDotY1, curveDotY2;
 
       const dotIterator = speedMultiplier / parts;
@@ -186,7 +186,7 @@ const handleMouse = (worker: Worker) => {
 
         yPartEnd = yE;
       }
-    } while (true);
+    }
 
     const arr: number[][] = [];
 
@@ -203,6 +203,12 @@ const handleMouse = (worker: Worker) => {
     return arr;
   };
 
+  /**
+   * Switch mouse button state
+   * @param button - name of mouse button
+   * @param state - key state selection: true for press, false for release
+   * @param [delay=35] - milliseconds to await after switching mouse button state, if not provided defaults to `35`
+   */
   const toggle = (
     button: MouseButton,
     state: boolean,
@@ -213,16 +219,25 @@ const handleMouse = (worker: Worker) => {
     return sleep(delay);
   };
 
+  /**
+   * @param [button="left"] - name of mouse button, if not provided defaults to `"left"`
+   * @param [delayAfterPress=35] - milliseconds to await after mouse button pressed, if not provided defaults to `35`
+   * @param [delayAfterRelease=0] - milliseconds to await after mouse button released, if not provided defaults to `0`
+   */
   const click = async (
     button: MouseButton = "left",
-    buttonTogglerDelay: Delay = DEFAULT_DELAY,
-    buttonSenderDelay: Delay = 0
+    delayAfterPress: Delay = DEFAULT_DELAY,
+    delayAfterRelease: Delay = 0
   ) => {
-    await toggle(button, true, buttonTogglerDelay);
+    await toggle(button, true, delayAfterPress);
 
-    return toggle(button, false, buttonSenderDelay);
+    return toggle(button, false, delayAfterRelease);
   };
 
+  /**
+   * Move mouse to [x, y]
+   * @param [delay=0] - milliseconds to await after mouse movement, if not provided defaults to `0`
+   */
   const moveTo = (x: number, y: number, delay: Delay = 0) => {
     worker.move(x, y, true);
 
@@ -246,12 +261,20 @@ const handleMouse = (worker: Worker) => {
     }
   };
 
+  /**
+   * Move mouse from current position by [x, y] relatively
+   * @param [delay=0] - milliseconds to await after mouse movement, if not provided defaults to `0`
+   */
   const move = (x: number, y: number, delay: Delay = 0) => {
     worker.move(x, y, false);
 
     return sleep(delay);
   };
 
+  /**
+   * @param amount - the amount of wheel movement. A positive value indicates that the wheel was rotated forward, away from the user, a negative value indicates that the wheel was rotated backward, toward the user.
+   * @param [delay=0] - milliseconds to await after wheel scroll, if not provided defaults to `0`
+   */
   const scrollWheel = (amount: number, delay: Delay = 0) => {
     worker.scrollWheel(amount);
 

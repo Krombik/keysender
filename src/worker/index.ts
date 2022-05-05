@@ -10,7 +10,7 @@ const handleWorker = (WorkerClass: typeof Worker) =>
     readonly mouse: ReturnType<typeof handleMouse>;
     readonly workwindow: ReturnType<typeof handleWorkwindow>;
 
-    /** Sets current workwindow by `handle`. */
+    /** Finds the first window with `handle`. */
     constructor(handle?: number);
     /** Finds the first window with `title` and/or `className` and sets it as current workwindow. */
     constructor(title: string | null, className?: string | null);

@@ -6,14 +6,14 @@
 
 Napi::Value vkToString(const Napi::CallbackInfo &info);
 
-class Keyboard
-{
-public:
-    void toggleKey(const Napi::CallbackInfo &info);
-    void printChar(const Napi::CallbackInfo &info);
+class Keyboard {
+ public:
+  void toggleKey(const Napi::CallbackInfo &info);
+  void printChar(const Napi::CallbackInfo &info);
 
-private:
-    virtual void keyToggler(UINT key, bool isKeyDown) = 0;
-    virtual void charPrinter(int code) = 0;
+ private:
+  virtual void keyToggler(UINT key, bool isKeyDown) = 0;
+  virtual void charPrinter(int code) = 0;
 };
+
 #endif

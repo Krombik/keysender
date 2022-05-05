@@ -40,173 +40,194 @@ const std::map<uint8_t, std::array<UINT, 2>> Hardware::buttonsDef = {
     {1, {MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_RIGHTDOWN}},
     {2, {MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_MIDDLEDOWN}}};
 
-void Hardware::mousePosGetter(POINT *coords)
-{
-    GetCursorPos(coords);
-    ScreenToClient(hWnd, coords);
+void Hardware::mousePosGetter(POINT *coords) {
+  GetCursorPos(coords);
+
+  ScreenToClient(hWnd, coords);
 }
 
-Napi::Value Hardware::getLastCoords(const Napi::CallbackInfo &info)
-{
-    Napi::Object coords = Napi::Object::New(info.Env());
-    if (saveMode)
-    {
-        coords["x"] = lastCoords.x;
-        coords["y"] = lastCoords.y;
-    }
-    else
-    {
-        POINT curr;
-        GetCursorPos(&curr);
-        ScreenToClient(hWnd, &curr);
-        coords["x"] = curr.x;
-        coords["y"] = curr.y;
-    }
-    return coords;
+Napi::Value Hardware::getLastCoords(const Napi::CallbackInfo &info) {
+  Napi::Object coords = Napi::Object::New(info.Env());
+
+  if (saveMode) {
+    coords["x"] = lastCoords.x;
+    coords["y"] = lastCoords.y;
+  } else {
+    POINT curr;
+
+    GetCursorPos(&curr);
+    ScreenToClient(hWnd, &curr);
+
+    coords["x"] = curr.x;
+    coords["y"] = curr.y;
+  }
+
+  return coords;
 };
 
-void Hardware::mbToggler(uint8_t button, bool isButtonDown)
-{
-    INPUT ip;
-    ip.type = INPUT_MOUSE;
-    ip.mi.dx = 0;
-    ip.mi.dy = 0;
-    ip.mi.mouseData = 0;
-    ip.mi.dwExtraInfo = 0;
-    ip.mi.time = 0;
-    ip.mi.dwFlags = buttonsDef.at(button)[(int)isButtonDown];
-    SendInput(1, &ip, sizeof(INPUT));
+void Hardware::mbToggler(uint8_t button, bool isButtonDown) {
+  INPUT ip;
+
+  ip.type = INPUT_MOUSE;
+
+  ip.mi.dx = 0;
+  ip.mi.dy = 0;
+  ip.mi.mouseData = 0;
+  ip.mi.dwExtraInfo = 0;
+  ip.mi.time = 0;
+  ip.mi.dwFlags = buttonsDef.at(button)[(int)isButtonDown];
+
+  SendInput(1, &ip, sizeof(INPUT));
 }
 
-void Hardware::mover(POINT coords, bool isAbsolute)
-{
-    INPUT ip;
-    if (isAbsolute)
-    {
-        ClientToScreen(hWnd, &coords);
-        if (coords.x < 0)
-            coords.x = 0;
-        else if (coords.x >= screenWidth)
-            coords.x = screenWidth - 1;
-        if (coords.y < 0)
-            coords.y = 0;
-        else if (coords.y >= screenHeigh)
-            coords.y = screenHeigh - 1;
+void Hardware::mover(POINT coords, bool isAbsolute) {
+  INPUT ip;
+
+  if (isAbsolute) {
+    ClientToScreen(hWnd, &coords);
+    if (coords.x < 0) {
+      coords.x = 0;
+    } else if (coords.x >= screenWidth) {
+      coords.x = screenWidth - 1;
     }
-    ip.type = INPUT_MOUSE;
-    ip.mi.mouseData = 0;
-    ip.mi.dwExtraInfo = 0;
-    ip.mi.time = 0;
-    ip.mi.dwFlags = MOUSEEVENTF_MOVE;
-    if (saveMode)
-    {
-        POINT currCoords;
-        GetCursorPos(&currCoords);
-        ScreenToClient(hWnd, &currCoords);
-        if (currCoords.x != lastCoords.x && currCoords.y != lastCoords.y)
-        {
-            ip.mi.dx = lastCoords.x - currCoords.x;
-            ip.mi.dy = lastCoords.y - currCoords.y;
-            SendInput(1, &ip, sizeof(INPUT));
-        }
-        if (isAbsolute)
-        {
-            lastCoords.x = coords.x;
-            lastCoords.y = coords.y;
-        }
-        else
-        {
-            lastCoords.x = ip.mi.dx + coords.x;
-            lastCoords.y = ip.mi.dy + coords.y;
-        }
+
+    if (coords.y < 0) {
+      coords.y = 0;
+    } else if (coords.y >= screenHeigh) {
+      coords.y = screenHeigh - 1;
     }
-    if (isAbsolute)
-    {
-        ip.mi.dx = ((coords.x - GetSystemMetrics(SM_XVIRTUALSCREEN) + 1) << 16) / GetSystemMetrics(SM_CXVIRTUALSCREEN);
-        ip.mi.dy = ((coords.y - GetSystemMetrics(SM_YVIRTUALSCREEN) + 1) << 16) / GetSystemMetrics(SM_CYVIRTUALSCREEN);
-        ip.mi.dwFlags |= MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESK;
+  }
+
+  ip.type = INPUT_MOUSE;
+
+  ip.mi.mouseData = 0;
+  ip.mi.dwExtraInfo = 0;
+  ip.mi.time = 0;
+  ip.mi.dwFlags = MOUSEEVENTF_MOVE;
+
+  if (saveMode) {
+    POINT currCoords;
+
+    GetCursorPos(&currCoords);
+
+    ScreenToClient(hWnd, &currCoords);
+
+    if (currCoords.x != lastCoords.x && currCoords.y != lastCoords.y) {
+      ip.mi.dx = lastCoords.x - currCoords.x;
+      ip.mi.dy = lastCoords.y - currCoords.y;
+
+      SendInput(1, &ip, sizeof(INPUT));
     }
-    else
-    {
-        ip.mi.dx = coords.x;
-        ip.mi.dy = coords.y;
+    if (isAbsolute) {
+      lastCoords.x = coords.x;
+      lastCoords.y = coords.y;
+    } else {
+      lastCoords.x = ip.mi.dx + coords.x;
+      lastCoords.y = ip.mi.dy + coords.y;
     }
-    SendInput(1, &ip, sizeof(INPUT));
+  }
+  if (isAbsolute) {
+    ip.mi.dx = ((coords.x - GetSystemMetrics(SM_XVIRTUALSCREEN) + 1) << 16) / GetSystemMetrics(SM_CXVIRTUALSCREEN);
+    ip.mi.dy = ((coords.y - GetSystemMetrics(SM_YVIRTUALSCREEN) + 1) << 16) / GetSystemMetrics(SM_CYVIRTUALSCREEN);
+    ip.mi.dwFlags |= MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESK;
+  } else {
+    ip.mi.dx = coords.x;
+    ip.mi.dy = coords.y;
+  }
+
+  SendInput(1, &ip, sizeof(INPUT));
 }
 
-void Hardware::wheelScroller(int x)
-{
-    INPUT ip;
-    ip.type = INPUT_MOUSE;
-    ip.mi.dx = 0;
-    ip.mi.dy = 0;
-    ip.mi.mouseData = x;
-    ip.mi.dwExtraInfo = 0;
-    ip.mi.time = 0;
-    ip.mi.dwFlags = MOUSEEVENTF_WHEEL;
-    SendInput(1, &ip, sizeof(INPUT));
+void Hardware::wheelScroller(int x) {
+  INPUT ip;
+
+  ip.type = INPUT_MOUSE;
+
+  ip.mi.dx = 0;
+  ip.mi.dy = 0;
+  ip.mi.mouseData = x;
+  ip.mi.dwExtraInfo = 0;
+  ip.mi.time = 0;
+  ip.mi.dwFlags = MOUSEEVENTF_WHEEL;
+
+  SendInput(1, &ip, sizeof(INPUT));
 }
 
-void Hardware::keyToggler(UINT key, bool isKeyDown)
-{
-    INPUT ip;
-    DWORD dwFlags = KEYEVENTF_SCANCODE;
-    if (!isKeyDown)
-        dwFlags |= KEYEVENTF_KEYUP;
-    if (std::find(std::begin(extendKeys), std::end(extendKeys), key) != std::end(extendKeys))
-        dwFlags |= KEYEVENTF_EXTENDEDKEY;
-    ip.ki.time = 0;
-    ip.ki.wVk = 0;
-    ip.ki.dwExtraInfo = 0;
-    ip.type = INPUT_KEYBOARD;
-    ip.ki.dwFlags = dwFlags;
-    ip.ki.wScan = MapVirtualKeyA(key, MAPVK_VK_TO_VSC);
-    SendInput(1, &ip, sizeof(INPUT));
+void Hardware::keyToggler(UINT key, bool isKeyDown) {
+  INPUT ip;
+
+  DWORD dwFlags = KEYEVENTF_SCANCODE;
+
+  if (!isKeyDown) {
+    dwFlags |= KEYEVENTF_KEYUP;
+  }
+
+  if (std::find(std::begin(extendKeys), std::end(extendKeys), key) != std::end(extendKeys)) {
+    dwFlags |= KEYEVENTF_EXTENDEDKEY;
+  }
+
+  ip.type = INPUT_KEYBOARD;
+
+  ip.ki.time = 0;
+  ip.ki.wVk = 0;
+  ip.ki.dwExtraInfo = 0;
+  ip.ki.dwFlags = dwFlags;
+  ip.ki.wScan = MapVirtualKeyA(key, MAPVK_VK_TO_VSC);
+
+  SendInput(1, &ip, sizeof(INPUT));
 }
 
-void Hardware::charPrinter(int code)
-{
-    INPUT ip;
-    ip.ki.time = 0;
-    ip.ki.wVk = 0;
-    ip.ki.dwExtraInfo = 0;
-    ip.type = INPUT_KEYBOARD;
-    ip.ki.dwFlags = KEYEVENTF_UNICODE;
-    ip.ki.wScan = code;
-    SendInput(1, &ip, sizeof(INPUT));
-    ip.ki.dwFlags |= KEYEVENTF_KEYUP;
-    SendInput(1, &ip, sizeof(INPUT));
+void Hardware::charPrinter(int code) {
+  INPUT ip;
+
+  ip.type = INPUT_KEYBOARD;
+
+  ip.ki.time = 0;
+  ip.ki.wVk = 0;
+  ip.ki.dwExtraInfo = 0;
+  ip.ki.dwFlags = KEYEVENTF_UNICODE;
+  ip.ki.wScan = code;
+
+  SendInput(1, &ip, sizeof(INPUT));
+
+  ip.ki.dwFlags |= KEYEVENTF_KEYUP;
+
+  SendInput(1, &ip, sizeof(INPUT));
 }
 
 Napi::FunctionReference Hardware::constructor;
 
-Napi::Object Hardware::Init(Napi::Env env, Napi::Object exports)
-{
-    Napi::HandleScope scope(env);
-    Napi::Function func = DefineClass(
-        env, "_Hardware", {
-                              InstanceMethod("_getPos", &Hardware::getMousePos),
-                              InstanceMethod("_toggleMb", &Hardware::toggleMb),
-                              InstanceMethod("_move", &Hardware::move),
-                              InstanceMethod("_scrollWheel", &Hardware::scrollWheel),
-                              InstanceMethod("_toggleKey", &Hardware::toggleKey),
-                              InstanceMethod("_printChar", &Hardware::printChar),
-                              InstanceMethod("_isOpen", &Hardware::isOpen),
-                              InstanceMethod("_isForeground", &Hardware::isForeground),
-                              InstanceMethod("_setForeground", &Hardware::setForeground),
-                              InstanceMethod("_capture", &Hardware::capture),
-                              InstanceMethod("_getColor", &Hardware::getColor),
-                              InstanceMethod("_kill", &Hardware::kill),
-                              InstanceMethod("_close", &Hardware::close),
-                              InstanceMethod("_refresh", &Hardware::refresh),
-                              InstanceMethod("_setWorkwindow", &Hardware::setWorkwindow),
-                              InstanceMethod("_getWorkwindow", &Hardware::getWorkwindow),
-                              InstanceAccessor("_lastCoords", &Hardware::getLastCoords, NULL),
-                              InstanceAccessor("_saveMode", NULL, &Hardware::setSaveMode),
-                              InstanceAccessor("_windowView", &Hardware::getWindowView, &Hardware::setWindowView),
-                          });
-    constructor = Napi::Persistent(func);
-    constructor.SuppressDestruct();
-    exports.Set("_Hardware", func);
-    return exports;
+Napi::Object Hardware::Init(Napi::Env env, Napi::Object exports) {
+  Napi::HandleScope scope(env);
+
+  Napi::Function func = DefineClass(
+      env, "_Hardware", {
+                            InstanceMethod("_getPos", &Hardware::getMousePos),
+                            InstanceMethod("_toggleMb", &Hardware::toggleMb),
+                            InstanceMethod("_move", &Hardware::move),
+                            InstanceMethod("_scrollWheel", &Hardware::scrollWheel),
+                            InstanceMethod("_toggleKey", &Hardware::toggleKey),
+                            InstanceMethod("_printChar", &Hardware::printChar),
+                            InstanceMethod("_isOpen", &Hardware::isOpen),
+                            InstanceMethod("_isForeground", &Hardware::isForeground),
+                            InstanceMethod("_setForeground", &Hardware::setForeground),
+                            InstanceMethod("_capture", &Hardware::capture),
+                            InstanceMethod("_getColor", &Hardware::getColor),
+                            InstanceMethod("_kill", &Hardware::kill),
+                            InstanceMethod("_close", &Hardware::close),
+                            InstanceMethod("_refresh", &Hardware::refresh),
+                            InstanceMethod("_setWorkwindow", &Hardware::setWorkwindow),
+                            InstanceMethod("_getWorkwindow", &Hardware::getWorkwindow),
+                            InstanceAccessor("_lastCoords", &Hardware::getLastCoords, NULL),
+                            InstanceAccessor("_saveMode", NULL, &Hardware::setSaveMode),
+                            InstanceAccessor("_windowView", &Hardware::getWindowView, &Hardware::setWindowView),
+                        });
+
+  constructor = Napi::Persistent(func);
+
+  constructor.SuppressDestruct();
+
+  exports.Set("_Hardware", func);
+
+  return exports;
 }

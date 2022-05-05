@@ -5,7 +5,7 @@ export const Hardware = handleWorker(_Hardware);
 
 export const Virtual = handleWorker(_Virtual);
 
-export { default as GlobalHotkey } from "./GlobalHotkey";
+export { default as GlobalHotkey, HotkeyOptions } from "./GlobalHotkey";
 
 export { default as textToImg } from "./textToImg";
 

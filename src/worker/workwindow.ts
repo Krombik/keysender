@@ -5,15 +5,15 @@ import { normalizeWindowInfo, stringsToBuffers } from "../utils";
 type SetWorkwindow = {
   /** Sets current workwindow by `handle`. */
   (handle?: number): void;
-  /** Finds the first window with `title` and/or `className` and sets it as current workwindow. */
+  /** Sets current workwindow by first window with `title` and/or `className` and sets it as current workwindow. */
   (title: string | null, className?: string | null): void;
-  /** Finds the first child window with `childClassName` and/or `childTitle` of window with `parentHandle` and sets it as current workwindow. */
+  /** Sets current workwindow by first child window with `childClassName` and/or `childTitle` of window with `parentHandle`. */
   (
     parentHandle: number,
     childClassName: string | null,
     childTitle?: string | null
   ): void;
-  /** Finds the first child window with `childClassName` and/or `childTitle` of the first found window with `parentTitle` and/or `parentClassName` and sets it as current workwindow. */
+  /** Sets current workwindow by first child window with `childClassName` and/or `childTitle` of the first founded window with `parentTitle` and/or `parentClassName`. */
   (
     parentTitle: string | null,
     parentClassName: string | null,
@@ -30,9 +30,9 @@ export const handleSetWorkwindow =
 
 type ColorAt = {
   /**
-   * @param format - type of return value, "string" for hexadecimal color representation "rrggbb", "array" for array representation of color [r,g,b], "number" for color representation in decimal
-   * if not provided defaults to "string".
-   * @returns pixel color in [x, y] of current workwindow (or screen if `handle` was unset). */
+   * @param format - type of return value, "string" for hexadecimal color representation "rrggbb", "array" for array representation of color [r,g,b], "number" for color representation in decimal, if not provided defaults to "string".
+   * @returns pixel color in [x, y] of current workwindow (or screen if `handle` was unset).
+   */
   (x: number, y: number, format?: "string"): string;
   (x: number, y: number, format: "array"): RGB;
   (x: number, y: number, format: "number"): number;
@@ -76,8 +76,6 @@ const handleWorkwindow = (worker: Worker) => {
     kill: worker.kill,
     close: worker.close,
 
-    set: handleSetWorkwindow(worker),
-
     set view(view: Position & Size) {
       worker.windowView = view;
     },
@@ -86,7 +84,10 @@ const handleWorkwindow = (worker: Worker) => {
       return worker.windowView;
     },
 
+    set: handleSetWorkwindow(worker),
+
     get: () => normalizeWindowInfo(worker.getWorkwindow()),
+
     colorAt,
   };
 };
