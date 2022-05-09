@@ -13,14 +13,18 @@ class Virtual : public Keyboard, public Mouse, public Workwindow, public Napi::O
 
  private:
   static Napi::FunctionReference constructor;
+
+#ifdef IS_WINDOWS
   static const std::map<uint8_t, std::array<UINT, 2>> msgs;
   static const std::map<UINT, UINT> wParams;
-  Napi::Value Virtual::getLastCoords(const Napi::CallbackInfo &info);
   void mousePosGetter(POINT *coords);
-  void mbToggler(uint8_t button, bool isButtonDown);
   void mover(POINT coords, bool isAbsolute);
-  void wheelScroller(int x);
   void keyToggler(UINT key, bool isKeyDown);
+#endif
+
+  Napi::Value Virtual::getLastCoords(const Napi::CallbackInfo &info);
+  void mbToggler(uint8_t button, bool isButtonDown);
+  void wheelScroller(int x);
   void charPrinter(int code);
 };
 

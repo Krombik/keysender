@@ -3,15 +3,23 @@
         {
             "target_name": "key_sender",
             "sources": [
-                "src/cpp/key_sender.cpp",
-                "src/cpp/keyboard.cpp",
-                "src/cpp/mouse.cpp",
-                "src/cpp/workwindow.cpp",
-                "src/cpp/hardware.cpp",
-                "src/cpp/virtual.cpp",
-                "src/cpp/hotkey.cpp",
-                "src/cpp/helper.cpp",
-                "src/cpp/utilities.cpp"
+                "src/addon/key_sender.cpp",
+                "src/addon/keyboard.cpp",
+                "src/addon/mouse.cpp",
+                "src/addon/workwindow.cpp",
+                "src/addon/hardware.cpp",
+                "src/addon/virtual.cpp",
+                "src/addon/hotkey.cpp",
+                "src/addon/helper.cpp",
+                "src/addon/utilities.cpp"
+            ],
+            'conditions': [
+                ['OS=="mac"', {
+                    'cflags+': ['-fvisibility=hidden'],
+                    'xcode_settings': {
+                        'GCC_SYMBOLS_PRIVATE_EXTERN': 'YES',  # -fvisibility=hidden
+                    }
+                }]
             ],
             "cflags!": ["-fno-exceptions"],
             "cflags_cc!": ["-fno-exceptions"],

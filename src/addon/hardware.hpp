@@ -13,16 +13,18 @@ class Hardware : public Keyboard, public Mouse, public Workwindow, public Napi::
 
  private:
   static Napi::FunctionReference constructor;
+#ifdef IS_WINDOWS
   static const UINT extendKeys[];
   static const std::map<uint8_t, std::array<UINT, 2>> buttonsDef;
   int screenWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
   int screenHeigh = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-  Napi::Value getLastCoords(const Napi::CallbackInfo &info);
   void mousePosGetter(POINT *coords);
-  void mbToggler(uint8_t button, bool isButtonDown);
   void mover(POINT coords, bool isAbsolute);
-  void wheelScroller(int x);
   void keyToggler(UINT key, bool isKeyDown);
+#endif
+  Napi::Value getLastCoords(const Napi::CallbackInfo &info);
+  void mbToggler(uint8_t button, bool isButtonDown);
+  void wheelScroller(int x);
   void charPrinter(int code);
 };
 

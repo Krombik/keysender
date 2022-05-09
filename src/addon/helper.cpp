@@ -1,5 +1,19 @@
 #include "helper.hpp"
 
+std::wstring Helper::bufferToWstring(Napi::Value val) {
+  Napi::Buffer<wchar_t> buffer = val.As<Napi::Buffer<wchar_t>>();
+
+  std::wstring wstr;
+
+  for (size_t i = 0; i < buffer.ByteLength(); i += 2) {
+    wstr.push_back(wchar_t(buffer.Get(i).As<Napi::Number>().Int32Value() | (buffer.Get(i + 1).As<Napi::Number>().Int32Value() << 8)));
+  }
+
+  return wstr;
+}
+
+#ifdef IS_WINDOWS
+
 BOOL CALLBACK Helper::EnumWindowsProc(HWND hWnd, LPARAM lParam) {
   if (!IsWindowVisible(hWnd) || !IsWindowEnabled(hWnd) || GetWindowTextLengthA(hWnd) == 0) {
     return TRUE;
@@ -40,18 +54,6 @@ BOOL CALLBACK Helper::EnumChildrenProc(HWND hWnd, LPARAM lParam) {
   return TRUE;
 }
 
-std::wstring Helper::bufferToWstring(Napi::Value val) {
-  Napi::Buffer<wchar_t> buffer = val.As<Napi::Buffer<wchar_t>>();
-
-  std::wstring wstr;
-
-  for (size_t i = 0; i < buffer.ByteLength(); i += 2) {
-    wstr.push_back(wchar_t(buffer.Get(i).As<Napi::Number>().Int32Value() | (buffer.Get(i + 1).As<Napi::Number>().Int32Value() << 8)));
-  }
-
-  return wstr;
-}
-
 std::wstring Helper::classNameGetter(HWND hWnd) {
   std::wstring className;
 
@@ -90,6 +92,7 @@ Napi::Object Helper::windowGetter(HWND hWnd, Napi::Env env) {
 
     if (titleLength > 0) {
       std::wstring title = titleGetter(hWnd);
+
       window["title"] = Napi::Buffer<wchar_t>::Copy(env, title.data(), title.size());
     }
 
@@ -106,8 +109,11 @@ bool Helper::getKeyCode(Napi::Value key, UINT *keyCode) {
     *keyCode = key.As<Napi::Number>();
   } else {
     const std::string keyName = key.As<Napi::String>();
-    if (keysDef.count(keyName) == 0)
+
+    if (keysDef.count(keyName) == 0) {
       return false;
+    }
+
     *keyCode = keysDef.at(keyName);
   }
 
@@ -234,3 +240,5 @@ const std::map<std::string, UINT> Helper::keysDef = {
     {"|", VK_OEM_5},
     {"]", VK_OEM_6},
     {"'", VK_OEM_7}};
+
+#endif

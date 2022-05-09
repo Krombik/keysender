@@ -3,6 +3,8 @@
 
 #include "helper.hpp"
 
+#ifdef IS_WINDOWS
+
 std::set<TsfnContext *> Hotkey::hotkeyPointers;
 
 void Hotkey::unregisterDuplicate(UINT keyCode) {
@@ -192,6 +194,8 @@ void Hotkey::deleteAllHotkeys(const Napi::CallbackInfo &info) {
 
   hotkeyPointers.clear();
 }
+
+#endif
 
 Napi::FunctionReference Hotkey::constructor;
 

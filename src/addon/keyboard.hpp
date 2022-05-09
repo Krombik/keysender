@@ -12,7 +12,10 @@ class Keyboard {
   void printChar(const Napi::CallbackInfo &info);
 
  private:
+#ifdef IS_WINDOWS
   virtual void keyToggler(UINT key, bool isKeyDown) = 0;
+#endif
+
   virtual void charPrinter(int code) = 0;
 };
 

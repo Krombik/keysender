@@ -1,5 +1,7 @@
 #include "hardware.hpp"
 
+#ifdef IS_WINDOWS
+
 const UINT Hardware::extendKeys[] = {
     VK_RCONTROL,
     VK_SNAPSHOT,
@@ -85,6 +87,7 @@ void Hardware::mover(POINT coords, bool isAbsolute) {
 
   if (isAbsolute) {
     ClientToScreen(hWnd, &coords);
+
     if (coords.x < 0) {
       coords.x = 0;
     } else if (coords.x >= screenWidth) {
@@ -194,6 +197,8 @@ void Hardware::charPrinter(int code) {
 
   SendInput(1, &ip, sizeof(INPUT));
 }
+
+#endif
 
 Napi::FunctionReference Hardware::constructor;
 

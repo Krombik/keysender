@@ -13,15 +13,15 @@ typedef enum {
   HOTKEY_DELETED
 } HotkeyState;
 
-typedef struct
-{
+#ifdef IS_WINDOWS
+
+typedef struct {
   HotkeyState state = HOTKEY_REGISTERED;
   UINT keyCode;
   Napi::ThreadSafeFunction tsfn;
 } TsfnContext;
 
-typedef struct
-{
+typedef struct {
   HWND hWnd = NULL;
   std::wstring className;
   std::wstring title;
@@ -42,5 +42,7 @@ typedef struct _BITMAP : BITMAPINFO {
     bmiHeader.biClrImportant = 0;
   }
 } MAKEBITMAPINFO;
+
+#endif
 
 #endif

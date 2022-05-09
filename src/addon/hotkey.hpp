@@ -18,13 +18,16 @@ class Hotkey : public Napi::ObjectWrap<Hotkey> {
   static void unregisterAllHotkeys(const Napi::CallbackInfo &info);
 
  private:
-  std::set<TsfnContext *>::iterator it;
   bool togglerState = false;
   void registerHotkey(const Napi::CallbackInfo &info);
   static Napi::FunctionReference constructor;
+
+#ifdef IS_WINDOWS
+  std::set<TsfnContext *>::iterator it;
   static std::set<TsfnContext *> hotkeyPointers;
   static void messagesGetter(TsfnContext *context);
   static void unregisterDuplicate(UINT keyCode);
+#endif
 };
 
 #endif

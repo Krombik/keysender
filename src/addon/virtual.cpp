@@ -1,5 +1,7 @@
 #include "virtual.hpp"
 
+#ifdef IS_WINDOWS
+
 const std::map<uint8_t, std::array<UINT, 2>> Virtual::msgs = {
     {0, {WM_LBUTTONUP, WM_LBUTTONDOWN}},
     {1, {WM_RBUTTONUP, WM_RBUTTONDOWN}},
@@ -58,6 +60,8 @@ void Virtual::keyToggler(UINT key, bool isKeyDown) {
 void Virtual::charPrinter(int code) {
   SendMessageW(hWnd, WM_CHAR, (WPARAM)code, 0);
 }
+
+#endif
 
 Napi::FunctionReference Virtual::constructor;
 

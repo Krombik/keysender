@@ -2,6 +2,8 @@
 
 #include "helper.hpp"
 
+#ifdef IS_WINDOWS
+
 Napi::Value Workwindow::capture(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
 
@@ -15,27 +17,40 @@ Napi::Value Workwindow::capture(const Napi::CallbackInfo &info) {
 
   if (info[0].IsObject()) {
     Napi::Object part(env, info[0]);
-    if ((rect.left = part.Get("x").As<Napi::Number>().Int32Value()) < 0) {
+
+    const int x = part.Get("x").As<Napi::Number>().Int32Value();
+
+    if (x < 0) {
       Napi::Error::New(env, "x should be >= 0")
           .ThrowAsJavaScriptException();
 
       return env.Undefined();
     }
 
-    if ((rect.top = part.Get("y").As<Napi::Number>().Int32Value()) < 0) {
+    rect.left = x;
+
+    const int y = part.Get("y").As<Napi::Number>().Int32Value();
+
+    if (y < 0) {
       Napi::Error::New(env, "y should be >= 0")
           .ThrowAsJavaScriptException();
 
       return env.Undefined();
     }
 
-    if ((width = part.Get("width").As<Napi::Number>().Int32Value()) <= 0) {
+    rect.top = y;
+
+    width = part.Get("width").As<Napi::Number>().Int32Value();
+
+    if (width <= 0) {
       Napi::Error::New(env, "width should be > 0")
           .ThrowAsJavaScriptException();
       return env.Undefined();
     }
 
-    if ((height = part.Get("height").As<Napi::Number>().Int32Value()) <= 0) {
+    height = part.Get("height").As<Napi::Number>().Int32Value();
+
+    if (height <= 0) {
       Napi::Error::New(env, "height should be > 0")
           .ThrowAsJavaScriptException();
       return env.Undefined();
@@ -52,9 +67,11 @@ Napi::Value Workwindow::capture(const Napi::CallbackInfo &info) {
     if (info[0].IsString()) {
       format = info[0].As<Napi::String>();
     }
+
     if (info[1].IsNumber()) {
       threshold = info[1].As<Napi::Number>().Int32Value();
     }
+
     if (hWnd != NULL) {
       GetClientRect(hWnd, &rect);
 
@@ -146,16 +163,18 @@ Napi::Value Workwindow::getColor(const Napi::CallbackInfo &info) {
     return env.Undefined();
   }
 
-  int x, y;
+  const int x = info[0].As<Napi::Number>().Int32Value();
 
-  if ((x = info[0].As<Napi::Number>().Int32Value()) <= 0) {
+  if (x <= 0) {
     Napi::Error::New(info.Env(), "x should be > 0")
         .ThrowAsJavaScriptException();
 
     return env.Undefined();
   }
 
-  if ((y = info[1].As<Napi::Number>().Int32Value()) <= 0) {
+  const int y = info[1].As<Napi::Number>().Int32Value();
+
+  if (y <= 0) {
     Napi::Error::New(info.Env(), "y should be > 0")
         .ThrowAsJavaScriptException();
 
@@ -164,7 +183,7 @@ Napi::Value Workwindow::getColor(const Napi::CallbackInfo &info) {
 
   HDC context = GetDC(hWnd);
 
-  unsigned int color = GetPixel(context, x, y);
+  const unsigned int color = GetPixel(context, x, y);
 
   ReleaseDC(hWnd, context);
 
@@ -251,6 +270,7 @@ void Workwindow::setWorkwindow(const Napi::CallbackInfo &info) {
 
     if (info[0].IsNumber()) {
       hWnd = (HWND)info[0].As<Napi::Number>().Int64Value();
+
       if (info[1].IsBuffer()) {
         childClassName = Helper::bufferToWstring(info[1]);
       }
@@ -275,6 +295,7 @@ void Workwindow::setWorkwindow(const Napi::CallbackInfo &info) {
         childTitle = Helper::bufferToWstring(info[3]);
       }
     }
+
     if (hWnd == NULL) {
       EnumWindows(EnumWindowsProc, (LPARAM)this);
     }
@@ -330,36 +351,52 @@ void Workwindow::setWindowView(const Napi::CallbackInfo &info, const Napi::Value
 
   if (!windowView.Get("width").IsNumber()) {
     width = rect.right - rect.left;
-  } else if ((width = windowView.Get("width").As<Napi::Number>().Int32Value()) < 0) {
-    Napi::Error::New(env, "width should be > 0")
-        .ThrowAsJavaScriptException();
-    return;
+  } else {
+    width = windowView.Get("width").As<Napi::Number>().Int32Value();
+
+    if (width < 0) {
+      Napi::Error::New(env, "width should be > 0")
+          .ThrowAsJavaScriptException();
+
+      return;
+    }
   }
 
   if (!windowView.Get("height").IsNumber()) {
     height = rect.bottom - rect.top;
-  } else if ((height = windowView.Get("height").As<Napi::Number>().Int32Value()) < 0) {
-    Napi::Error::New(env, "height should be > 0")
-        .ThrowAsJavaScriptException();
-    return;
+  } else {
+    height = windowView.Get("height").As<Napi::Number>().Int32Value();
+
+    if (height < 0) {
+      Napi::Error::New(env, "height should be > 0")
+          .ThrowAsJavaScriptException();
+
+      return;
+    }
   }
 
   if (windowView.Get("x").IsNumber()) {
-    if ((x = windowView.Get("x").As<Napi::Number>().Int32Value()) >= 0)
+    x = windowView.Get("x").As<Napi::Number>().Int32Value();
+
+    if (x >= 0) {
       rect.left = x;
-    else {
+    } else {
       Napi::Error::New(env, "x should be >= 0")
           .ThrowAsJavaScriptException();
+
       return;
     }
   }
 
   if (windowView.Get("y").IsNumber()) {
-    if ((y = windowView.Get("y").As<Napi::Number>().Int32Value()) >= 0)
+    y = windowView.Get("y").As<Napi::Number>().Int32Value();
+
+    if (y >= 0) {
       rect.top = y;
-    else {
+    } else {
       Napi::Error::New(env, "y should be >= 0")
           .ThrowAsJavaScriptException();
+
       return;
     }
   }
@@ -399,3 +436,5 @@ Napi::Value Workwindow::isOpen(const Napi::CallbackInfo &info) {
 void Workwindow::setForeground(const Napi::CallbackInfo &info) {
   SetForegroundWindow(hWnd);
 }
+
+#endif

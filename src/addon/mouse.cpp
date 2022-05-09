@@ -1,5 +1,7 @@
 #include "mouse.hpp"
 
+#ifdef IS_WINDOWS
+
 Napi::Value Mouse::getMousePos(const Napi::CallbackInfo &info) {
   Napi::Object pos = Napi::Object::New(info.Env());
 
@@ -67,3 +69,5 @@ void Mouse::setSaveMode(const Napi::CallbackInfo &info, const Napi::Value &value
 
   saveMode = info[0].As<Napi::Boolean>();
 };
+
+#endif

@@ -1,11 +1,32 @@
 #pragma once
+
 #ifndef INCLUDES_H
+
 #define INCLUDES_H
 #define NAPI_VERSION 5
 
+#if defined(__APPLE__)
+
+#include <TargetConditionals.h>
+
+#if defined(TARGET_OS_MAC)
+
+#define IS_MACOS
+
+#endif
+
+#endif
+
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+
 #include <Wingdi.h>
-#include <napi.h>
 #include <windows.h>
+
+#define IS_WINDOWS
+
+#endif
+
+#include <napi.h>
 
 #include <algorithm>
 #include <array>

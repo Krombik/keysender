@@ -2,6 +2,8 @@
 
 #include "helper.hpp"
 
+#ifdef IS_WINDOWS
+
 Napi::Value vkToString(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
 
@@ -21,15 +23,6 @@ Napi::Value vkToString(const Napi::CallbackInfo &info) {
   }
 
   return env.Undefined();
-}
-
-void sleep(const Napi::CallbackInfo &info) {
-  if (info.Length() != 1 || !info[0].IsNumber()) {
-    Napi::Error::New(info.Env(), "Expected 1 argument: Number")
-        .ThrowAsJavaScriptException();
-  } else {
-    std::this_thread::sleep_for(std::chrono::milliseconds(info[0].As<Napi::Number>().Int32Value()));
-  }
 }
 
 Napi::Value getAllWindows(const Napi::CallbackInfo &info) {
@@ -216,3 +209,5 @@ Napi::Value getScreenSize(const Napi::CallbackInfo &info) {
 
   return screenSize;
 }
+
+#endif

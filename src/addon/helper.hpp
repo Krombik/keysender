@@ -7,6 +7,8 @@
 class Helper {
  public:
   static std::wstring bufferToWstring(Napi::Value val);
+
+#ifdef IS_WINDOWS
   static std::wstring classNameGetter(HWND hWnd);
   static std::wstring titleGetter(HWND hWnd);
   static Napi::Object windowGetter(HWND hWnd, Napi::Env env);
@@ -15,6 +17,7 @@ class Helper {
   static BOOL CALLBACK EnumChildrenProc(HWND hWnd, LPARAM lParam);
   static bool getKeyCode(Napi::Value key, UINT *keyCode);
   static const std::map<std::string, UINT> keysDef;
+#endif
 };
 
 #endif
