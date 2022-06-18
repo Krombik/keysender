@@ -11,6 +11,10 @@
 
 #if defined(TARGET_OS_MAC)
 
+#include <ApplicationServices/ApplicationServices.h>
+#include <IOKit/hidsystem/IOHIDLib.h>
+#include <IOKit/hidsystem/ev_keymap.h>
+
 #define IS_MACOS
 
 #endif

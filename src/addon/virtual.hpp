@@ -20,12 +20,13 @@ class Virtual : public Keyboard, public Mouse, public Workwindow, public Napi::O
   void mousePosGetter(POINT *coords);
   void mover(POINT coords, bool isAbsolute);
   void keyToggler(UINT key, bool isKeyDown);
-#endif
 
   Napi::Value Virtual::getLastCoords(const Napi::CallbackInfo &info);
   void mbToggler(uint8_t button, bool isButtonDown);
   void wheelScroller(int x);
   void charPrinter(int code);
+
+#endif
 };
 
 #endif

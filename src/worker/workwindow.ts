@@ -47,7 +47,7 @@ const handleWorkwindow = (worker: Worker) => {
   const colorAt: ColorAt = (
     x: number,
     y: number,
-    format?: "string" | "array" | "number"
+    format: "string" | "array" | "number" = "string"
   ): any => {
     const bgr = worker.getColor(x, y);
 
@@ -62,8 +62,11 @@ const handleWorkwindow = (worker: Worker) => {
       case "number":
         return (r << 16) | (g << 8) | b;
 
-      default:
+      case "string":
         return _hex(r, g, b);
+
+      default:
+        throw new Error("wrong format");
     }
   };
 

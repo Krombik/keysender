@@ -45,9 +45,9 @@
     "node-addon-api": "^5.0.0"
   },
   "devDependencies": {
-    "@types/node": "^17.0.31",
-    "typescript": "^4.6.4",
+    "@types/node": "^18.0.0",
     "microbundle": "^0.15.0",
-    "better-typescript-lib": "^2.1.0"
+    "prettier": "^2.7.1",
+    "typescript": "^4.7.4"
   }
 }

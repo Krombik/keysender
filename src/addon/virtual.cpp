@@ -6,6 +6,7 @@ const std::map<uint8_t, std::array<UINT, 2>> Virtual::msgs = {
     {0, {WM_LBUTTONUP, WM_LBUTTONDOWN}},
     {1, {WM_RBUTTONUP, WM_RBUTTONDOWN}},
     {2, {WM_MBUTTONUP, WM_MBUTTONDOWN}}};
+
 const std::map<UINT, UINT> Virtual::wParams = {{WM_LBUTTONDOWN, MK_LBUTTON},
                                                {WM_RBUTTONDOWN, MK_RBUTTON},
                                                {WM_MBUTTONDOWN, MK_MBUTTON},
@@ -61,8 +62,6 @@ void Virtual::charPrinter(int code) {
   SendMessageW(hWnd, WM_CHAR, (WPARAM)code, 0);
 }
 
-#endif
-
 Napi::FunctionReference Virtual::constructor;
 
 Napi::Object Virtual::Init(Napi::Env env, Napi::Object exports) {
@@ -70,24 +69,24 @@ Napi::Object Virtual::Init(Napi::Env env, Napi::Object exports) {
 
   Napi::Function func = DefineClass(
       env, "_Virtual", {
-                           InstanceMethod("_getPos", &Virtual::getMousePos),
-                           InstanceMethod("_toggleMb", &Virtual::toggleMb),
-                           InstanceMethod("_move", &Virtual::move),
-                           InstanceMethod("_scrollWheel", &Virtual::scrollWheel),
-                           InstanceMethod("_toggleKey", &Virtual::toggleKey),
-                           InstanceMethod("_printChar", &Virtual::printChar),
-                           InstanceMethod("_setForeground", &Virtual::setForeground),
-                           InstanceMethod("_isForeground", &Virtual::isForeground),
-                           InstanceMethod("_isOpen", &Virtual::isOpen),
-                           InstanceMethod("_capture", &Virtual::capture),
-                           InstanceMethod("_getColor", &Virtual::getColor),
-                           InstanceMethod("_kill", &Virtual::kill),
-                           InstanceMethod("_refresh", &Virtual::refresh),
-                           InstanceMethod("_setWorkwindow", &Virtual::setWorkwindow),
-                           InstanceMethod("_getWorkwindow", &Virtual::getWorkwindow),
-                           InstanceAccessor("_lastCoords", &Virtual::getLastCoords, NULL),
-                           InstanceAccessor("_saveMode", NULL, &Virtual::setSaveMode),
-                           InstanceAccessor("_windowView", &Virtual::getWindowView, &Virtual::setWindowView),
+                           InstanceMethod("getPos", &Virtual::getMousePos),
+                           InstanceMethod("toggleMb", &Virtual::toggleMb),
+                           InstanceMethod("move", &Virtual::move),
+                           InstanceMethod("scrollWheel", &Virtual::scrollWheel),
+                           InstanceMethod("toggleKey", &Virtual::toggleKey),
+                           InstanceMethod("printChar", &Virtual::printChar),
+                           InstanceMethod("setForeground", &Virtual::setForeground),
+                           InstanceMethod("isForeground", &Virtual::isForeground),
+                           InstanceMethod("isOpen", &Virtual::isOpen),
+                           InstanceMethod("capture", &Virtual::capture),
+                           InstanceMethod("getColor", &Virtual::getColor),
+                           InstanceMethod("kill", &Virtual::kill),
+                           InstanceMethod("refresh", &Virtual::refresh),
+                           InstanceMethod("setWorkwindow", &Virtual::setWorkwindow),
+                           InstanceMethod("getWorkwindow", &Virtual::getWorkwindow),
+                           InstanceAccessor("lastCoords", &Virtual::getLastCoords, NULL),
+                           InstanceAccessor("saveMode", NULL, &Virtual::setSaveMode),
+                           InstanceAccessor("windowView", &Virtual::getWindowView, &Virtual::setWindowView),
                        });
 
   constructor = Napi::Persistent(func);
@@ -98,3 +97,5 @@ Napi::Object Virtual::Init(Napi::Env env, Napi::Object exports) {
 
   return exports;
 }
+
+#endif

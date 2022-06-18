@@ -37,6 +37,7 @@ void Hotkey::messagesGetter(TsfnContext *context) {
   while (context->state == HOTKEY_REGISTERED) {
     if (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE) && msg.message == WM_HOTKEY && (currState = GetKeyState(keyCode)) != prevState) {
       prevState = currState;
+      
       context->tsfn.BlockingCall(callback);
     }
 

@@ -4,9 +4,11 @@ import { noop, sleep } from "./utils";
 
 import { _GlobalHotkey } from "./addon";
 
-type Reason = "toggle" | "released" | "ended" | String;
+type _Reason = "keyboard" | "action" | "stopped";
 
-export declare type HotkeyOptions = {
+type Reason<T = undefined> = T extends NonNullable<T> ? _Reason | T : _Reason;
+
+export declare type HotkeyOptions<T = undefined> = {
   key: KeyboardRegularButton | number;
 } & (
   | {
@@ -20,41 +22,43 @@ export declare type HotkeyOptions = {
       action(this: GlobalHotkey): boolean | Promise<boolean>;
       finalizerCallback?(
         this: GlobalHotkey,
-        reason: Reason
+        reason: Reason<T>
       ): void | Promise<void>;
+      /**
+       * @default 35
+       */
       delay?: Delay;
     }
 );
 
-class GlobalHotkey extends _GlobalHotkey {
-  private _canceled?: Promise<void>;
-  private _reason?: Reason;
+class GlobalHotkey<T extends any = undefined> extends _GlobalHotkey {
+  private _completion?: Promise<void>;
+  private _reason?: T | "stopped";
+  private _withFinalizerCallback?: boolean;
 
-  constructor(options: HotkeyOptions) {
+  constructor(options: HotkeyOptions<T>) {
     super();
-
-    this._canceled = undefined;
 
     let isFree = true;
 
-    const { key } = options;
+    const { mode } = options;
 
-    let handleAction;
+    const action: OmitThisParameter<typeof options.action> =
+      options.action.bind(this);
 
-    if (options.mode === "once") {
-      const action: OmitThisParameter<typeof options.action> =
-        options.action.bind(this);
+    const getAction = () => {
+      if (mode === "once") {
+        return async () => {
+          if (isFree) {
+            isFree = false;
 
-      handleAction = async () => {
-        if (isFree) {
-          isFree = false;
+            await action();
 
-          await action();
+            isFree = true;
+          }
+        };
+      }
 
-          isFree = true;
-        }
-      };
-    } else {
       const isEnable: OmitThisParameter<NonNullable<typeof options.isEnable>> =
         options.isEnable?.bind(this) || (() => true);
 
@@ -62,82 +66,103 @@ class GlobalHotkey extends _GlobalHotkey {
         NonNullable<typeof options.onBeforeAction>
       > = options.onBeforeAction?.bind(this) || noop;
 
-      const action: OmitThisParameter<typeof options.action> =
-        options.action.bind(this);
-
-      const finalizerCallback: OmitThisParameter<
-        NonNullable<typeof options.finalizerCallback>
-      > = options.finalizerCallback?.bind(this) || noop;
-
       const { delay = DEFAULT_DELAY } = options;
 
-      if (options.mode === "toggle") {
-        handleAction = async () => {
+      const createMain = (getReason: () => any) => {
+        let finalizerCallback: () => void | Promise<void>;
+
+        if (options.finalizerCallback) {
+          const fn: OmitThisParameter<
+            NonNullable<typeof options.finalizerCallback>
+          > = options.finalizerCallback.bind(this);
+
+          finalizerCallback = () => fn(getReason());
+
+          this._withFinalizerCallback = true;
+        } else {
+          finalizerCallback = noop;
+        }
+
+        return async () => {
+          isFree = false;
+
+          await onBeforeAction();
+
+          while (this.hotkeyState && (await action())) {
+            await sleep(delay);
+          }
+
+          await finalizerCallback();
+
+          isFree = true;
+        };
+      };
+
+      if (mode === "toggle") {
+        const main = createMain(() => {
+          if ("_reason" in this) {
+            const reason = this._reason!;
+
+            delete this._reason;
+
+            return reason;
+          }
+
+          if (this.hotkeyState) {
+            this.hotkeyState = false;
+
+            return "action";
+          }
+
+          return "keyboard";
+        });
+
+        return async () => {
           if ((this.hotkeyState = !this.hotkeyState)) {
             if (isFree && (await isEnable())) {
-              isFree = false;
-
               let resolve: () => void;
 
-              this._canceled = new Promise<void>((_resolve) => {
+              this._completion = new Promise<void>((_resolve) => {
                 resolve = _resolve;
               });
 
-              await onBeforeAction();
-
-              while (this.hotkeyState && (await action())) {
-                await sleep(delay);
-              }
-
-              await finalizerCallback(
-                this._reason || (this.hotkeyState ? "ended" : "toggled")
-              );
-
-              this.hotkeyState = false;
-
-              this._reason = undefined;
-
-              isFree = true;
+              await main();
 
               resolve!();
-
-              this._canceled = undefined;
             } else {
               this.hotkeyState = false;
             }
           }
         };
-      } else if (options.mode === "hold") {
-        handleAction = async () => {
+      }
+
+      if (mode === "hold") {
+        const main = createMain(() =>
+          this.hotkeyState ? "action" : "keyboard"
+        );
+
+        return async () => {
           if (isFree && (await isEnable())) {
-            isFree = false;
-
-            let hotkeyState;
-
-            while ((hotkeyState = this.hotkeyState) && (await action())) {
-              await sleep(delay);
-            }
-
-            await finalizerCallback(hotkeyState ? "ended" : "released");
-
-            isFree = true;
+            await main();
           }
         };
-      } else {
-        throw new Error("No mode was selected");
       }
-    }
 
-    this._register(key, options.mode, handleAction);
+      throw new Error("No mode was selected");
+    };
+
+    this._register(options.key, mode, getAction());
   }
 
-  stop(reason: Reason = "stopped") {
+  stop(reason: T | "stopped" = "stopped") {
     if (this.hotkeyState) {
-      this._reason = reason;
+      if (this._withFinalizerCallback) {
+        this._reason = reason;
+      }
 
       this.hotkeyState = false;
 
-      return this._canceled;
+      return this._completion;
     }
   }
 }
