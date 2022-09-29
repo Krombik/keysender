@@ -1,5 +1,5 @@
 import { Delay, RGB, WindowInfo } from "./types";
-import { AddonWindowInfo, Worker } from "./addon";
+import { _WindowInfo } from "./addon";
 import fs from "fs";
 
 const resolvedPromise = Promise.resolve();
@@ -32,19 +32,20 @@ export const stringsToBuffers = <T extends any[]>(args: T) =>
     typeof item === "string" ? Buffer.from(item, "ucs2") : item
   ) as StringsToBuffers<T>;
 
-export const lazyGetters = <T extends {}>(
+export const lazyGetters = <T extends {}, K extends keyof T>(
   self: T,
-  worker: Worker,
-  modules: { key: keyof T; handleModule: (worker: Worker) => any }[]
+  modules: { [key in K]: () => T[key] }
 ) => {
-  for (let i = modules.length; i--; ) {
-    const { key, handleModule } = modules[i];
+  const keys = Object.keys(modules);
+
+  for (let i = keys.length; i--; ) {
+    const key = keys[i];
 
     Object.defineProperty(self, key, {
       configurable: true,
       get() {
         Object.defineProperty(self, key, {
-          value: handleModule(worker),
+          value: modules[key](),
         });
 
         return self[key];
@@ -52,6 +53,15 @@ export const lazyGetters = <T extends {}>(
     });
   }
 };
+
+export const bindPick = <T extends {}, K extends keyof T>(
+  worker: T,
+  keys: K[]
+) =>
+  keys.reduce(
+    (acc, key) => ({ ...acc, [key]: (worker[key] as Function).bind(worker) }),
+    {} as { [key in K]: T[key] extends Function ? T[key] : never }
+  );
 
 export const noop = function () {};
 
@@ -132,9 +142,7 @@ export const getFontName = (path: string) => {
   throw new Error(`Something wrong with font '${path}'`);
 };
 
-export const normalizeWindowInfo = (
-  windowInfo: AddonWindowInfo
-): WindowInfo => ({
+export const normalizeWindowInfo = (windowInfo: _WindowInfo): WindowInfo => ({
   ...windowInfo,
   className: windowInfo.className.toString("ucs2"),
   title: windowInfo.title.toString("ucs2"),

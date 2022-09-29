@@ -1,0 +1,485 @@
+import { _Worker, _Hardware, _Virtual } from "./addon";
+import {
+  bindPick,
+  lazyGetters,
+  normalizeWindowInfo,
+  random,
+  sleep,
+  stringsToBuffers,
+} from "./utils";
+import {
+  Keyboard,
+  KeyboardButton,
+  Mouse,
+  RGB,
+  SetWorkwindow,
+  Workwindow,
+} from "./types";
+import { DEFAULT_DELAY, MICRO_DELAY } from "./constants";
+
+declare class Worker {
+  /** Provides methods to synthesize keystrokes */
+  readonly keyboard: Keyboard;
+
+  /** Provides methods to synthesize mouse motions, and button clicks */
+  readonly mouse: Mouse;
+
+  /** Provides methods to work with workwindow. */
+  readonly workwindow: Workwindow;
+
+  /** Finds the first window with {@link handle} */
+  constructor(handle?: number);
+  /** Finds the first window with {@link title} and/or {@link className} and sets it as current workwindow */
+  constructor(title: string | null, className?: string | null);
+  /** Finds the first child window with {@link childClassName} and/or {@link childTitle} of window with {@link parentHandle} and sets it as current workwindow */
+  constructor(
+    parentHandle: number,
+    childClassName: string | null,
+    childTitle?: string | null
+  );
+  /** Finds the first child window with {@link childClassName} and/or {@link childTitle} of the first found window with {@link parentTitle} and/or {@link parentClassName} and sets it as current workwindow */
+  constructor(
+    parentTitle: string | null,
+    parentClassName: string | null,
+    childClassName: string | null,
+    childTitle?: string | null
+  );
+}
+
+const handleSetWorkwindow =
+  (worker: _Worker): SetWorkwindow =>
+  (...args: any[]) => {
+    worker.setWorkwindow(...stringsToBuffers(args));
+  };
+
+const handleWorker = (WorkerClass: typeof _Worker): typeof Worker =>
+  class {
+    declare readonly keyboard: Keyboard;
+
+    declare readonly mouse: Mouse;
+
+    declare readonly workwindow: Workwindow;
+
+    constructor(...args: any[]) {
+      const worker = new WorkerClass();
+
+      handleSetWorkwindow(worker)(...args);
+
+      lazyGetters(this, {
+        keyboard() {
+          const _toggleKey = (key: KeyboardButton, state: boolean) => {
+            worker.toggleKey(key, state);
+
+            return sleep(MICRO_DELAY);
+          };
+
+          const _toggleKeys = async (
+            keys: KeyboardButton[],
+            state: boolean
+          ) => {
+            const l = keys.length - 1;
+
+            if (state) {
+              for (let i = 0; i < l; i++) {
+                await _toggleKey(keys[i], true);
+              }
+
+              worker.toggleKey(keys[l], true);
+            } else {
+              for (let i = l; i--; ) {
+                await _toggleKey(keys[i], false);
+              }
+
+              worker.toggleKey(keys[0], false);
+            }
+          };
+
+          const sendKey: Keyboard["sendKey"] = async (
+            key,
+            delayAfterPress = DEFAULT_DELAY,
+            delayAfterRelease = 0
+          ) => {
+            if (Array.isArray(key)) {
+              await _toggleKeys(key, true);
+
+              await sleep(delayAfterPress);
+
+              await _toggleKeys(key, false);
+            } else {
+              worker.toggleKey(key, true);
+
+              await sleep(delayAfterPress);
+
+              worker.toggleKey(key, false);
+            }
+
+            return sleep(delayAfterRelease);
+          };
+
+          return {
+            async printText(text, delayAfterCharTyping = 0, delay = 0) {
+              const l = text.length - 1;
+
+              for (let i = 0; i < l; i++) {
+                worker.printChar(text.codePointAt(i)!);
+
+                await sleep(delayAfterCharTyping);
+              }
+
+              worker.printChar(text.codePointAt(l)!);
+
+              return sleep(delay);
+            },
+
+            async toggleKey(key, state, delay = DEFAULT_DELAY) {
+              if (Array.isArray(key)) {
+                await _toggleKeys(key, state);
+              } else {
+                worker.toggleKey(key, state);
+              }
+
+              return sleep(delay);
+            },
+
+            sendKey,
+
+            async sendKeys(
+              keys,
+              delayAfterPress = DEFAULT_DELAY,
+              delayAfterRelease = DEFAULT_DELAY,
+              delay = 0
+            ) {
+              const l = keys.length - 1;
+
+              for (let i = 0; i < l; i++) {
+                await sendKey(keys[i], delayAfterPress, delayAfterRelease);
+              }
+
+              return sendKey(keys[l], delayAfterPress, delay);
+            },
+          };
+        },
+        mouse() {
+          const _getSign = () => (Math.random() > 0.5 ? 1 : -1);
+
+          const _tremor = (probability: number) =>
+            Math.random() <= probability ? _getSign() : 0;
+
+          const _curveMaker = (
+            t: number,
+            start: number,
+            curveDot1: number,
+            curveDot2: number,
+            end: number
+          ) => {
+            const invertT = 1 - t;
+
+            const invertT2 = invertT * invertT;
+
+            const t2 = t * t;
+
+            return Math.floor(
+              invertT2 * invertT * start +
+                3 * invertT2 * t * curveDot1 +
+                3 * invertT * t2 * curveDot2 +
+                t2 * t * end
+            );
+          };
+
+          const _humanCurve = async (
+            xE: number,
+            yE: number,
+            speed: number,
+            deviation: number,
+            action: (x: number, y: number) => Promise<void>
+          ) => {
+            const { x, y } = worker.lastCoords;
+
+            if (x === xE && y === yE) {
+              return;
+            }
+
+            const partLength = random(50, 200) / 2;
+
+            const partsTotal = Math.ceil(
+              Math.pow(Math.pow(xE - x, 2) + Math.pow(yE - y, 2), 0.5) /
+                partLength
+            );
+
+            const xPartLength = (xE - x) / partsTotal;
+
+            const yPartLength = (yE - y) / partsTotal;
+
+            const speedMultiplier = (speed > 1 ? speed + 2 : 3) / partLength;
+
+            let partsLeft = partsTotal;
+
+            let isLastOne = partsTotal === 1;
+
+            let parts: number;
+
+            let xPartEnd: number;
+
+            let yPartEnd: number;
+
+            let xPartStart = x;
+
+            let yPartStart = y;
+
+            if (!isLastOne) {
+              parts = random(1, Math.ceil(partsTotal / 2));
+
+              xPartEnd = x + xPartLength * parts;
+
+              yPartEnd = y + yPartLength * parts;
+            } else {
+              parts = 1;
+
+              xPartEnd = xE;
+
+              yPartEnd = yE;
+            }
+
+            let getCurveDots = () => {
+              const _curveDotMaker = (
+                start: number,
+                end: number,
+                deviation: number
+              ) =>
+                Math.round(
+                  start +
+                    (end - start) / 2 +
+                    _getSign() * (end - start) * 0.01 * deviation
+                );
+
+              getCurveDots = () => ({
+                curveDotX1: _curveDotMaker(
+                  xPartStart,
+                  xPartEnd,
+                  random(deviation / 3, deviation)
+                ),
+                curveDotY1: _curveDotMaker(
+                  yPartStart,
+                  yPartEnd,
+                  random(deviation / 3, deviation / 2)
+                ),
+                curveDotX2: _curveDotMaker(
+                  xPartStart,
+                  xPartEnd,
+                  random(0, deviation)
+                ),
+                curveDotY2: _curveDotMaker(
+                  yPartStart,
+                  yPartEnd,
+                  random(0, deviation / 2)
+                ),
+              });
+
+              const _firstCurveDotMaker = (
+                start: number,
+                end: number,
+                deviation: number,
+                sign: 1 | -1
+              ) => Math.round(start + sign * (end - start) * 0.01 * deviation);
+
+              return {
+                curveDotX1: _firstCurveDotMaker(
+                  xPartStart,
+                  xPartEnd,
+                  random(deviation / 2, deviation),
+                  1
+                ),
+                curveDotY1: _firstCurveDotMaker(
+                  yPartStart,
+                  yPartEnd,
+                  random(deviation / 4, deviation / 3),
+                  1
+                ),
+                curveDotX2: _firstCurveDotMaker(
+                  xPartStart,
+                  xPartEnd,
+                  random(deviation / 2, deviation),
+                  _getSign()
+                ),
+                curveDotY2: _firstCurveDotMaker(
+                  yPartStart,
+                  yPartEnd,
+                  random(deviation / 2, deviation),
+                  _getSign()
+                ),
+              };
+            };
+
+            const fn = async () => {
+              const { curveDotX1, curveDotX2, curveDotY1, curveDotY2 } =
+                getCurveDots();
+
+              const dotIterator = speedMultiplier / parts;
+
+              const count = 1 / dotIterator;
+
+              const tremorProbability = speed / 15;
+
+              for (let i = 1; i < count; i++) {
+                const t = i * dotIterator;
+
+                await action(
+                  _curveMaker(t, xPartStart, curveDotX1, curveDotX2, xPartEnd),
+                  _curveMaker(t, yPartStart, curveDotY1, curveDotY2, yPartEnd) +
+                    _tremor(tremorProbability)
+                );
+              }
+
+              if (isLastOne) {
+                await action(xE, yE);
+
+                return false;
+              }
+
+              await action(xPartEnd, yPartEnd + _tremor(tremorProbability));
+
+              partsLeft -= parts;
+
+              xPartStart = xPartEnd;
+
+              yPartStart = yPartEnd;
+
+              if (partsLeft > 2) {
+                parts = random(1, partsLeft - 1);
+
+                xPartEnd += xPartLength * parts;
+
+                yPartEnd += yPartLength * parts;
+              } else {
+                parts = partsLeft;
+
+                xPartEnd = xE;
+
+                yPartEnd = yE;
+
+                isLastOne = true;
+              }
+
+              return true;
+            };
+
+            while (await fn()) {}
+          };
+
+          const moveTo: Mouse["moveTo"] = (x, y, delay = 0) => {
+            worker.move(x, y, true);
+
+            return sleep(delay);
+          };
+
+          const toggle: Mouse["toggle"] = (
+            button,
+            state,
+            delay = DEFAULT_DELAY
+          ) => {
+            worker.toggleMb(button, state);
+
+            return sleep(delay);
+          };
+
+          return {
+            set saveMode(value: boolean) {
+              worker.saveMode = value;
+            },
+
+            get saveMode() {
+              throw Error("Not Supported Exception");
+            },
+
+            ...bindPick(worker, ["getPos"]),
+
+            toggle,
+
+            async click(
+              button = "left",
+              delayAfterPress = DEFAULT_DELAY,
+              delayAfterRelease = 0
+            ) {
+              await toggle(button, true, delayAfterPress);
+
+              return toggle(button, false, delayAfterRelease);
+            },
+
+            moveTo,
+
+            moveCurveTo(x, y, speed = 5, deviation = 30) {
+              const sleepTime = speed >= 1 ? 1 : Math.round(1 / speed);
+
+              return _humanCurve(x, y, speed, deviation, (x, y) =>
+                moveTo(x, y, sleepTime)
+              );
+            },
+
+            move(x, y, delay = 0) {
+              worker.move(x, y, false);
+
+              return sleep(delay);
+            },
+
+            scrollWheel(amount, delay = 0) {
+              worker.scrollWheel(amount);
+
+              return sleep(delay);
+            },
+          };
+        },
+        workwindow() {
+          const _add0 = (item: string) => (item.length > 1 ? item : "0" + item);
+
+          const _hex = (...rgb: RGB) =>
+            rgb.reduce((hex, color) => hex + _add0(color.toString(16)), "");
+
+          return {
+            ...bindPick(worker, [
+              "refresh",
+              "setForeground",
+              "isForeground",
+              "isOpen",
+              "capture",
+              "kill",
+              "close",
+              "getView",
+              "setView",
+            ]),
+
+            set: handleSetWorkwindow(worker),
+
+            get: () => normalizeWindowInfo(worker.getWorkwindow()),
+
+            colorAt(x, y, format = "string"): any {
+              const bgr = worker.getColor(x, y);
+
+              const r = bgr & 0xff;
+              const g = (bgr >> 8) & 0xff;
+              const b = (bgr >> 16) & 0xff;
+
+              switch (format) {
+                case "array":
+                  return [r, g, b];
+
+                case "number":
+                  return (r << 16) | (g << 8) | b;
+
+                case "string":
+                  return _hex(r, g, b);
+
+                default:
+                  throw new Error("wrong format");
+              }
+            },
+          };
+        },
+      });
+    }
+  };
+
+/** Provides methods implementations on hardware level. */
+export const Hardware = handleWorker(_Hardware);
+
+/** Provides methods implementations on virtual level. */
+export const Virtual = handleWorker(_Virtual);

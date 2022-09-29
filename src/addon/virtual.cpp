@@ -84,9 +84,10 @@ Napi::Object Virtual::Init(Napi::Env env, Napi::Object exports) {
                            InstanceMethod("refresh", &Virtual::refresh),
                            InstanceMethod("setWorkwindow", &Virtual::setWorkwindow),
                            InstanceMethod("getWorkwindow", &Virtual::getWorkwindow),
+                           InstanceMethod("setView", &Virtual::setWindowView),
+                           InstanceMethod("getView", &Virtual::getWindowView),
                            InstanceAccessor("lastCoords", &Virtual::getLastCoords, NULL),
                            InstanceAccessor("saveMode", NULL, &Virtual::setSaveMode),
-                           InstanceAccessor("windowView", &Virtual::getWindowView, &Virtual::setWindowView),
                        });
 
   constructor = Napi::Persistent(func);

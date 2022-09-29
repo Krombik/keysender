@@ -221,9 +221,10 @@ Napi::Object Hardware::Init(Napi::Env env, Napi::Object exports) {
                             InstanceMethod("refresh", &Hardware::refresh),
                             InstanceMethod("setWorkwindow", &Hardware::setWorkwindow),
                             InstanceMethod("getWorkwindow", &Hardware::getWorkwindow),
+                            InstanceMethod("setView", &Virtual::setWindowView),
+                            InstanceMethod("getView", &Virtual::getWindowView),
                             InstanceAccessor("lastCoords", &Hardware::getLastCoords, NULL),
                             InstanceAccessor("saveMode", NULL, &Hardware::setSaveMode),
-                            InstanceAccessor("windowView", &Hardware::getWindowView, &Hardware::setWindowView),
                         });
 
   constructor = Napi::Persistent(func);
