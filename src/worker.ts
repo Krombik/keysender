@@ -24,7 +24,7 @@ declare class Worker {
   /** Provides methods to synthesize mouse motions, and button clicks */
   readonly mouse: Mouse;
 
-  /** Provides methods to work with workwindow. */
+  /** Provides methods to work with workwindow */
   readonly workwindow: Workwindow;
 
   /** Finds the first window with {@link handle} */
@@ -131,7 +131,7 @@ const handleWorker = (WorkerClass: typeof _Worker): typeof Worker =>
               return sleep(delay);
             },
 
-            async toggleKey(key, state, delay = DEFAULT_DELAY) {
+            async toggleKey(key, state, delay = 0) {
               if (Array.isArray(key)) {
                 await _toggleKeys(key, state);
               } else {
@@ -186,185 +186,23 @@ const handleWorker = (WorkerClass: typeof _Worker): typeof Worker =>
             );
           };
 
-          const _humanCurve = async (
-            xE: number,
-            yE: number,
-            speed: number,
-            deviation: number,
-            action: (x: number, y: number) => Promise<void>
-          ) => {
-            const { x, y } = worker.lastCoords;
-
-            if (x === xE && y === yE) {
-              return;
-            }
-
-            const partLength = random(50, 200) / 2;
-
-            const partsTotal = Math.ceil(
-              Math.pow(Math.pow(xE - x, 2) + Math.pow(yE - y, 2), 0.5) /
-                partLength
+          const _curveDotMaker = (
+            start: number,
+            end: number,
+            deviation: number
+          ) =>
+            Math.round(
+              start +
+                (end - start) / 2 +
+                _getSign() * (end - start) * 0.01 * deviation
             );
 
-            const xPartLength = (xE - x) / partsTotal;
-
-            const yPartLength = (yE - y) / partsTotal;
-
-            const speedMultiplier = (speed > 1 ? speed + 2 : 3) / partLength;
-
-            let partsLeft = partsTotal;
-
-            let isLastOne = partsTotal === 1;
-
-            let parts: number;
-
-            let xPartEnd: number;
-
-            let yPartEnd: number;
-
-            let xPartStart = x;
-
-            let yPartStart = y;
-
-            if (!isLastOne) {
-              parts = random(1, Math.ceil(partsTotal / 2));
-
-              xPartEnd = x + xPartLength * parts;
-
-              yPartEnd = y + yPartLength * parts;
-            } else {
-              parts = 1;
-
-              xPartEnd = xE;
-
-              yPartEnd = yE;
-            }
-
-            let getCurveDots = () => {
-              const _curveDotMaker = (
-                start: number,
-                end: number,
-                deviation: number
-              ) =>
-                Math.round(
-                  start +
-                    (end - start) / 2 +
-                    _getSign() * (end - start) * 0.01 * deviation
-                );
-
-              getCurveDots = () => ({
-                curveDotX1: _curveDotMaker(
-                  xPartStart,
-                  xPartEnd,
-                  random(deviation / 3, deviation)
-                ),
-                curveDotY1: _curveDotMaker(
-                  yPartStart,
-                  yPartEnd,
-                  random(deviation / 3, deviation / 2)
-                ),
-                curveDotX2: _curveDotMaker(
-                  xPartStart,
-                  xPartEnd,
-                  random(0, deviation)
-                ),
-                curveDotY2: _curveDotMaker(
-                  yPartStart,
-                  yPartEnd,
-                  random(0, deviation / 2)
-                ),
-              });
-
-              const _firstCurveDotMaker = (
-                start: number,
-                end: number,
-                deviation: number,
-                sign: 1 | -1
-              ) => Math.round(start + sign * (end - start) * 0.01 * deviation);
-
-              return {
-                curveDotX1: _firstCurveDotMaker(
-                  xPartStart,
-                  xPartEnd,
-                  random(deviation / 2, deviation),
-                  1
-                ),
-                curveDotY1: _firstCurveDotMaker(
-                  yPartStart,
-                  yPartEnd,
-                  random(deviation / 4, deviation / 3),
-                  1
-                ),
-                curveDotX2: _firstCurveDotMaker(
-                  xPartStart,
-                  xPartEnd,
-                  random(deviation / 2, deviation),
-                  _getSign()
-                ),
-                curveDotY2: _firstCurveDotMaker(
-                  yPartStart,
-                  yPartEnd,
-                  random(deviation / 2, deviation),
-                  _getSign()
-                ),
-              };
-            };
-
-            const fn = async () => {
-              const { curveDotX1, curveDotX2, curveDotY1, curveDotY2 } =
-                getCurveDots();
-
-              const dotIterator = speedMultiplier / parts;
-
-              const count = 1 / dotIterator;
-
-              const tremorProbability = speed / 15;
-
-              for (let i = 1; i < count; i++) {
-                const t = i * dotIterator;
-
-                await action(
-                  _curveMaker(t, xPartStart, curveDotX1, curveDotX2, xPartEnd),
-                  _curveMaker(t, yPartStart, curveDotY1, curveDotY2, yPartEnd) +
-                    _tremor(tremorProbability)
-                );
-              }
-
-              if (isLastOne) {
-                await action(xE, yE);
-
-                return false;
-              }
-
-              await action(xPartEnd, yPartEnd + _tremor(tremorProbability));
-
-              partsLeft -= parts;
-
-              xPartStart = xPartEnd;
-
-              yPartStart = yPartEnd;
-
-              if (partsLeft > 2) {
-                parts = random(1, partsLeft - 1);
-
-                xPartEnd += xPartLength * parts;
-
-                yPartEnd += yPartLength * parts;
-              } else {
-                parts = partsLeft;
-
-                xPartEnd = xE;
-
-                yPartEnd = yE;
-
-                isLastOne = true;
-              }
-
-              return true;
-            };
-
-            while (await fn()) {}
-          };
+          const _firstCurveDotMaker = (
+            start: number,
+            end: number,
+            deviation: number,
+            sign: 1 | -1
+          ) => Math.round(start + sign * (end - start) * 0.01 * deviation);
 
           const moveTo: Mouse["moveTo"] = (x, y, delay = 0) => {
             worker.move(x, y, true);
@@ -372,11 +210,7 @@ const handleWorker = (WorkerClass: typeof _Worker): typeof Worker =>
             return sleep(delay);
           };
 
-          const toggle: Mouse["toggle"] = (
-            button,
-            state,
-            delay = DEFAULT_DELAY
-          ) => {
+          const toggle: Mouse["toggle"] = (button, state, delay = 0) => {
             worker.toggleMb(button, state);
 
             return sleep(delay);
@@ -407,12 +241,178 @@ const handleWorker = (WorkerClass: typeof _Worker): typeof Worker =>
 
             moveTo,
 
-            moveCurveTo(x, y, speed = 5, deviation = 30) {
+            async humanMoveTo(xE, yE, speed = 5, deviation = 30, delay = 0) {
               const sleepTime = speed >= 1 ? 1 : Math.round(1 / speed);
 
-              return _humanCurve(x, y, speed, deviation, (x, y) =>
-                moveTo(x, y, sleepTime)
+              const { x, y } = worker.lastCoords;
+
+              if (x === xE && y === yE) {
+                return;
+              }
+
+              const partLength = random(50, 200) / 2;
+
+              const partsTotal = Math.ceil(
+                Math.pow(Math.pow(xE - x, 2) + Math.pow(yE - y, 2), 0.5) /
+                  partLength
               );
+
+              const xPartLength = (xE - x) / partsTotal;
+
+              const yPartLength = (yE - y) / partsTotal;
+
+              const speedMultiplier = (speed > 1 ? speed + 2 : 3) / partLength;
+
+              let partsLeft = partsTotal;
+
+              let isLastOne = partsTotal === 1;
+
+              let parts: number;
+
+              let xPartEnd: number;
+
+              let yPartEnd: number;
+
+              let xPartStart = x;
+
+              let yPartStart = y;
+
+              if (!isLastOne) {
+                parts = random(1, Math.ceil(partsTotal / 2));
+
+                xPartEnd = x + xPartLength * parts;
+
+                yPartEnd = y + yPartLength * parts;
+              } else {
+                parts = 1;
+
+                xPartEnd = xE;
+
+                yPartEnd = yE;
+              }
+
+              let getCurveDots = () => {
+                getCurveDots = () => ({
+                  curveDotX1: _curveDotMaker(
+                    xPartStart,
+                    xPartEnd,
+                    random(deviation / 3, deviation)
+                  ),
+                  curveDotY1: _curveDotMaker(
+                    yPartStart,
+                    yPartEnd,
+                    random(deviation / 3, deviation / 2)
+                  ),
+                  curveDotX2: _curveDotMaker(
+                    xPartStart,
+                    xPartEnd,
+                    random(0, deviation)
+                  ),
+                  curveDotY2: _curveDotMaker(
+                    yPartStart,
+                    yPartEnd,
+                    random(0, deviation / 2)
+                  ),
+                });
+
+                return {
+                  curveDotX1: _firstCurveDotMaker(
+                    xPartStart,
+                    xPartEnd,
+                    random(deviation / 2, deviation),
+                    1
+                  ),
+                  curveDotY1: _firstCurveDotMaker(
+                    yPartStart,
+                    yPartEnd,
+                    random(deviation / 4, deviation / 3),
+                    1
+                  ),
+                  curveDotX2: _firstCurveDotMaker(
+                    xPartStart,
+                    xPartEnd,
+                    random(deviation / 2, deviation),
+                    _getSign()
+                  ),
+                  curveDotY2: _firstCurveDotMaker(
+                    yPartStart,
+                    yPartEnd,
+                    random(deviation / 2, deviation),
+                    _getSign()
+                  ),
+                };
+              };
+
+              const fn = async () => {
+                const { curveDotX1, curveDotX2, curveDotY1, curveDotY2 } =
+                  getCurveDots();
+
+                const dotIterator = speedMultiplier / parts;
+
+                const count = 1 / dotIterator;
+
+                const tremorProbability = speed / 15;
+
+                for (let i = 1; i < count; i++) {
+                  const t = i * dotIterator;
+
+                  await moveTo(
+                    _curveMaker(
+                      t,
+                      xPartStart,
+                      curveDotX1,
+                      curveDotX2,
+                      xPartEnd
+                    ),
+                    _curveMaker(
+                      t,
+                      yPartStart,
+                      curveDotY1,
+                      curveDotY2,
+                      yPartEnd
+                    ) + _tremor(tremorProbability),
+                    sleepTime
+                  );
+                }
+
+                if (isLastOne) {
+                  await moveTo(xE, yE, delay);
+
+                  return false;
+                }
+
+                await moveTo(
+                  xPartEnd,
+                  yPartEnd + _tremor(tremorProbability),
+                  sleepTime
+                );
+
+                partsLeft -= parts;
+
+                xPartStart = xPartEnd;
+
+                yPartStart = yPartEnd;
+
+                if (partsLeft > 2) {
+                  parts = random(1, partsLeft - 1);
+
+                  xPartEnd += xPartLength * parts;
+
+                  yPartEnd += yPartLength * parts;
+                } else {
+                  parts = partsLeft;
+
+                  xPartEnd = xE;
+
+                  yPartEnd = yE;
+
+                  isLastOne = true;
+                }
+
+                return true;
+              };
+
+              while (await fn()) {}
             },
 
             move(x, y, delay = 0) {

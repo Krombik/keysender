@@ -1,6 +1,6 @@
 import { _Worker } from "./addon";
 
-export type Delay = [from: number, to: number] | number;
+export type Delay = number | [from: number, to: number];
 
 export type KeyboardRegularButton =
   | "backspace"
@@ -205,22 +205,10 @@ export type SetWorkwindow = {
 
 export interface Keyboard {
   /**
-   * Prints given text
-   * @param text - string to print
-   * @param [delayAfterCharTyping=0] - milliseconds to await after each char typing (excluding last), if not provided defaults to `0`
-   * @param [delay=0] - milliseconds to await after {@link text} printed, if not provided defaults to `0`
-   */
-  printText(
-    text: string,
-    delayAfterCharTyping?: Delay,
-    delay?: Delay
-  ): Promise<void>;
-
-  /**
    * Toggling {@link key key or combination of keys} to provided {@link state}
    * @param key - key or array with combination of keys
    * @param state - {@link key} state selection: `true` for press, `false` for release
-   * @param [delay=35]- milliseconds to await after {@link key} toggling, if not provided defaults to `35`
+   * @param [delay=0]- milliseconds to await after {@link key} toggling, if not provided defaults to `0`
    */
   toggleKey(
     key: KeyboardButton | KeyboardButton[],
@@ -253,17 +241,21 @@ export interface Keyboard {
     delayAfterRelease?: Delay,
     delay?: Delay
   ): Promise<void>;
+
+  /**
+   * Prints given text
+   * @param text - string to print
+   * @param [delayAfterCharTyping=0] - milliseconds to await after each char typing (excluding last), if not provided defaults to `0`
+   * @param [delay=0] - milliseconds to await after {@link text} printed, if not provided defaults to `0`
+   */
+  printText(
+    text: string,
+    delayAfterCharTyping?: Delay,
+    delay?: Delay
+  ): Promise<void>;
 }
 
 export interface Mouse extends Pick<_Worker, "getPos" | "saveMode"> {
-  /**
-   * Switch mouse button state
-   * @param button - name of mouse button
-   * @param state - {@link button} state selection: `true` for press, `false` for release
-   * @param [delay=35] - milliseconds to await after switching {@link button} {@link state}, if not provided defaults to `35`
-   */
-  toggle(button: MouseButton, state: boolean, delay?: Delay): Promise<void>;
-
   /**
    * @param [button="left"] - name of mouse button, if not provided defaults to `"left"`
    * @param [delayAfterPress=35] - milliseconds to await after {@link button} pressed, if not provided defaults to `35`
@@ -276,28 +268,38 @@ export interface Mouse extends Pick<_Worker, "getPos" | "saveMode"> {
   ): Promise<void>;
 
   /**
-   * Move mouse to [{@link x}, {@link y}]
+   * Switch mouse button state
+   * @param button - name of mouse button
+   * @param state - {@link button} state selection: `true` for press, `false` for release
+   * @param [delay=0] - milliseconds to await after switching {@link button} {@link state}, if not provided defaults to `0`
+   */
+  toggle(button: MouseButton, state: boolean, delay?: Delay): Promise<void>;
+
+  /**
+   * Move mouse to [{@link x}, {@link y}] in current workwindow
    * @param [delay=0] - milliseconds to await after mouse movement, if not provided defaults to `0`
    */
   moveTo(x: number, y: number, delay?: Delay): Promise<void>;
-
-  /**
-   * Simulate human similar mouse movement from current cursor position to [{@link x}, {@link y}]
-   * @param [speed=5] - move speed, if not provided defaults to `5`
-   * @param [deviation=30] - movement curvature, if not provided defaults to `30`
-   */
-  moveCurveTo(
-    x: number,
-    y: number,
-    speed?: number,
-    deviation?: number
-  ): Promise<void>;
 
   /**
    * Move mouse from current position by [{@link x}, {@link y}] relatively
    * @param [delay=0] - milliseconds to await after mouse movement, if not provided defaults to `0`
    */
   move(x: number, y: number, delay?: Delay): Promise<void>;
+
+  /**
+   * Simulate human similar mouse movement from current cursor position to [{@link x}, {@link y}] in current workwindow
+   * @param [speed=5] - move speed, if not provided defaults to `5`
+   * @param [deviation=30] - movement curvature, if not provided defaults to `30`
+   * @param [delay=0] - milliseconds to await after movement end, if not provided defaults to `0`
+   */
+  humanMoveTo(
+    x: number,
+    y: number,
+    speed?: number,
+    deviation?: number,
+    delay?: Delay
+  ): Promise<void>;
 
   /**
    * @param amount - the amount of wheel movement. A positive value indicates that the wheel was rotated forward, away from the user, a negative value indicates that the wheel was rotated backward, toward the user

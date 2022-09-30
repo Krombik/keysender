@@ -1,6 +1,6 @@
 export { Hardware, Virtual } from "./worker";
 
-export { default as GlobalHotkey, HotkeyOptions } from "./GlobalHotkey";
+export { default as GlobalHotkey, Reason, HotkeyOptions } from "./GlobalHotkey";
 
 export { default as textToImg } from "./textToImg";
 

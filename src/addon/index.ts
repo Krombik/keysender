@@ -15,7 +15,7 @@ export declare type _WindowInfo = {
 };
 
 export declare class _Worker {
-  /** @returns current cursor position relative to workwindow. */
+  /** @returns current cursor position relative to workwindow */
   getPos(): Position;
 
   toggleMb(button: MouseButton, state: boolean): void;
@@ -28,28 +28,32 @@ export declare class _Worker {
 
   printChar(charCode: number): void;
 
+  /**
+   * Checks if the current workwindow exist
+   */
   isOpen(): boolean;
 
+  /**
+   * Checks if the current workwindow is a foreground window
+   */
   isForeground(): boolean;
 
-  /** Makes the current workwindow a foreground window. */
+  /**
+   * Makes the current workwindow the foreground window
+   */
   setForeground(): void;
 
   /**
-   * Captures part of current workwindow (or screen if `handle` is `0`).
-   * @param part - position of top left corner and size to be capture.
-   * @param [format="rgba"] - color format of return data.
-   *
-   * if not provided defaults to `"rgba"`.
+   * Captures {@link part} of current workwindow (or screen if `handle` is `0`)
+   * @param part - top left corner position and size of part to capture
+   * @param [format="rgba"] - color format of returned data, if not provided defaults to `"rgba"`
    */
   capture(part: Position & Size, format?: "rgba" | "bgra" | "grey"): Image;
   /**
-   * Captures part of current workwindow (or screen if `handle` is `0`).
-   * @param part - position of top left corner and size to be capture
-   * @param format - color format of return data.
-   * @param [threshold=127] - color limit, if the pixel value is smaller than the threshold, it is set to `0`, otherwise it is set to `255`,
-   *
-   * if not provided defaults to `127`.
+   * Captures part of current workwindow (or screen if `handle` is `0`)
+   * @param part - top left corner position and size of part to capture
+   * @param format - color format of returned data
+   * @param [threshold=127] - color limit, if the pixel value is smaller than the threshold, it is set to `0`, otherwise it is set to `255`, if not provided defaults to `127`
    */
   capture(
     part: Position & Size,
@@ -57,32 +61,28 @@ export declare class _Worker {
     threshold?: number
   ): Image;
   /**
-   * Captures part of current workwindow (or screen if `handle` is `0`).
-   * @param [format="rgba"] - color format of return data
-   *
-   * if not provided defaults to `"rgba"`.
+   * Captures part of current workwindow (or screen if `handle` is `0`)
+   * @param [format="rgba"] - color format of returned data, if not provided defaults to `"rgba"`
    */
   capture(format?: "rgba" | "bgra" | "grey"): Image;
   /**
-   * Captures part of current workwindow (or screen if `handle` is `0`).
-   * @param format - color format of return data.
-   * @param [threshold=127] - color limit, if the pixel value is smaller than the threshold, it is set to `0`, otherwise it is set to `255`,
-   *
-   * if not provided defaults to `127`.
+   * Captures part of current workwindow (or screen if `handle` is `0`)
+   * @param format - color format of returned data
+   * @param [threshold=127] - color limit, if the pixel value is smaller than the threshold, it is set to `0`, otherwise it is set to `255`, if not provided defaults to `127`
    */
   capture(format: "monochrome", threshold?: number): Image;
 
   getColor(x: number, y: number): number;
 
-  /** Terminates current workwindow by killing it's thread. */
+  /** Terminates current workwindow by killing it's thread */
   kill(): void;
 
-  /** Closes current workwindow by sending close message. */
+  /** Closes current workwindow by sending close message */
   close(): void;
 
   /**
-   * Tries to find a new workwindow using already defined `handle`, `className`, `childTitle`, `childClassName`.
-   * @returns `true` if new workwindow successfully find (new handle not equal to 0), `false` if it is not.
+   * Tries to find a new workwindow using already defined `handle`, `className`, `childTitle`, `childClassName`
+   * @returns `true` if new workwindow successfully find (new handle not equal to 0), `false` if it is not
    */
   refresh(): boolean;
 
@@ -105,13 +105,13 @@ export declare class _Worker {
   get lastCoords(): Position;
 
   /**
-   * If `true` - every mouse move method first back to last known coordinates ([0, 0] on first move)
+   * if `true` - every mouse move method first back to last known coordinates ([0, 0] on first move)
    * @default false
    */
   set saveMode(value: boolean);
 
   /**
-   * Sets workwindow position and(or) size
+   * Sets workwindow position and/or size
    */
   setView(view: Partial<Position & Size>): void;
 
@@ -143,7 +143,7 @@ export declare class _GlobalHotkey {
   /**
    * * if `options.mode` is `"hold"` - state of `options.key` (`true` if `options.key` is pressed, `false` if it isn't),
    * * if `options.mode` is `"toggle"` - state of `toggler`,
-   * * if `options.mode` is `"once"` - always `true`.
+   * * if `options.mode` is `"once"` - always `true`
    */
   hotkeyState: boolean;
 }
