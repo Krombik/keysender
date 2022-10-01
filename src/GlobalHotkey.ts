@@ -63,7 +63,7 @@ class GlobalHotkey extends _GlobalHotkey {
   private _withAfter?: boolean;
 
   /**
-   * Registers hotkey, if some hotkey already registered for this {@link HotkeyOptions.key key}, {@link GlobalHotkey.unregister unregister} previous hotkey and registers new hotkey
+   * Registers a hotkey, if any hotkey is already registered for this {@link HotkeyOptions.key key}, {@link GlobalHotkey.unregister unregisters} the previous hotkey and registers a new hotkey
    */
   constructor(options: HotkeyOptions) {
     super();

@@ -657,7 +657,7 @@ obj.workwindow.kill();
 close(): void;
 ```
 
-Closes current workwindow by sending close message
+Closes current workwindow by sending close message to it
 
 ```ts
 import { Hardware } from "keysender";
@@ -680,7 +680,7 @@ obj.workwindow.close();
   capture(format: "monochrome", threshold?: number): Image;
 ```
 
-Capture screenshot of current workwindow (even if it background) or desktop.
+Takes a screenshot of the current workwindow (even if it is in the background) or the desktop
 
 | Argument  | Description                                                                                                                                                                                      | Default Value |
 | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------- |
@@ -778,7 +778,7 @@ constructor(
 );
 ```
 
-Registers hotkey, if some hotkey already registered for this **key**, [unregister](#unregister) previous hotkey and registers new hotkey.
+Registers a hotkey, if any hotkey is already registered for this **key**, [unregisters](#unregister) the previous hotkey and registers a new hotkey
 
 | field      | Description                                                                                                                                                                                                                                                                                                                                                                                            | Default Value |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------- |
@@ -867,7 +867,7 @@ hotkeyState: boolean;
 ```
 
 **mode** is `"hold"` - state of **key** (`true` if **key** is pressed, `false` if it isn't),<br />
-**mode** is `"toggle"` - state of `toggler`,<br />
+**mode** is `"toggle"` - state of toggler,<br />
 **mode** is `"once"` - always `true`
 
 ```ts
@@ -974,7 +974,7 @@ foo.reassignment("a");
 unregister(): void;
 ```
 
-Unregister hotkey, but it still can be reassignment by [reassignment](#reassignment) method
+Unregisters a hotkey, but it can still be reassignment using the [reassignment](#reassignment) method
 
 ```ts
 import { GlobalHotkey } from "keysender";
@@ -996,7 +996,7 @@ foo.unregister();
 delete(): void;
 ```
 
-Delete hotkey, it can't be [reassignment](#reassignment)
+Delete a hotkey, it can't be [reassignment](#reassignment)
 
 ```ts
 import { GlobalHotkey } from "keysender";
@@ -1056,7 +1056,7 @@ Draws text using the specified font **(supports .ttf and .otf only)**
 | Argument | Description         |
 | -------- | ------------------- |
 | text     | text to draw        |
-| path     | path to font        |
+| path     | font path           |
 | fontSize | font size in px     |
 | options  | object with options |
 
@@ -1176,7 +1176,7 @@ console.log(vkToString(66)); // "b"
 sleep(ms: number | [from: number, to: number]): Promise<void>;
 ```
 
-used under the hood of all async methods
+This method used under the hood of all async methods
 
 ```ts
 import { sleep } from "keysender";
@@ -1191,7 +1191,7 @@ await sleep([25, 50]);
 [toggleKey](#togglekey), [sendKey](#sendkey), [sendKeys](#sendkeys), [GlobalHotkey](#globalhotkey) supports for following keys or numbers([virtual key codes](https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes))
 
 ```ts
-export type KeyboardRegularButton =
+type KeyboardRegularButton =
   | "backspace"
   | "tab"
   | "enter"
@@ -1301,7 +1301,7 @@ export type KeyboardRegularButton =
   | "]"
   | "'";
 
-export type KeyboardSpecButton =
+type KeyboardSpecButton =
   | "alt"
   | "ctrl"
   | "shift"
@@ -1314,8 +1314,5 @@ export type KeyboardSpecButton =
   | "lwin"
   | "rwin";
 
-export type KeyboardButton =
-  | KeyboardRegularButton
-  | KeyboardSpecButton
-  | number;
+type KeyboardButton = KeyboardRegularButton | KeyboardSpecButton | number;
 ```
