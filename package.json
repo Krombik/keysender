@@ -20,6 +20,7 @@
   "source": "src/index.ts",
   "main": "./dist/index.js",
   "scripts": {
+    "install": "node-gyp rebuild",
     "build": "yarn tsc"
   },
   "types": "./dist/index.d.ts",

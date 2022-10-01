@@ -793,15 +793,17 @@ Registers a hotkey, if any hotkey is already registered for this **key**, [unreg
 ```ts
 import { GlobalHotkey } from "keysender";
 
-new GlobalHotkey({ // logs "hi" after pressing "num+"
+new GlobalHotkey({
+  // logs "hi" after pressing "num+"
   key: "num+",
   mode: "once",
   action() {
     console.log("hi");
-  }
+  },
 });
 
-new GlobalHotkey({ // logs "hi" every 50 milliseconds while "num*" is pressed
+new GlobalHotkey({
+  // logs "hi" every 50 milliseconds while "num*" is pressed
   key: "num*",
   mode: "hold",
   action() {
@@ -809,13 +811,14 @@ new GlobalHotkey({ // logs "hi" every 50 milliseconds while "num*" is pressed
 
     return true;
   },
-  delay: 50
+  delay: 50,
 });
 
 let i = 0;
 
-new GlobalHotkey({ // logs "hi" every 50 milliseconds after "num/" is pressed
-  key: "num/", //     until "num/" be pressed again or i become > 50
+new GlobalHotkey({
+  // logs "hi" every 50 milliseconds after "num/" is pressed
+  key: "num/", // until "num/" be pressed again or i become > 50
   mode: "toggle",
   action() {
     i++;
@@ -830,23 +833,27 @@ new GlobalHotkey({ // logs "hi" every 50 milliseconds after "num/" is pressed
   },
 });
 
-new GlobalHotkey({ // after "a" is pressed if i <= 50 - logs "hi" every 50 milliseconds
-  key: "a", //        until "a" be pressed again
-  mode: "toggle",
-  isEnabled() {
-    return i <= 50;
-  }
-  action() {
-    i++;
+let j = 0;
 
-    console.log("hi");
+new GlobalHotkey({
+  // after "a" is pressed if i <= 50 - logs "hi" every 50 milliseconds
+  key: "a", // until "a" be pressed again
+  mode: "toggle",
+  isEnable() {
+    return j <= 50;
+  },
+  action() {
+    j++;
+
+    console.log(j);
 
     return true;
   },
-  delay: 50
+  delay: 50,
 });
 
-new GlobalHotkey({ // logs "hi" every 50 milliseconds while "num-" is pressed,
+new GlobalHotkey({
+  // logs "hi" every 50 milliseconds while "num-" is pressed,
   key: "num-", //   logs Release.BY_KEYBOARD when "num-" is released
   mode: "hold",
   action() {
@@ -856,7 +863,7 @@ new GlobalHotkey({ // logs "hi" every 50 milliseconds while "num-" is pressed,
   },
   after(reason) {
     console.log(reason);
-  }
+  },
 });
 ```
 
