@@ -2,7 +2,7 @@
 
 > Node.js Desktop Automation for Windows. Emulate the mouse and keyboard physical or virtual inputs, capture workwindow, register global hotkeys.
 
-# Installation
+## Installation
 
 Install Windows Build Tools:
 
@@ -28,7 +28,7 @@ or yarn:
 yarn add keysender
 ```
 
-# Example
+## Example
 
 ```ts
 import { Hardware, GlobalHotkey } from "keysender";
@@ -62,7 +62,7 @@ new GlobalHotkey({
 });
 ```
 
-# Api
+## Api
 
 - [Hardware and Virtual](#hardware-and-virtual)
   - [.keyboard](#keyboard)
