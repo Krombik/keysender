@@ -23,7 +23,6 @@
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
 
-#include <Wingdi.h>
 #include <windows.h>
 
 #define IS_WINDOWS

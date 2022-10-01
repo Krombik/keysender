@@ -68,27 +68,29 @@ Napi::Object Virtual::Init(Napi::Env env, Napi::Object exports) {
   Napi::HandleScope scope(env);
 
   Napi::Function func = DefineClass(
-      env, "_Virtual", {
-                           InstanceMethod("getPos", &Virtual::getMousePos),
-                           InstanceMethod("toggleMb", &Virtual::toggleMb),
-                           InstanceMethod("move", &Virtual::move),
-                           InstanceMethod("scrollWheel", &Virtual::scrollWheel),
-                           InstanceMethod("toggleKey", &Virtual::toggleKey),
-                           InstanceMethod("printChar", &Virtual::printChar),
-                           InstanceMethod("setForeground", &Virtual::setForeground),
-                           InstanceMethod("isForeground", &Virtual::isForeground),
-                           InstanceMethod("isOpen", &Virtual::isOpen),
-                           InstanceMethod("capture", &Virtual::capture),
-                           InstanceMethod("getColor", &Virtual::getColor),
-                           InstanceMethod("kill", &Virtual::kill),
-                           InstanceMethod("refresh", &Virtual::refresh),
-                           InstanceMethod("setWorkwindow", &Virtual::setWorkwindow),
-                           InstanceMethod("getWorkwindow", &Virtual::getWorkwindow),
-                           InstanceMethod("setView", &Virtual::setWindowView),
-                           InstanceMethod("getView", &Virtual::getWindowView),
-                           InstanceAccessor("lastCoords", &Virtual::getLastCoords, NULL),
-                           InstanceAccessor("saveMode", NULL, &Virtual::setSaveMode),
-                       });
+      env,
+      "_Virtual",
+      {
+          InstanceMethod("getPos", &Virtual::getMousePos),
+          InstanceMethod("toggleMb", &Virtual::toggleMb),
+          InstanceMethod("move", &Virtual::move),
+          InstanceMethod("scrollWheel", &Virtual::scrollWheel),
+          InstanceMethod("toggleKey", &Virtual::toggleKey),
+          InstanceMethod("printChar", &Virtual::printChar),
+          InstanceMethod("setForeground", &Virtual::setForeground),
+          InstanceMethod("isForeground", &Virtual::isForeground),
+          InstanceMethod("isOpen", &Virtual::isOpen),
+          InstanceMethod("capture", &Virtual::capture),
+          InstanceMethod("getColor", &Virtual::getColor),
+          InstanceMethod("kill", &Virtual::kill),
+          InstanceMethod("refresh", &Virtual::refresh),
+          InstanceMethod("setWorkwindow", &Virtual::setWorkwindow),
+          InstanceMethod("getWorkwindow", &Virtual::getWorkwindow),
+          InstanceMethod("setView", &Virtual::setWindowView),
+          InstanceMethod("getView", &Virtual::getWindowView),
+          InstanceAccessor("lastCoords", &Virtual::getLastCoords, NULL),
+          InstanceAccessor("saveMode", NULL, &Virtual::setSaveMode),
+      });
 
   constructor = Napi::Persistent(func);
 

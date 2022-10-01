@@ -37,8 +37,9 @@ const notepad = new Hardware(null, "Notepad"); // find Notepad handle by classNa
 
 new GlobalHotkey({
   // register hotkey
-  key: "num-",
-  async action(props) {
+  key: "f1",
+  mode: "once",
+  async action() {
     if (
       (notepad.workwindow.isOpen() || notepad.workwindow.refresh()) &&
       notepad.workwindow.isForeground()
@@ -56,8 +57,6 @@ new GlobalHotkey({
       await notepad.keyboard.sendKeys(["w", "o", "r", "l", "d"], [25, 50], 50);
 
       await notepad.keyboard.sendKey(["ctrl", "s"], 50); // press key combination "ctrl+s", await for 50 milliseconds, release key combination
-
-      notepad.workwindow.close(); // close "Notepad" window
     }
   },
 });
@@ -702,7 +701,7 @@ import { Hardware } from "keysender";
 
 const obj = new Hardware(handle); // or Virtual
 
-const desktop = new Hardware(0);
+const desktop = new Hardware();
 
 obj.workwindow.capture();
 
@@ -736,7 +735,7 @@ import { Hardware } from "keysender";
 
 const obj = new Hardware(handle); // or Virtual
 
-const desktop = new Hardware(0);
+const desktop = new Hardware();
 
 obj.workwindow.colorAt(25, 25); // returns workwindow color in [25, 25] in "rrggbb" format
 

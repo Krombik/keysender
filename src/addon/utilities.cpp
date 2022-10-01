@@ -122,13 +122,18 @@ Napi::Value textToImg(const Napi::CallbackInfo &info) {
   if (format == "rgba") {
     for (size_t i = 0; i < size; i += 4) {
       std::swap(pixels[i], pixels[i + 2]);
+
       pixels[i + 3] = 255;
     }
   } else if (format == "grey") {
     size_t j = 0;
-    for (size_t i = 0; i < size; i += 4, j++)
+
+    for (size_t i = 0; i < size; i += 4, j++) {
       pixels[j] = pixels[i] * 0.114 + pixels[i + 1] * 0.587 + pixels[i + 2] * 0.299;
+    }
+
     memcpy(pixels, pixels, j);
+
     size = j;
   }
 
@@ -137,10 +142,11 @@ Napi::Value textToImg(const Napi::CallbackInfo &info) {
 
   Napi::Buffer<uint8_t> imgData = Napi::Buffer<uint8_t>::New(env, pixels, size);
 
-  imgData.AddFinalizer([](Napi::Env env, HBITMAP section) {
-    DeleteObject(section);
-  },
-                       section);
+  imgData.AddFinalizer(
+      [](Napi::Env env, HBITMAP section) {
+        DeleteObject(section);
+      },
+      section);
 
   img["data"] = imgData;
 

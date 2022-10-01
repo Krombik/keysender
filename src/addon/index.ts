@@ -169,4 +169,4 @@ export declare function vkToString(virtualKey: number): KeyboardButton;
 
 export declare function getScreenSize(): Size;
 
-exports = require("../../build/Release/key_sender.node");
+module.exports = require("../../build/Release/key_sender.node");

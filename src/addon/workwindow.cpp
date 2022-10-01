@@ -331,7 +331,7 @@ Napi::Value Workwindow::getWorkwindow(const Napi::CallbackInfo &info) {
   return Helper::windowGetter(hWnd, info.Env());
 }
 
-void Workwindow::setWindowView(const Napi::CallbackInfo &info, const Napi::Value &value) {
+void Workwindow::setWindowView(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
 
   if (hWnd == NULL) {

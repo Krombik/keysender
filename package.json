@@ -16,7 +16,7 @@
     "ahk",
     "uopilot"
   ],
-  "type": "module",
+  "type": "commonjs",
   "source": "src/index.ts",
   "main": "./dist/index.js",
   "scripts": {

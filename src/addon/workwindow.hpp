@@ -28,7 +28,7 @@ class Workwindow {
   std::wstring title, className, childTitle, childClassName;
   void setWorkwindow(const Napi::CallbackInfo &info);
   Napi::Value getWorkwindow(const Napi::CallbackInfo &info);
-  void setWindowView(const Napi::CallbackInfo &info, const Napi::Value &value);
+  void setWindowView(const Napi::CallbackInfo &info);
   Napi::Value getWindowView(const Napi::CallbackInfo &info);
 };
 
