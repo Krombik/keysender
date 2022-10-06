@@ -5,20 +5,18 @@ import fs from "fs";
 const resolvedPromise = Promise.resolve();
 
 export const random = (min: number, max: number) =>
-  min < max ? Math.floor(Math.random() * (max + 1 - min)) + min : min;
+  Math.floor(Math.random() * (max + 1 - min)) + min;
 
 export const sleep = (delay: Delay) => {
-  if (Array.isArray(delay)) {
+  if (typeof delay !== "number") {
     delay = random(delay[0], delay[1]);
   }
 
-  if (delay) {
-    return new Promise<void>((res) => {
-      setTimeout(res, delay as number);
-    });
-  }
-
-  return resolvedPromise;
+  return delay
+    ? new Promise<void>((resolve) => {
+        setTimeout(resolve, delay as number);
+      })
+    : resolvedPromise;
 };
 
 type StringsToBuffers<T extends any[]> = {
@@ -36,19 +34,15 @@ export const lazyGetters = <T extends {}, K extends keyof T>(
   self: T,
   modules: { [key in K]: () => T[key] }
 ) => {
-  const keys = Object.keys(modules);
-
-  for (let i = keys.length; i--; ) {
-    const key = keys[i];
-
+  for (const key in modules) {
     Object.defineProperty(self, key, {
       configurable: true,
       get() {
-        Object.defineProperty(self, key, {
-          value: modules[key](),
-        });
+        const value = modules[key]();
 
-        return self[key];
+        Object.defineProperty(self, key, { value });
+
+        return value;
       },
     });
   }
@@ -107,8 +101,10 @@ export const getFontName = (path: string) => {
     }
   }
 
+  const getError = () => new Error(`Something wrong with font '${path}'`);
+
   if (offset === undefined) {
-    throw new Error(`Something wrong with font '${path}'`);
+    throw getError();
   }
 
   let count = data.getUint16(offset + 2);
@@ -139,7 +135,7 @@ export const getFontName = (path: string) => {
     offset += 6;
   }
 
-  throw new Error(`Something wrong with font '${path}'`);
+  throw getError();
 };
 
 export const normalizeWindowInfo = (windowInfo: _WindowInfo): WindowInfo => ({
