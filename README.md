@@ -1,6 +1,6 @@
 # keysender
 
-> Node.js Desktop Automation for Windows. Emulate the mouse and keyboard physical or virtual inputs, capture workwindow, register global hotkeys.
+Node.js Desktop Automation for Windows. Emulate the mouse and keyboard physical or virtual inputs, capture workwindow, register global hotkeys.
 
 ---
 
