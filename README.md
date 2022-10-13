@@ -2,6 +2,8 @@
 
 > Node.js Desktop Automation for Windows. Emulate the mouse and keyboard physical or virtual inputs, capture workwindow, register global hotkeys.
 
+---
+
 ## Installation
 
 Install Windows Build Tools:
@@ -27,6 +29,8 @@ or yarn:
 ```
 yarn add keysender
 ```
+
+---
 
 ## Example
 
@@ -62,9 +66,11 @@ new GlobalHotkey({
 });
 ```
 
+---
+
 ## Api
 
-- [Hardware and Virtual](#hardware-and-virtual)
+- [Hardware or Virtual](#hardware-and-virtual)
   - [.keyboard](#keyboard)
     - [.sendKey](#sendkey)
     - [.toggleKey](#togglekey)
@@ -108,7 +114,9 @@ new GlobalHotkey({
 - [sleep](#sleep)
 - [Available keyboard buttons](#keyboardbutton)
 
-## Hardware and Virtual
+---
+
+### Hardware or Virtual
 
 ```ts
 /** Finds the first window with {handle} */
@@ -159,9 +167,13 @@ const foobar = new Hardware(
 );
 ```
 
+---
+
 ### keyboard
 
 Provides methods to synthesize keystrokes
+
+---
 
 ### sendKey
 
@@ -195,6 +207,8 @@ await obj.keyboard.sendKey("a", 50, 90);
 await obj.keyboard.sendKey(["ctrl", "shift", "a"], [25, 50]);
 ```
 
+---
+
 ### toggleKey
 
 ```ts
@@ -224,6 +238,8 @@ await obj.keyboard.toggleKey("a", false, 50);
 
 await obj.keyboard.toggleKey(["ctrl", "shift", "a"], true, [25, 50]);
 ```
+
+---
 
 ### sendKeys
 
@@ -259,6 +275,8 @@ await obj.keyboard.sendKeys(["a", "b"], 50, 90);
 await obj.keyboard.sendKeys(["a", "b"], [25, 50], 25, 45);
 ```
 
+---
+
 ### printText
 
 ```ts
@@ -289,9 +307,13 @@ await obj.keyboard.printText("hello world", 50);
 await obj.keyboard.printText("hello world", [25, 50], 25);
 ```
 
+---
+
 ### mouse
 
 Provides methods to synthesize mouse motions, and button clicks
+
+---
 
 ### click
 
@@ -319,6 +341,8 @@ await obj.mouse.click();
 await obj.mouse.click("right", 25, 15);
 ```
 
+---
+
 ### toggle
 
 ```ts
@@ -343,6 +367,8 @@ await obj.mouse.toggle("left", true);
 await obj.mouse.toggle("right", false, 25);
 ```
 
+---
+
 ### moveTo
 
 ```ts
@@ -365,6 +391,8 @@ await obj.mouse.moveTo(25, 25);
 await obj.mouse.moveTo(50, 50, 50);
 ```
 
+---
+
 ### move
 
 ```ts
@@ -386,6 +414,8 @@ await obj.mouse.move(25, 25);
 
 await obj.mouse.move(-50, 50, 50);
 ```
+
+---
 
 ### humanMoveTo
 
@@ -415,16 +445,18 @@ const obj = new Hardware(handle); // or Virtual
 await obj.mouse.humanMoveTo(25, 25);
 ```
 
+---
+
 ### scrollWheel
 
 ```ts
 scrollWheel(amount: number, delay?: number | [from: number, to: number]): Promise<void>;
 ```
 
-| Argument | Description                                                                                                                                                                                    | Default Value |
-| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| amount   | amount of wheel movement, positive value indicates that the wheel was rotated forward,<br /> away from the user, negative value indicates that the wheel was rotated backward, toward the user |               |
-| delay    | milliseconds to await after wheel scroll                                                                                                                                                       | `0`           |
+| Argument | Description                                                                                                                                                                              | Default Value |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| amount   | amount of wheel movement, positive value indicates that the wheel was rotated forward, away from the user, negative value indicates that the wheel was rotated backward, toward the user |               |
+| delay    | milliseconds to await after wheel scroll                                                                                                                                                 | `0`           |
 
 ```ts
 import { Hardware } from "keysender";
@@ -433,6 +465,8 @@ const obj = new Hardware(handle); // or Virtual
 
 await obj.mouse.scrollWheel(-1);
 ```
+
+---
 
 ### getPos
 
@@ -451,6 +485,8 @@ await obj.mouse.moveTo(25, 50);
 
 console.log(obj.mouse.getPos()); // {x: 25, y: 50}
 ```
+
+---
 
 ### saveMod
 
@@ -471,9 +507,13 @@ const obj = new Hardware(handle); // or Virtual
 obj.mouse.saveMode = true;
 ```
 
+---
+
 ### workwindow
 
 Provides methods to work with workwindow
+
+---
 
 ### set
 
@@ -509,6 +549,8 @@ const obj = new Hardware("Some title"); // or Virtual
 obj.workwindow.set(null, "SomeClass");
 ```
 
+---
+
 ### get
 
 ```ts
@@ -527,6 +569,8 @@ const obj = new Hardware("Some title"); // or Virtual
 console.log(obj.workwindow.get()); // { handle, title, className }
 ```
 
+---
+
 ### refresh
 
 ```ts
@@ -543,6 +587,8 @@ const obj = new Hardware("Some title"); // or Virtual
 
 obj.workwindow.refresh();
 ```
+
+---
 
 ### setView
 
@@ -571,6 +617,8 @@ obj.workwindow.setView({ y: 25, width: 1200 });
 obj.workwindow.setView({ x: 50, y: 25, width: 1200, height: 800 });
 ```
 
+---
+
 ### getView
 
 ```ts
@@ -586,6 +634,8 @@ const obj = new Hardware(handle); // or Virtual
 
 console.log(obj.workwindow.getView()); // { x, y, width, height }
 ```
+
+---
 
 ### setForeground
 
@@ -603,6 +653,8 @@ const obj = new Hardware(handle); // or Virtual
 obj.workwindow.setForeground();
 ```
 
+---
+
 ### isForeground
 
 ```ts
@@ -618,6 +670,8 @@ const obj = new Hardware(handle); // or Virtual
 
 console.log(obj.workwindow.isForeground());
 ```
+
+---
 
 ### isOpen
 
@@ -635,6 +689,8 @@ const obj = new Hardware(handle); // or Virtual
 console.log(obj.workwindow.isOpen());
 ```
 
+---
+
 ### kill
 
 ```ts
@@ -651,6 +707,8 @@ const obj = new Hardware(handle); // or Virtual
 obj.workwindow.kill();
 ```
 
+---
+
 ### close
 
 ```ts
@@ -666,6 +724,8 @@ const obj = new Hardware(handle); // or Virtual
 
 obj.workwindow.close();
 ```
+
+---
 
 ### capture
 
@@ -720,6 +780,8 @@ obj.workwindow.capture(
 );
 ```
 
+---
+
 ### colorAt
 
 ```ts
@@ -746,7 +808,9 @@ obj.workwindow.colorAt(25, 25, "number"); // returns workwindow color in [25, 25
 desktop.workwindow.colorAt(25, 25); // returns screen color in [25, 25] in "rrggbb" format
 ```
 
-## GlobalHotkey
+---
+
+### GlobalHotkey
 
 ```ts
 enum Reason {
@@ -770,7 +834,7 @@ constructor(
         action(this: GlobalHotkey): boolean | Promise<boolean>;
         after?(
           this: GlobalHotkey,
-          reason: any
+          reason: Reason | unknown
         ): void | Promise<void>;
         delay?: number | [from: number, to: number];
       }
@@ -780,15 +844,15 @@ constructor(
 
 Registers a hotkey, if any hotkey is already registered for this **key**, [unregisters](#unregister) the previous hotkey and registers a new hotkey
 
-| field      | Description                                                                                                                                                                                                                                                                                                                                                                                            | Default Value |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------- |
-| key        | hotkey                                                                                                                                                                                                                                                                                                                                                                                                 |               |
-| mode       | if `"once"` - **action** will call one time for each **key** press,<br /> if `"hold"` - **action** will repeat every **delay** milliseconds while **key** is pressed or **action** returns `true`,<br /> if `"toggle"` - **action** starts repeat repeat every **delay** milliseconds after **key** first time pressed <br/> and stops after **key** second time pressed or **action** returns `false` |               |
-| isEnabled? | method to check if hotkey is need to be executing                                                                                                                                                                                                                                                                                                                                                      | `() => true`  |
-| before?    | if **mode** is `"hold"` or `"toggle"` - method to be executed before the **action** loop                                                                                                                                                                                                                                                                                                               |               |
-| action     | function to be call after hotkey was pressed                                                                                                                                                                                                                                                                                                                                                           |               |
-| after?     | if **mode** is `"hold"` or `"toggle"` - function to be call after hotkey work is end, first param is reason of ending,<br /> reason of **action** loop ending, can be one of `Reason` enum (if ended by action - `Reason.BY_ACTION`,<br /> if ended by keyboard - `Reason.BY_KEYBOARD`) or any value from [stop](#stop) method                                                                         |               |
-| delay?     | if **mode** is `"hold"` or `"toggle"` - sets delay between **action** calls                                                                                                                                                                                                                                                                                                                            | `35`          |
+| field      | Description                                                                                                                                                                                                                                                                                                                                                                                | Default Value |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------- |
+| key        | hotkey                                                                                                                                                                                                                                                                                                                                                                                     |               |
+| mode       | if `"once"` - **action** will call one time for each **key** press, if `"hold"` - **action** will repeat every **delay** milliseconds while **key** is pressed or **action** returns `true`, if `"toggle"` - **action** starts repeat repeat every **delay** milliseconds after **key** first time pressed <br/> and stops after **key** second time pressed or **action** returns `false` |               |
+| isEnabled? | method to check if hotkey is need to be executing                                                                                                                                                                                                                                                                                                                                          | `() => true`  |
+| before?    | if **mode** is `"hold"` or `"toggle"` - method to be executed before the **action** loop                                                                                                                                                                                                                                                                                                   |               |
+| action     | function to be call after hotkey was pressed                                                                                                                                                                                                                                                                                                                                               |               |
+| after?     | if **mode** is `"hold"` or `"toggle"` - function to be call after hotkey work is end, first param is reason of ending, reason of **action** loop ending, can be one of `Reason` enum (if ended by action - `Reason.BY_ACTION`, if ended by keyboard - `Reason.BY_KEYBOARD`) or any value from [stop](#stop) method                                                                         |               |
+| delay?     | if **mode** is `"hold"` or `"toggle"` - sets delay between **action** calls                                                                                                                                                                                                                                                                                                                | `35`          |
 
 ```ts
 import { GlobalHotkey } from "keysender";
@@ -867,6 +931,8 @@ new GlobalHotkey({
 });
 ```
 
+---
+
 ### hotkeyState
 
 ```ts
@@ -910,10 +976,12 @@ new GlobalHotkey({
 });
 ```
 
-## stop
+---
+
+### stop
 
 ```ts
-stop(reason?: string): Promise<void>;
+stop(reason: unknown | Reason): Promise<void>;
 ```
 
 Stops the loop of **action** executing
@@ -953,6 +1021,8 @@ new GlobalHotkey({
 });
 ```
 
+---
+
 ### reassignment
 
 ```ts
@@ -974,6 +1044,8 @@ const foo = new GlobalHotkey({
 
 foo.reassignment("a");
 ```
+
+---
 
 ### unregister
 
@@ -997,6 +1069,8 @@ const foo = new GlobalHotkey({
 foo.unregister();
 ```
 
+---
+
 ### delete
 
 ```ts
@@ -1019,6 +1093,8 @@ const foo = new GlobalHotkey({
 foo.delete();
 ```
 
+---
+
 ### unregisterAll
 
 ```ts
@@ -1032,6 +1108,8 @@ import { GlobalHotkey } from "keysender";
 
 GlobalHotkey.unregisterAll();
 ```
+
+---
 
 ### deleteAll
 
@@ -1047,7 +1125,9 @@ import { GlobalHotkey } from "keysender";
 GlobalHotkey.deleteAll();
 ```
 
-## textToImg
+---
+
+### textToImg
 
 ```ts
 textToImg(
@@ -1102,14 +1182,16 @@ const img3 = textToImg("Hello World!", "./path/to/font.otf", 36, {
 });
 ```
 
-## getAllWindows
+---
+
+### getAllWindows
 
 ```ts
-getAllWindows(): {
+getAllWindows(): Array<{
   handle: number;
   className: string;
   title: string;
-}[];
+}>;
 ```
 
 Returns array with objects {handle, title, className} of all open windows
@@ -1120,7 +1202,9 @@ import { getAllWindows } from "keysender";
 console.log(getAllWindows());
 ```
 
-## getWindowChildren
+---
+
+### getWindowChildren
 
 ```ts
 getWindowChildren(parentHandle: number): {
@@ -1149,7 +1233,9 @@ console.log(getWindowChildren(null, "SomeClass"));
 console.log(getWindowChildren("Some title", "SomeClass"));
 ```
 
-## getScreenSize
+---
+
+### getScreenSize
 
 ```ts
 getScreenSize(): size;
@@ -1163,7 +1249,9 @@ import { getScreenSize } from "keysender";
 console.log(getScreenSize());
 ```
 
-## vkToString
+---
+
+### vkToString
 
 ```ts
 vkToString(virtualKey: number): KeyboardButton;
@@ -1177,7 +1265,9 @@ import { vkToString } from "keysender";
 console.log(vkToString(66)); // "b"
 ```
 
-## sleep
+---
+
+### sleep
 
 ```ts
 sleep(ms: number | [from: number, to: number]): Promise<void>;
@@ -1192,6 +1282,8 @@ await sleep(25);
 
 await sleep([25, 50]);
 ```
+
+---
 
 ### KeyboardButton
 
@@ -1323,3 +1415,9 @@ type KeyboardSpecButton =
 
 type KeyboardButton = KeyboardRegularButton | KeyboardSpecButton | number;
 ```
+
+---
+
+## License
+
+MIT © [Krombik](https://github.com/Krombik)

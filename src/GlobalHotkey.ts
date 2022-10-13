@@ -44,7 +44,7 @@ type HotkeyRestModesOptions = {
    * Method to be executed after the {@link HotkeyRestModesOptions.action action} loop
    * @param reason - reason of {@link HotkeyRestModesOptions.action action} loop ending, can be {@link Reason} (if ended by action - {@link Reason.BY_ACTION}, if ended by keyboard - {@link Reason.BY_KEYBOARD}) or any value from {@link GlobalHotkey.stop stop}
    */
-  after?(this: GlobalHotkey, reason: any): void | Promise<void>;
+  after?(this: GlobalHotkey, reason: unknown): void | Promise<void>;
   /**
    * Delay in milliseconds between {@link HotkeyRestModesOptions.action action} executions
    * @default 35
@@ -140,9 +140,7 @@ class GlobalHotkey extends _GlobalHotkey {
 
       if (mode === "toggle") {
         return async () => {
-          this.hotkeyState = !this.hotkeyState;
-
-          if (this.hotkeyState) {
+          if ((this.hotkeyState = !this.hotkeyState)) {
             if (isFree && (await isEnable())) {
               let resolve: () => void;
 
@@ -181,7 +179,7 @@ class GlobalHotkey extends _GlobalHotkey {
    * * Note: works only in `"toggle"` {@link HotkeyRestModesOptions.mode mode}
    * @param [reason=Reason.BY_STOP] - reason to {@link HotkeyRestModesOptions.after after}, if not provided defaults to {@link Reason.BY_STOP}
    */
-  stop(reason: any = Reason.BY_STOP) {
+  stop(reason: unknown = Reason.BY_STOP) {
     if (this.hotkeyState) {
       if (this._withAfter) {
         this._reason = reason;
