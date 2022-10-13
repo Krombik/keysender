@@ -86,7 +86,7 @@ const handleWorker = (WorkerClass: typeof _Worker): typeof Worker =>
 
               worker.toggleKey(keys[l], true);
             } else {
-              for (let i = l; i--; ) {
+              for (let i = l; i > 0; i--) {
                 await _toggleKey(keys[i], false);
               }
 
