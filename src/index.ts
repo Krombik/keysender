@@ -1,6 +1,6 @@
 export { Hardware, Virtual } from "./worker";
 
-export { default as GlobalHotkey, Reason, HotkeyOptions } from "./GlobalHotkey";
+export { default as GlobalHotkey, Reason } from "./GlobalHotkey";
 
 export { default as textToImg } from "./textToImg";
 
@@ -11,6 +11,8 @@ export { default as getWindowChildren } from "./getWindowChildren";
 export { vkToString, getScreenSize } from "./addon";
 
 export { sleep } from "./utils";
+
+export type { HotkeyOptions } from "./GlobalHotkey";
 
 export type {
   Delay,

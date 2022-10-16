@@ -99,11 +99,12 @@ new GlobalHotkey({
     - [.capture](#capture)
     - [.colorAt](#colorat)
 - [GlobalHotkey](#globalhotkey)
-  - [.hotkeyState](#hotkeystate)
   - [.stop](#stop)
   - [.reassignment](#reassignment)
   - [.unregister](#unregister)
   - [.delete](#delete)
+  - [.state](#state)
+  - [.hotkeyState](#hotkeystate)
   - [unregisterAll](#unregisterall)
   - [deleteAll](#deleteall)
 - [textToImg](#texttoimg)
@@ -819,40 +820,66 @@ enum Reason {
   BY_STOP,
 }
 
-constructor(
-  options: {
-    key: KeyboardRegularButton | number;
-  } & (
+type HotkeyOptions<S = never, R = never> = {
+  key: KeyboardRegularButton | number;
+} & ([S] extends [never]
+  ? {
+      defaultState?: undefined;
+    }
+  : {
+      defaultState: S;
+    }) &
+  (
     | {
         mode: "once";
-        action(this: GlobalHotkey): void | Promise<void>;
+        action(this: GlobalHotkey<S, R>): void | Promise<void>;
       }
     | {
         mode: "toggle" | "hold";
-        isEnable?(this: GlobalHotkey): boolean | Promise<boolean>;
-        before?(this: GlobalHotkey): void | Promise<void>;
-        action(this: GlobalHotkey): boolean | Promise<boolean>;
+        isEnable?(this: GlobalHotkey<S, R>): boolean | Promise<boolean>;
+        before?(this: GlobalHotkey<S, R>): void | Promise<void>;
+        action(this: GlobalHotkey<S, R>): boolean | Promise<boolean>;
         after?(
-          this: GlobalHotkey,
-          reason: Reason | unknown
+          this: GlobalHotkey<S, R>,
+          reason: Reason | R
         ): void | Promise<void>;
-        delay?: number | [from: number, to: number];
+        delay?: Delay;
       }
-  )
-);
+  );
+
+class GlobalHotkey<S = never, R = never> {
+  constructor(options: HotkeyOptions<S, R>);
+
+  stop(reason?: Reason.BY_STOP | R): Promise<void> | undefined;
+
+  reassignment(newKey: KeyboardRegularButton | number): void;
+
+  unregister(): void;
+
+  delete(): void;
+
+  hotkeyState: boolean;
+
+  state: S;
+
+  static unregisterAll(): void;
+
+  static deleteAll(): void;
+}
 ```
 
 Registers a hotkey, if any hotkey is already registered for this **key**, [unregisters](#unregister) the previous hotkey and registers a new hotkey
 
-| field      | Description                                                                                                                                                                                                                                                                                                                                                                                | Default Value |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------- |
-| key        | hotkey                                                                                                                                                                                                                                                                                                                                                                                     |               |
-| mode       | if `"once"` - **action** will call one time for each **key** press, if `"hold"` - **action** will repeat every **delay** milliseconds while **key** is pressed or **action** returns `true`, if `"toggle"` - **action** starts repeat repeat every **delay** milliseconds after **key** first time pressed <br/> and stops after **key** second time pressed or **action** returns `false` |               |
-| isEnabled? | method to check if hotkey is need to be executing                                                                                                                                                                                                                                                                                                                                          | `() => true`  |
-| before?    | if **mode** is `"hold"` or `"toggle"` - method to be executed before the **action** loop                                                                                                                                                                                                                                                                                                   |               |
-| action     | function to be call after hotkey was pressed                                                                                                                                                                                                                                                                                                                                               |               |
-| after?     | if **mode** is `"hold"` or `"toggle"` - function to be call after hotkey work is end, first param is reason of ending, reason of **action** loop ending, can be one of `Reason` enum (if ended by action - `Reason.BY_ACTION`, if ended by keyboard - `Reason.BY_KEYBOARD`) or any value from [stop](#stop) method                                                                         |               |
-| delay?     | if **mode** is `"hold"` or `"toggle"` - sets delay between **action** calls                                                                                                                                                                                                                                                                                                                | `35`          |
+| field                                               | Description                                                                                                                                                                                                                                                                                                                                                                                | Default Value |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------- |
+| key                                                 | hotkey                                                                                                                                                                                                                                                                                                                                                                                     |               |
+| <i id="globalhotkey.options.mode"></i>mode          | if `"once"` - **action** will call one time for each **key** press, if `"hold"` - **action** will repeat every **delay** milliseconds while **key** is pressed or **action** returns `true`, if `"toggle"` - **action** starts repeat repeat every **delay** milliseconds after **key** first time pressed <br/> and stops after **key** second time pressed or **action** returns `false` |               |
+| <i id="globalhotkey.options.isenable"></i>isEnable? | method to check if hotkey is need to be executing                                                                                                                                                                                                                                                                                                                                          | `() => true`  |
+| <i id="globalhotkey.options.before"></i>before?     | if **mode** is `"hold"` or `"toggle"` - method to be executed before the **action** loop                                                                                                                                                                                                                                                                                                   |               |
+| <i id="globalhotkey.options.action"></i>action      | function to be call after hotkey was pressed                                                                                                                                                                                                                                                                                                                                               |               |
+| <i id="globalhotkey.options.after"></i>after?       | if **mode** is `"hold"` or `"toggle"` - function to be call after hotkey work is end, first param is reason of ending, reason of **action** loop ending, can be one of `Reason` enum (if ended by action - `Reason.BY_ACTION`, if ended by keyboard - `Reason.BY_KEYBOARD`) or any value from [stop](#stop) method                                                                         |               |
+| delay?                                              | if **mode** is `"hold"` or `"toggle"` - sets delay between **action** calls                                                                                                                                                                                                                                                                                                                | `35`          |
+| defaultState?                                       | default [state](#state)                                                                                                                                                                                                                                                                                                                                                                    |               |
 
 ```ts
 import { GlobalHotkey } from "keysender";
@@ -933,69 +960,22 @@ new GlobalHotkey({
 
 ---
 
-### hotkeyState
-
-```ts
-hotkeyState: boolean;
-```
-
-**mode** is `"hold"` - state of **key** (`true` if **key** is pressed, `false` if it isn't),<br />
-**mode** is `"toggle"` - state of toggler,<br />
-**mode** is `"once"` - always `true`
-
-```ts
-import { GlobalHotkey } from "keysender";
-
-const text = "hello world!";
-
-let i = 0;
-
-new GlobalHotkey({
-  key: "num-",
-  mode: "toggle",
-  async action() {
-    while (i < text.length && this.hotkeyState) {
-      console.log(text[i]);
-
-      i++;
-
-      await new Promise((res) => setTimeout(res, 250));
-    }
-
-    return false;
-  },
-  after() {
-    if (this.hotkeyState) {
-      console.log("I done");
-    } else {
-      console.log("I not done");
-    }
-
-    i = 0;
-  },
-});
-```
-
----
-
 ### stop
 
 ```ts
-stop(reason: unknown | Reason): Promise<void>;
+stop(reason?: Reason.BY_STOP | R): Promise<void>;
 ```
 
-Stops the loop of **action** executing
+Stops the loop of [action](#globalhotkey.options.action) executing
 
-> Note: works only if **mode** equals to `"toggle"`
-
-| Argument | Description                | Default Value    |
-| -------- | -------------------------- | ---------------- |
-| reason   | reason to **after** method | `Reason.BY_STOP` |
+| Argument | Description                                           | Default Value    |
+| -------- | ----------------------------------------------------- | ---------------- |
+| reason   | reason to [after](#globalhotkey.options.after) method | `Reason.BY_STOP` |
 
 ```ts
 import { GlobalHotkey } from "keysender";
 
-const foo = new GlobalHotkey({
+const hotkey = new GlobalHotkey<never, "someReason">({
   key: "num-",
   mode: "toggle",
   action() {
@@ -1014,7 +994,7 @@ new GlobalHotkey({
   key: "num+",
   mode: "once",
   async action() {
-    await foo.stop("someReason");
+    await hotkey.stop("someReason");
 
     console.log("num- action was stopped");
   },
@@ -1092,6 +1072,51 @@ const foo = new GlobalHotkey({
 
 foo.delete();
 ```
+
+---
+
+### state
+
+Any state that can be used via `this` in [isEnable](#globalhotkey.options.isenable), [before](#globalhotkey.options.before), [action](#globalhotkey.options.action), [after](#globalhotkey.options.after) methods or via [GlobalHotkey](#globalhotkey) instance
+
+```ts
+type State = { counter: number };
+
+const hotkey = new GlobalHotkey<State>({
+  key: "f1",
+  mode: "toggle",
+  action() {
+    this.state.counter++;
+
+    console.log(this.state.counter);
+
+    return true;
+  },
+  defaultState: { counter: 0 },
+});
+
+new GlobalHotkey({
+  key: "f2",
+  mode: "once",
+  action() {
+    hotkey.state.counter--;
+  },
+});
+```
+
+---
+
+### hotkeyState
+
+```ts
+hotkeyState: boolean;
+```
+
+if [mode](#mode) is
+
+- `"hold"` - state of **key** (`true` if **key** is pressed, `false` if it isn't)
+- `"toggle"` - state of toggler
+- `"once"` - always `true`
 
 ---
 

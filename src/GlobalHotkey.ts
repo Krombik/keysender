@@ -10,7 +10,7 @@ export enum Reason {
   BY_STOP,
 }
 
-type HotkeyOnceModeOptions = {
+type HotkeyOnceModeOptions<S, R> = {
   /**
    * * if `"once"` - {@link HotkeyOnceModeOptions.action action} will call one time for each {@link HotkeyOptions.key key} press
    */
@@ -18,10 +18,10 @@ type HotkeyOnceModeOptions = {
   /**
    * Method to be executed after the {@link HotkeyOptions.key hotkey} is pressed
    */
-  action(this: GlobalHotkey): void | Promise<void>;
+  action(this: GlobalHotkey<S, R>): void | Promise<void>;
 };
 
-type HotkeyRestModesOptions = {
+type HotkeyRestModesOptions<S, R> = {
   /**
    * * if `"hold"` - {@link HotkeyRestModesOptions.action action} will repeat every {@link HotkeyRestModesOptions.delay delay} milliseconds while {@link HotkeyOptions.key key} is pressed or {@link HotkeyRestModesOptions.action action} returns `true`
    * * if `"toggle"` - {@link HotkeyRestModesOptions.action action} starts repeat repeat every {@link HotkeyRestModesOptions.delay delay} milliseconds after {@link HotkeyOptions.key key} first time pressed and stops after {@link HotkeyOptions.key key} second time pressed or {@link HotkeyRestModesOptions.action action} returns `false`
@@ -31,20 +31,20 @@ type HotkeyRestModesOptions = {
    * Method to check if hotkey is need to be executing
    * @default () => true
    */
-  isEnable?(this: GlobalHotkey): boolean | Promise<boolean>;
+  isEnable?(this: GlobalHotkey<S, R>): boolean | Promise<boolean>;
   /**
    * Method to be executed before the {@link HotkeyRestModesOptions.action action} loop
    */
-  before?(this: GlobalHotkey): void | Promise<void>;
+  before?(this: GlobalHotkey<S, R>): void | Promise<void>;
   /**
    * @see {@link HotkeyRestModesOptions.mode mode}
    */
-  action(this: GlobalHotkey): boolean | Promise<boolean>;
+  action(this: GlobalHotkey<S, R>): boolean | Promise<boolean>;
   /**
    * Method to be executed after the {@link HotkeyRestModesOptions.action action} loop
    * @param reason - reason of {@link HotkeyRestModesOptions.action action} loop ending, can be {@link Reason} (if ended by action - {@link Reason.BY_ACTION}, if ended by keyboard - {@link Reason.BY_KEYBOARD}) or any value from {@link GlobalHotkey.stop stop}
    */
-  after?(this: GlobalHotkey, reason: unknown): void | Promise<void>;
+  after?(this: GlobalHotkey<S, R>, reason: Reason | R): void | Promise<void>;
   /**
    * Delay in milliseconds between {@link HotkeyRestModesOptions.action action} executions
    * @default 35
@@ -52,21 +52,34 @@ type HotkeyRestModesOptions = {
   delay?: Delay;
 };
 
-export type HotkeyOptions = {
+export type HotkeyOptions<S = never, R = never> = {
   /** hotkey */
   key: KeyboardRegularButton | number;
-} & (HotkeyOnceModeOptions | HotkeyRestModesOptions);
+} & ([S] extends [never]
+  ? {
+      defaultState?: undefined;
+    }
+  : {
+      defaultState: S;
+    }) &
+  (HotkeyOnceModeOptions<S, R> | HotkeyRestModesOptions<S, R>);
 
-class GlobalHotkey extends _GlobalHotkey {
+class GlobalHotkey<S = never, R = never> extends _GlobalHotkey {
   private _completion?: Promise<void>;
-  private _reason?: any;
+  private _reason?: Reason | R;
   private _withAfter?: boolean;
+
+  state: S;
 
   /**
    * Registers a hotkey, if any hotkey is already registered for this {@link HotkeyOptions.key key}, {@link GlobalHotkey.unregister unregisters} the previous hotkey and registers a new hotkey
    */
-  constructor(options: HotkeyOptions) {
+  constructor(options: HotkeyOptions<S, R>) {
     super();
+
+    if ("defaultState" in options) {
+      this.state = options.defaultState!;
+    }
 
     let isFree = true;
 
@@ -104,10 +117,10 @@ class GlobalHotkey extends _GlobalHotkey {
           options.after.bind(this);
 
         after = () => {
-          let reason;
+          let reason: Reason | R;
 
           if ("_reason" in this) {
-            reason = this._reason;
+            reason = this._reason!;
 
             delete this._reason;
           } else {
@@ -124,51 +137,49 @@ class GlobalHotkey extends _GlobalHotkey {
 
       const { delay = DEFAULT_DELAY } = options;
 
-      const main = async () => {
-        isFree = false;
+      const fn = async () => {
+        if (isFree && (await isEnable())) {
+          isFree = false;
 
-        await before();
+          this.hotkeyState = true;
 
-        while (this.hotkeyState && (await action())) {
-          await sleep(delay);
+          let resolve: () => void;
+
+          this._completion = new Promise<void>((_resolve) => {
+            resolve = _resolve;
+          });
+
+          await before();
+
+          while (this.hotkeyState && (await action())) {
+            await sleep(delay);
+          }
+
+          await after();
+
+          this.hotkeyState = false;
+
+          isFree = true;
+
+          resolve!();
         }
-
-        await after();
-
-        isFree = true;
       };
 
-      if (mode === "toggle") {
-        return async () => {
-          if ((this.hotkeyState = !this.hotkeyState)) {
-            if (isFree && (await isEnable())) {
-              let resolve: () => void;
-
-              this._completion = new Promise<void>((_resolve) => {
-                resolve = _resolve;
-              });
-
-              await main();
-
-              this.hotkeyState = false;
-
-              resolve!();
-            } else {
-              this.hotkeyState = false;
-            }
-          }
-        };
-      }
-
       if (mode === "hold") {
-        return async () => {
-          if (isFree && (await isEnable())) {
-            await main();
+        return fn;
+      }
+
+      if (mode === "toggle") {
+        return () => {
+          if (this.hotkeyState) {
+            this.hotkeyState = false;
+          } else {
+            return fn();
           }
         };
       }
 
-      throw new Error("No mode was selected");
+      throw new Error("Wrong mode");
     };
 
     this._register(options.key, mode, getAction());
@@ -176,13 +187,12 @@ class GlobalHotkey extends _GlobalHotkey {
 
   /**
    * Stops the loop of {@link HotkeyRestModesOptions.action action} executing
-   * * Note: works only in `"toggle"` {@link HotkeyRestModesOptions.mode mode}
    * @param [reason=Reason.BY_STOP] - reason to {@link HotkeyRestModesOptions.after after}, if not provided defaults to {@link Reason.BY_STOP}
    */
-  stop(reason: unknown = Reason.BY_STOP) {
+  stop(reason?: Reason.BY_STOP | R) {
     if (this.hotkeyState) {
       if (this._withAfter) {
-        this._reason = reason;
+        this._reason = arguments.length ? reason : Reason.BY_STOP;
       }
 
       this.hotkeyState = false;

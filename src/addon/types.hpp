@@ -6,26 +6,26 @@
 #define SOME_NUMBER 5
 #define NONEXISTENT_VIRTUAL_KEY 255
 
-typedef enum {
+enum HotkeyState {
   HOTKEY_REGISTERED,
   HOTKEY_REASSIGNMENT,
   HOTKEY_UNREGISTERED,
   HOTKEY_DELETED
-} HotkeyState;
+};
 
 #ifdef IS_WINDOWS
 
-typedef struct {
+struct TsfnContext {
   HotkeyState state = HOTKEY_REGISTERED;
   UINT keyCode;
   Napi::ThreadSafeFunction tsfn;
-} TsfnContext;
+};
 
-typedef struct {
+struct WindowInfo {
   HWND hWnd = NULL;
   std::wstring className;
   std::wstring title;
-} WindowInfo;
+};
 
 typedef struct _BITMAP : BITMAPINFO {
   _BITMAP(int height, int width) {

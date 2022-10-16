@@ -79,15 +79,15 @@ void Hotkey::registerHotkey(const Napi::CallbackInfo &info) {
   std::string mode = info[1].As<Napi::String>();
 
   if (mode == "toggle") {
-    hotkeyState = [&]() -> bool {
-      return togglerState;
+    _getHotkeyState = [&]() -> bool {
+      return hotkeyState;
     };
   } else if (mode == "hold") {
-    hotkeyState = [&]() -> bool {
-      return GetKeyState((*it)->keyCode) < 0;
+    _getHotkeyState = [&]() -> bool {
+      return hotkeyState && GetKeyState((*it)->keyCode) < 0;
     };
   } else if (mode == "once") {
-    hotkeyState = [&]() -> bool {
+    _getHotkeyState = [&]() -> bool {
       return true;
     };
   } else {
@@ -111,11 +111,11 @@ void Hotkey::registerHotkey(const Napi::CallbackInfo &info) {
 }
 
 Napi::Value Hotkey::getHotkeyState(const Napi::CallbackInfo &info) {
-  return Napi::Boolean::New(info.Env(), hotkeyState());
+  return Napi::Boolean::New(info.Env(), _getHotkeyState());
 }
 
 void Hotkey::setHotkeyState(const Napi::CallbackInfo &info, const Napi::Value &value) {
-  togglerState = bool(info[0].As<Napi::Boolean>());
+  hotkeyState = bool(info[0].As<Napi::Boolean>());
 }
 
 void Hotkey::reassignmentHotkey(const Napi::CallbackInfo &info) {
