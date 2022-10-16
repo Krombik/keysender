@@ -70,7 +70,7 @@ new GlobalHotkey({
 
 ## Api
 
-- [Hardware or Virtual](#hardware-and-virtual)
+- [Hardware or Virtual](#hardware-or-virtual)
   - [.keyboard](#keyboard)
     - [.sendKey](#sendkey)
     - [.toggleKey](#togglekey)
@@ -152,6 +152,7 @@ Classes Hardware and Virtual provide the same [keyboard](#keyboard), [mouse](#mo
 
 - Class Hardware provides keyboard and mouse methods implementations on hardware level by inserts the events serially into the keyboard or mouse input stream. These events are not interspersed with other keyboard or mouse input events inserted either by the user (with the keyboard or mouse).
 - Class Virtual provides keyboard and mouse methods implementations on virtual level by sending messages to workwindow, so it could work with background window.
+
   > Note: Virtual keyboard and mouse methods do not work for all windows, for example, input line in certain window may accept message from [printText](#printext) method, but [sendKey](#sendkey) method makes no effect outside input line, or the window may accept a keystroke message from [sendKey](#sendkey) method but not accept mouse movement message from [moveTo](#moveto) method.
 
 ```ts
@@ -877,7 +878,7 @@ Registers a hotkey, if any hotkey is already registered for this **key**, [unreg
 | <i id="globalhotkey.options.isenable"></i>isEnable? | method to check if hotkey is need to be executing                                                                                                                                                                                                                                                                                                                                          | `() => true`  |
 | <i id="globalhotkey.options.before"></i>before?     | if **mode** is `"hold"` or `"toggle"` - method to be executed before the **action** loop                                                                                                                                                                                                                                                                                                   |               |
 | <i id="globalhotkey.options.action"></i>action      | function to be call after hotkey was pressed                                                                                                                                                                                                                                                                                                                                               |               |
-| <i id="globalhotkey.options.after"></i>after?       | if **mode** is `"hold"` or `"toggle"` - function to be call after hotkey work is end, first param is reason of ending, reason of **action** loop ending, can be one of `Reason` enum (if ended by action - `Reason.BY_ACTION`, if ended by keyboard - `Reason.BY_KEYBOARD`) or any value from [stop](#stop) method                                                                         |               |
+| <i id="globalhotkey.options.after"></i>after?       | if **mode** is `"hold"` or `"toggle"` - function to be call after hotkey work is end, first param is reason of ending, reason of **action** loop ending, can be one of `Reason` enum (if ended by action - `Reason.BY_ACTION`, if ended by keyboard - `Reason.BY_KEYBOARD`) or **reason** from [stop](#stop) method                                                                        |               |
 | delay?                                              | if **mode** is `"hold"` or `"toggle"` - sets delay between **action** calls                                                                                                                                                                                                                                                                                                                | `35`          |
 | defaultState?                                       | default [state](#state)                                                                                                                                                                                                                                                                                                                                                                    |               |
 

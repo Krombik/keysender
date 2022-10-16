@@ -69,6 +69,9 @@ class GlobalHotkey<S = never, R = never> extends _GlobalHotkey {
   private _reason?: Reason | R;
   private _withAfter?: boolean;
 
+  /**
+   * Any state that can be used via `this` in {@link HotkeyRestModesOptions.isEnable isEnable}, {@link HotkeyRestModesOptions.before before}, {@link HotkeyRestModesOptions.action action}, {@link HotkeyRestModesOptions.after after} methods or via {@link GlobalHotkey} instance
+   */
   state: S;
 
   /**
