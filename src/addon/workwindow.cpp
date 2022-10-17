@@ -165,8 +165,8 @@ Napi::Value Workwindow::getColor(const Napi::CallbackInfo &info) {
 
   const int x = info[0].As<Napi::Number>().Int32Value();
 
-  if (x <= 0) {
-    Napi::Error::New(info.Env(), "x should be > 0")
+  if (x < 0) {
+    Napi::Error::New(info.Env(), "x should be >= 0")
         .ThrowAsJavaScriptException();
 
     return env.Undefined();
@@ -174,8 +174,8 @@ Napi::Value Workwindow::getColor(const Napi::CallbackInfo &info) {
 
   const int y = info[1].As<Napi::Number>().Int32Value();
 
-  if (y <= 0) {
-    Napi::Error::New(info.Env(), "y should be > 0")
+  if (y < 0) {
+    Napi::Error::New(info.Env(), "y should be >= 0")
         .ThrowAsJavaScriptException();
 
     return env.Undefined();
