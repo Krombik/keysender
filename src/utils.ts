@@ -8,7 +8,7 @@ export const random = (min: number, max: number) =>
   Math.floor(Math.random() * (max + 1 - min)) + min;
 
 export const sleep = (delay: Delay) => {
-  if (typeof delay !== "number") {
+  if (typeof delay != "number") {
     delay = random(delay[0], delay[1]);
   }
 
@@ -79,14 +79,8 @@ export const toBGR = (color: number | string | RGB) => {
   }
 };
 
-export const getFontName = (path: string) => {
-  const data = new DataView(fs.readFileSync(path).buffer, 0);
-
-  const tablesCount = data.getUint16(4, false);
-
-  let offset: number | undefined;
-
-  for (let i = 0, pos = 12; i < tablesCount; i++, pos += 16) {
+const getOffset = (data: DataView) => {
+  for (let i = data.getUint16(4, false), pos = 12; i--; pos += 16) {
     if (
       String.fromCodePoint(
         data.getInt8(pos),
@@ -95,47 +89,45 @@ export const getFontName = (path: string) => {
         data.getInt8(pos + 3)
       ) === "name"
     ) {
-      offset = data.getUint32(pos + 8, false);
-
-      break;
+      return data.getUint32(pos + 8, false);
     }
   }
+};
 
-  const getError = () => new Error(`Something wrong with font '${path}'`);
+export const getFontName = (path: string) => {
+  const data = new DataView(fs.readFileSync(path).buffer, 0);
 
-  if (offset === undefined) {
-    throw getError();
-  }
+  let offset = getOffset(data);
 
-  let count = data.getUint16(offset + 2);
-
-  const keyPos = offset + data.getUint16(offset + 4);
-
-  offset += 6;
-
-  while (count--) {
-    const t = data.getUint16(offset);
+  if (offset !== undefined) {
+    const keyPos = offset + data.getUint16(offset + 4);
 
     offset += 6;
 
-    if ((t === 0 || t === 3) && data.getUint16(offset) === 4) {
-      const fontFullName = new Uint16Array(data.getUint16(offset + 2) / 2);
+    for (let i = data.getUint16(offset + 2); i--; ) {
+      const t = data.getUint16(offset);
 
-      for (
-        let i = 0, charPos = keyPos + data.getUint16(offset + 4);
-        i < fontFullName.length;
-        i++, charPos += 2
-      ) {
-        fontFullName[i] = data.getUint16(charPos);
+      offset += 6;
+
+      if ((t === 0 || t === 3) && data.getUint16(offset) === 4) {
+        const fontFullName = new Uint16Array(data.getUint16(offset + 2) / 2);
+
+        for (
+          let i = 0, charPos = keyPos + data.getUint16(offset + 4);
+          i < fontFullName.length;
+          i++, charPos += 2
+        ) {
+          fontFullName[i] = data.getUint16(charPos);
+        }
+
+        return Buffer.from(fontFullName);
       }
 
-      return Buffer.from(fontFullName);
+      offset += 6;
     }
-
-    offset += 6;
   }
 
-  throw getError();
+  throw new Error(`Something wrong with font '${path}'`);
 };
 
 export const normalizeWindowInfo = (windowInfo: _WindowInfo): WindowInfo => ({

@@ -79,19 +79,19 @@ const handleWorker = (WorkerClass: typeof _Worker): typeof Worker =>
           ) => {
             const l = keys.length - 1;
 
+            let i: number;
+
             if (state) {
-              for (let i = 0; i < l; i++) {
+              for (i = 0; i < l; i++) {
                 await _toggleKey(keys[i], true);
               }
-
-              worker.toggleKey(keys[l], true);
             } else {
-              for (let i = l; i > 0; i--) {
+              for (i = l; i > 0; i--) {
                 await _toggleKey(keys[i], false);
               }
-
-              worker.toggleKey(keys[0], false);
             }
+
+            worker.toggleKey(keys[i], state);
           };
 
           const sendKey: Keyboard["sendKey"] = async (
@@ -191,18 +191,14 @@ const handleWorker = (WorkerClass: typeof _Worker): typeof Worker =>
             end: number,
             deviation: number
           ) =>
-            Math.round(
-              start +
-                (end - start) / 2 +
-                _getSign() * (end - start) * 0.01 * deviation
-            );
+            Math.round(start + (end - start) * (0.5 + _getSign() * deviation));
 
           const _firstCurveDotMaker = (
             start: number,
             end: number,
             deviation: number,
             sign: 1 | -1
-          ) => Math.round(start + sign * (end - start) * 0.01 * deviation);
+          ) => Math.round(start + sign * (end - start) * deviation);
 
           const moveTo: Mouse["moveTo"] = (x, y, delay = 0) => {
             worker.move(x, y, true);
@@ -242,6 +238,8 @@ const handleWorker = (WorkerClass: typeof _Worker): typeof Worker =>
             moveTo,
 
             async humanMoveTo(xE, yE, speed = 5, deviation = 30, delay = 0) {
+              deviation /= 100;
+
               const sleepTime = speed >= 1 ? 1 : Math.round(1 / speed);
 
               const { x, y } = worker.lastCoords;
@@ -343,6 +341,8 @@ const handleWorker = (WorkerClass: typeof _Worker): typeof Worker =>
                 };
               };
 
+              const tremorProbability = speed / 15;
+
               const fn = async () => {
                 const { curveDotX1, curveDotX2, curveDotY1, curveDotY2 } =
                   getCurveDots();
@@ -350,8 +350,6 @@ const handleWorker = (WorkerClass: typeof _Worker): typeof Worker =>
                 const dotIterator = speedMultiplier / parts;
 
                 const count = 1 / dotIterator;
-
-                const tremorProbability = speed / 15;
 
                 for (let i = 1; i < count; i++) {
                   const t = i * dotIterator;
