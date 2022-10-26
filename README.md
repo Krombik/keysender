@@ -98,6 +98,7 @@ new GlobalHotkey({
     - [.close](#close)
     - [.capture](#capture)
     - [.colorAt](#colorat)
+  - [Interrupt method execution](#interrupt-method-execution)
 - [GlobalHotkey](#globalhotkey)
   - [.stop](#stop)
   - [.reassignment](#reassignment)
@@ -252,6 +253,8 @@ sendKeys(
   delayAfterRelease?: number | [from: number, to: number],
   delay?: number | [from: number, to: number]
 ): Promise<void>;
+
+sendKeys.cancelCurrent(): Promise<void>
 ```
 
 Pressing and releasing array of keys or combinations of keys
@@ -287,6 +290,8 @@ printText(
   delayAfterCharTyping?: number | [from: number, to: number],
   delay?: number | [from: number, to: number]
 ): Promise<void>;
+
+printText.cancelCurrent(): Promise<void>
 ```
 
 Prints given text
@@ -429,6 +434,8 @@ humanMoveTo(
   deviation?: number,
   delay?: number | [from: number, to: number]
 ): Promise<void>;
+
+humanMoveTo.cancelCurrent(): Promise<void>
 ```
 
 Simulate human similar mouse movement from current cursor position to [x, y] in current workwindow
@@ -809,6 +816,22 @@ obj.workwindow.colorAt(25, 25, "number"); // returns workwindow color in [25, 25
 
 desktop.workwindow.colorAt(25, 25); // returns screen color in [25, 25] in "rrggbb" format
 ```
+
+---
+
+### Interrupt method execution
+
+Execution of some methods ([sendKeys](#sendkeys), [printText](#printtext), [humanMoveTo](#humanmoveto)) can be interrupted by calling `cancelCurrent` method, as in the example below:
+
+```ts
+const obj = new Hardware();
+
+obj.mouse.humanMoveTo(100, 100);
+
+await obj.mouse.humanMoveTo.cancelCurrent();
+```
+
+You can call `cancelCurrent` even if no method currently executing (it will have no effect and return resolved promise) or call it multiple times (each call will return the same promise as the first call)
 
 ---
 

@@ -1,4 +1,5 @@
-import { _Worker } from "./addon";
+import { _Worker } from "../addon";
+import { SetWorkwindow, CancelableFunction } from "./utils";
 
 export type Delay = number | [from: number, to: number];
 
@@ -156,7 +157,7 @@ export type Position = {
 
 export type RGB = [red: number, green: number, blue: number];
 
-export declare type TextToImgOptions = {
+export type TextToImgOptions = {
   /**
    * if `true` - height of returned img will be equal to `fontSize` (some characters may be trimmed top or bottom)
    * @default false
@@ -181,26 +182,6 @@ export declare type TextToImgOptions = {
    * @default "rgba"
    */
   format?: "rgba" | "bgra" | "grey";
-};
-
-export type SetWorkwindow = {
-  /** Sets current workwindow by {@link handle}. */
-  (handle?: number): void;
-  /** Sets current workwindow by first window with {@link title} and/or {@link className} and sets it as current workwindow. */
-  (title: string | null, className?: string | null): void;
-  /** Sets current workwindow by first child window with {@link childClassName} and/or {@link childTitle} of window with {@link parentHandle}. */
-  (
-    parentHandle: number,
-    childClassName: string | null,
-    childTitle?: string | null
-  ): void;
-  /** Sets current workwindow by first child window with {@link childClassName} and/or {@link childTitle} of the first founded window with {@link parentTitle} and/or {@link parentClassName}. */
-  (
-    parentTitle: string | null,
-    parentClassName: string | null,
-    childClassName: string | null,
-    childTitle?: string | null
-  ): void;
 };
 
 export interface Keyboard {
@@ -228,31 +209,30 @@ export interface Keyboard {
     delayAfterRelease?: Delay
   ): Promise<void>;
 
-  /**
-   * Pressing and releasing array of {@link keys keys or combinations of keys}
-   * @param keys - array with keys
-   * @param [delayAfterPress=35] - milliseconds to await after each key pressed, if not provided defaults to `35`
-   * @param [delayAfterRelease=35] - milliseconds to await after each key released (excluding last), if not provided defaults to `35`
-   * @param [delay=0] - milliseconds to await after last key released, if not provided defaults to `0`
-   */
-  sendKeys(
-    keys: (KeyboardButton | KeyboardButton[])[],
-    delayAfterPress?: Delay,
-    delayAfterRelease?: Delay,
-    delay?: Delay
-  ): Promise<void>;
+  sendKeys: CancelableFunction<{
+    /**
+     * Pressing and releasing array of {@link keys keys or combinations of keys}
+     * @param keys - array with keys
+     * @param [delayAfterPress=35] - milliseconds to await after each key pressed, if not provided defaults to `35`
+     * @param [delayAfterRelease=35] - milliseconds to await after each key released (excluding last), if not provided defaults to `35`
+     * @param [delay=0] - milliseconds to await after last key released, if not provided defaults to `0`
+     */ (
+      keys: (KeyboardButton | KeyboardButton[])[],
+      delayAfterPress?: Delay,
+      delayAfterRelease?: Delay,
+      delay?: Delay
+    ): Promise<void>;
+  }>;
 
-  /**
-   * Prints given text
-   * @param text - string to print
-   * @param [delayAfterCharTyping=0] - milliseconds to await after each char typing (excluding last), if not provided defaults to `0`
-   * @param [delay=0] - milliseconds to await after {@link text} printed, if not provided defaults to `0`
-   */
-  printText(
-    text: string,
-    delayAfterCharTyping?: Delay,
-    delay?: Delay
-  ): Promise<void>;
+  printText: CancelableFunction<{
+    /**
+     * Prints given text
+     * @param text - string to print
+     * @param [delayAfterCharTyping=0] - milliseconds to await after each char typing (excluding last), if not provided defaults to `0`
+     * @param [delay=0] - milliseconds to await after {@link text} printed, if not provided defaults to `0`
+     */
+    (text: string, delayAfterCharTyping?: Delay, delay?: Delay): Promise<void>;
+  }>;
 }
 
 export interface Mouse extends Pick<_Worker, "getPos" | "saveMode"> {
@@ -287,19 +267,21 @@ export interface Mouse extends Pick<_Worker, "getPos" | "saveMode"> {
    */
   move(x: number, y: number, delay?: Delay): Promise<void>;
 
-  /**
-   * Simulate human similar mouse movement from current cursor position to [{@link x}, {@link y}] in current workwindow
-   * @param [speed=5] - move speed, if not provided defaults to `5`
-   * @param [deviation=30] - movement curvature, if not provided defaults to `30`
-   * @param [delay=0] - milliseconds to await after movement end, if not provided defaults to `0`
-   */
-  humanMoveTo(
-    x: number,
-    y: number,
-    speed?: number,
-    deviation?: number,
-    delay?: Delay
-  ): Promise<void>;
+  humanMoveTo: CancelableFunction<{
+    /**
+     * Simulate human similar mouse movement from current cursor position to [{@link x}, {@link y}] in current workwindow
+     * @param [speed=5] - move speed, if not provided defaults to `5`
+     * @param [deviation=30] - movement curvature, if not provided defaults to `30`
+     * @param [delay=0] - milliseconds to await after movement end, if not provided defaults to `0`
+     */
+    (
+      x: number,
+      y: number,
+      speed?: number,
+      deviation?: number,
+      delay?: Delay
+    ): Promise<void>;
+  }>;
 
   /**
    * @param amount - the amount of wheel movement. A positive value indicates that the wheel was rotated forward, away from the user, a negative value indicates that the wheel was rotated backward, toward the user

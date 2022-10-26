@@ -14,16 +14,4 @@ export { sleep } from "./utils";
 
 export type { HotkeyOptions } from "./GlobalHotkey";
 
-export type {
-  Delay,
-  KeyboardRegularButton,
-  KeyboardSpecButton,
-  KeyboardButton,
-  MouseButton,
-  Image,
-  WindowInfo,
-  Size,
-  Position,
-  RGB,
-  TextToImgOptions,
-} from "./types";
+export * from "./types";

@@ -1,6 +1,7 @@
 import { Delay, RGB, WindowInfo } from "./types";
 import { _WindowInfo } from "./addon";
 import fs from "fs";
+import { CancelableFunction, SetThisParameter } from "./types/utils";
 
 const resolvedPromise = Promise.resolve();
 
@@ -135,3 +136,37 @@ export const normalizeWindowInfo = (windowInfo: _WindowInfo): WindowInfo => ({
   className: windowInfo.className.toString("ucs2"),
   title: windowInfo.title.toString("ucs2"),
 });
+
+type CancelRef = { cancel(): true | void; isCancelable?: true };
+
+export const makeCancelable = <Fn extends (...args: any[]) => any>(
+  fn: SetThisParameter<CancelRef, Fn>
+) => {
+  const cancelRef: CancelRef = { cancel: noop };
+
+  const cancelableFn = fn.bind(cancelRef) as CancelableFunction<Fn>;
+
+  let promise: Promise<void> | undefined;
+
+  cancelableFn.cancelCurrent = () => {
+    if (!promise && cancelRef.isCancelable) {
+      promise = new Promise<void>((resolve) => {
+        cancelRef.cancel = () => {
+          cancelRef.cancel = noop;
+
+          delete cancelRef.isCancelable;
+
+          resolve();
+
+          promise = undefined;
+
+          return true;
+        };
+      });
+    }
+
+    return promise || resolvedPromise;
+  };
+
+  return cancelableFn;
+};

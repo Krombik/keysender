@@ -2,20 +2,15 @@ import { _Worker, _Hardware, _Virtual } from "./addon";
 import {
   bindPick,
   lazyGetters,
+  makeCancelable,
   normalizeWindowInfo,
   random,
   sleep,
   stringsToBuffers,
 } from "./utils";
-import {
-  Keyboard,
-  KeyboardButton,
-  Mouse,
-  RGB,
-  SetWorkwindow,
-  Workwindow,
-} from "./types";
+import { Keyboard, KeyboardButton, Mouse, RGB, Workwindow } from "./types";
 import { DEFAULT_DELAY, MICRO_DELAY } from "./constants";
+import { SetWorkwindow } from "./types/utils";
 
 declare class Worker {
   /** Provides methods to synthesize keystrokes */
@@ -117,19 +112,35 @@ const handleWorker = (WorkerClass: typeof _Worker): typeof Worker =>
           };
 
           return {
-            async printText(text, delayAfterCharTyping = 0, delay = 0) {
+            printText: makeCancelable<Keyboard["printText"]>(async function (
+              text,
+              delayAfterCharTyping = 0,
+              delay = 0
+            ) {
+              this.isCancelable = true;
+
               const l = text.length - 1;
 
               for (let i = 0; i < l; i++) {
+                if (this.cancel()) {
+                  return;
+                }
+
                 worker.printChar(text.codePointAt(i)!);
 
                 await sleep(delayAfterCharTyping);
               }
 
+              if (this.cancel()) {
+                return;
+              }
+
+              delete this.isCancelable;
+
               worker.printChar(text.codePointAt(l)!);
 
               return sleep(delay);
-            },
+            }),
 
             async toggleKey(key, state, delay = 0) {
               if (Array.isArray(key)) {
@@ -143,20 +154,32 @@ const handleWorker = (WorkerClass: typeof _Worker): typeof Worker =>
 
             sendKey,
 
-            async sendKeys(
+            sendKeys: makeCancelable<Keyboard["sendKeys"]>(async function (
               keys,
               delayAfterPress = DEFAULT_DELAY,
               delayAfterRelease = DEFAULT_DELAY,
               delay = 0
             ) {
+              this.isCancelable = true;
+
               const l = keys.length - 1;
 
               for (let i = 0; i < l; i++) {
+                if (this.cancel()) {
+                  return;
+                }
+
                 await sendKey(keys[i], delayAfterPress, delayAfterRelease);
               }
 
+              if (this.cancel()) {
+                return;
+              }
+
+              delete this.isCancelable;
+
               return sendKey(keys[l], delayAfterPress, delay);
-            },
+            }),
           };
         },
         mouse() {
@@ -237,7 +260,13 @@ const handleWorker = (WorkerClass: typeof _Worker): typeof Worker =>
 
             moveTo,
 
-            async humanMoveTo(xE, yE, speed = 5, deviation = 30, delay = 0) {
+            humanMoveTo: makeCancelable<Mouse["humanMoveTo"]>(async function (
+              xE,
+              yE,
+              speed = 5,
+              deviation = 30,
+              delay = 0
+            ) {
               deviation /= 100;
 
               const sleepTime = speed >= 1 ? 1 : Math.round(1 / speed);
@@ -247,6 +276,8 @@ const handleWorker = (WorkerClass: typeof _Worker): typeof Worker =>
               if (x === xE && y === yE) {
                 return;
               }
+
+              this.isCancelable = true;
 
               const partLength = random(50, 200) / 2;
 
@@ -343,7 +374,7 @@ const handleWorker = (WorkerClass: typeof _Worker): typeof Worker =>
 
               const tremorProbability = speed / 15;
 
-              const fn = async () => {
+              while (true) {
                 const { curveDotX1, curveDotX2, curveDotY1, curveDotY2 } =
                   getCurveDots();
 
@@ -352,6 +383,10 @@ const handleWorker = (WorkerClass: typeof _Worker): typeof Worker =>
                 const count = 1 / dotIterator;
 
                 for (let i = 1; i < count; i++) {
+                  if (this.cancel()) {
+                    return;
+                  }
+
                   const t = i * dotIterator;
 
                   await moveTo(
@@ -373,10 +408,16 @@ const handleWorker = (WorkerClass: typeof _Worker): typeof Worker =>
                   );
                 }
 
+                if (this.cancel()) {
+                  return;
+                }
+
                 if (isLastOne) {
+                  delete this.isCancelable;
+
                   await moveTo(xE, yE, delay);
 
-                  return false;
+                  return;
                 }
 
                 await moveTo(
@@ -406,12 +447,8 @@ const handleWorker = (WorkerClass: typeof _Worker): typeof Worker =>
 
                   isLastOne = true;
                 }
-
-                return true;
-              };
-
-              while (await fn()) {}
-            },
+              }
+            }),
 
             move(x, y, delay = 0) {
               worker.move(x, y, false);
