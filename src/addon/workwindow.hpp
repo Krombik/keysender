@@ -15,15 +15,11 @@ class Workwindow {
   void kill(const Napi::CallbackInfo &info);
   void close(const Napi::CallbackInfo &info);
 
-#ifdef IS_WINDOWS
   static BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam);
   static BOOL CALLBACK EnumChildProc(HWND hWnd, LPARAM lParam);
-#endif
 
  protected:
-#ifdef IS_WINDOWS
   HWND hWnd = NULL;
-#endif
 
   std::wstring title, className, childTitle, childClassName;
   void setWorkwindow(const Napi::CallbackInfo &info);

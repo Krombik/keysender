@@ -2,21 +2,12 @@
 
 #include "helper.hpp"
 
-#ifdef IS_WINDOWS
-
 Napi::Value vkToString(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
 
-  if (info.Length() != 1 || !info[0].IsNumber()) {
-    Napi::Error::New(env, "Expected 1 arguments: Number")
-        .ThrowAsJavaScriptException();
-
-    return env.Undefined();
-  }
-
   UINT keyCode = info[0].As<Napi::Number>();
 
-  for (auto it = Helper::keysDef.begin(); it != Helper::keysDef.end(); ++it) {
+  for (std::map<std::string, UINT>::const_iterator it = Helper::keyboardButtons.begin(); it != Helper::keyboardButtons.end(); ++it) {
     if (it->second == keyCode) {
       return Napi::String::New(env, it->first);
     }
@@ -35,7 +26,7 @@ Napi::Value getAllWindows(const Napi::CallbackInfo &info) {
   Napi::Array windows = Napi::Array::New(env);
 
   for (const HWND &hWnd : hWnds) {
-    windows[windows.Length()] = Helper::windowGetter(hWnd, env);
+    windows[windows.Length()] = Helper::windowGetter(info, hWnd);
   }
 
   return windows;
@@ -44,21 +35,7 @@ Napi::Value getAllWindows(const Napi::CallbackInfo &info) {
 Napi::Value textToImg(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
 
-  if (!info[0].IsBuffer() || !info[1].IsBuffer() || !info[2].IsBuffer() || !info[3].IsNumber() || !info[4].IsObject()) {
-    Napi::Error::New(env, "Expected 5 arguments: Buffer, Buffer, Buffer, Number, Object")
-        .ThrowAsJavaScriptException();
-
-    return env.Undefined();
-  }
-
   Napi::Object options(env, info[4]);
-
-  if (!options.Get("color").IsNumber() || !options.Get("backgroundColor").IsNumber() || !options.Get("enableActualHeight").IsBoolean() || !options.Get("enableAntiAliasing").IsBoolean() || !options.Get("format").IsString()) {
-    Napi::Error::New(env, "Wrong options")
-        .ThrowAsJavaScriptException();
-
-    return env.Undefined();
-  }
 
   RECT rect = {0, 0, 0, 0};
 
@@ -158,18 +135,10 @@ Napi::Value textToImg(const Napi::CallbackInfo &info) {
 }
 
 Napi::Value getWindowChildren(const Napi::CallbackInfo &info) {
-  Napi::Env env = info.Env();
-
   std::wstring title, className;
 
   HWND hWnd = NULL;
 
-  if (info.Length() < 1 || info.Length() > 2 || (!info[0].IsBuffer() && !info[0].IsNull() && !info[0].IsNumber()) || (!info[1].IsBuffer() && !info[1].IsNull() && !info[1].IsUndefined()) || (info[0].IsNull() && info[1].IsNull())) {
-    Napi::Error::New(info.Env(), "Expected 1-2 arguments: Buffer || Null || Number, Buffer || Null")
-        .ThrowAsJavaScriptException();
-
-    return env.Undefined();
-  }
   if (info[0].IsNumber()) {
     hWnd = (HWND)info[0].As<Napi::Number>().Int64Value();
   } else {
@@ -190,7 +159,7 @@ Napi::Value getWindowChildren(const Napi::CallbackInfo &info) {
     delete windowInfo;
   }
 
-  Napi::Array children = Napi::Array::New(env);
+  Napi::Array children = Napi::Array::New(info.Env());
 
   if (hWnd != NULL) {
     std::vector<HWND> hWnds;
@@ -199,7 +168,7 @@ Napi::Value getWindowChildren(const Napi::CallbackInfo &info) {
 
     if (!hWnds.empty()) {
       for (const HWND &hWnd : hWnds) {
-        children[children.Length()] = Helper::windowGetter(hWnd, env);
+        children[children.Length()] = Helper::windowGetter(info, hWnd);
       }
     }
   }
@@ -216,4 +185,12 @@ Napi::Value getScreenSize(const Napi::CallbackInfo &info) {
   return screenSize;
 }
 
-#endif
+Napi::Value isButtonPressed(const Napi::CallbackInfo &info) {
+  Napi::Value btn = info[1];
+
+  return Napi::Number::New(
+      info.Env(),
+      GetAsyncKeyState(std::string(info[0].As<Napi::String>()) == "mouse" ? Helper::mouseButtons.at(btn.As<Napi::String>())
+                                                                          : (btn.IsString() ? Helper::keyboardButtons.at(btn.As<Napi::String>())
+                                                                                            : btn.As<Napi::Number>().Int32Value())) < 0);
+};

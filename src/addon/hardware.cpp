@@ -1,7 +1,5 @@
 #include "hardware.hpp"
 
-#ifdef IS_WINDOWS
-
 const UINT Hardware::extendKeys[] = {
     VK_RCONTROL,
     VK_SNAPSHOT,
@@ -37,10 +35,12 @@ const UINT Hardware::extendKeys[] = {
     VK_LAUNCH_MAIL,
 };
 
-const std::map<uint8_t, std::array<UINT, 2>> Hardware::buttonsDef = {
-    {0, {MOUSEEVENTF_LEFTUP, MOUSEEVENTF_LEFTDOWN}},
-    {1, {MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_RIGHTDOWN}},
-    {2, {MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_MIDDLEDOWN}}};
+const std::map<std::string, std::array<UINT, 2>> Hardware::buttonsDef = {
+    {"left", {MOUSEEVENTF_LEFTUP, MOUSEEVENTF_LEFTDOWN}},
+    {"right", {MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_RIGHTDOWN}},
+    {"middle", {MOUSEEVENTF_MIDDLEUP, MOUSEEVENTF_MIDDLEDOWN}},
+    {"x1", {MOUSEEVENTF_XUP, MOUSEEVENTF_XDOWN}},
+    {"x2", {MOUSEEVENTF_XUP, MOUSEEVENTF_XDOWN}}};
 
 void Hardware::mousePosGetter(POINT *coords) {
   GetCursorPos(coords);
@@ -67,14 +67,16 @@ Napi::Value Hardware::getLastCoords(const Napi::CallbackInfo &info) {
   return coords;
 };
 
-void Hardware::mbToggler(uint8_t button, bool isButtonDown) {
+void Hardware::mbToggler(std::string button, bool isButtonDown) {
   INPUT ip;
 
   ip.type = INPUT_MOUSE;
 
   ip.mi.dx = 0;
   ip.mi.dy = 0;
-  ip.mi.mouseData = 0;
+  ip.mi.mouseData = button == "x1"   ? XBUTTON1
+                    : button == "x2" ? XBUTTON2
+                                     : 0;
   ip.mi.dwExtraInfo = 0;
   ip.mi.time = 0;
   ip.mi.dwFlags = buttonsDef.at(button)[(int)isButtonDown];
@@ -237,5 +239,3 @@ Napi::Object Hardware::Init(Napi::Env env, Napi::Object exports) {
 
   return exports;
 }
-
-#endif

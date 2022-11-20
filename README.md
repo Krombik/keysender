@@ -105,9 +105,12 @@ new GlobalHotkey({
   - [.unregister](#unregister)
   - [.delete](#delete)
   - [.state](#state)
-  - [.hotkeyState](#hotkeystate)
+  - [.isRunning](#isrunning)
   - [unregisterAll](#unregisterall)
   - [deleteAll](#deleteall)
+- [LowLevelHook](#lowlevelhook)
+  - [on](#on)
+- [isButtonPressed](#isbuttonpressed)
 - [textToImg](#texttoimg)
 - [getAllWindows](#getallwindows)
 - [getWindowChildren](#getwindowchildren)
@@ -1130,17 +1133,13 @@ new GlobalHotkey({
 
 ---
 
-### hotkeyState
+### isRunning
 
 ```ts
-hotkeyState: boolean;
+isRunning: boolean;
 ```
 
-if [mode](#mode) is
-
-- `"hold"` - state of **key** (`true` if **key** is pressed, `false` if it isn't)
-- `"toggle"` - state of toggler
-- `"once"` - always `true`
+flag indicating that an action is currently being performed
 
 ---
 
@@ -1176,10 +1175,156 @@ GlobalHotkey.deleteAll();
 
 ---
 
+### LowLevelHook
+
+```ts
+enum Reason {
+  BY_KEYBOARD,
+  BY_ACTION,
+  BY_STOP,
+}
+
+type LowLevelHookOptions<S = never, R = never> = (
+  | {
+      device: "keyboard";
+      button: KeyboardButton | number;
+    }
+  | {
+      device: "mouse";
+      button: MouseButton;
+    }
+) &
+  ([S] extends [never]
+    ? {
+        defaultState?: undefined;
+      }
+    : {
+        defaultState: S;
+      }) &
+  (
+    | {
+        mode: "once";
+        action(this: LowLevelHook<S, R>): void | Promise<void>;
+      }
+    | {
+        mode: "toggle" | "hold";
+        isEnable?(this: LowLevelHook<S, R>): boolean | Promise<boolean>;
+        before?(this: LowLevelHook<S, R>): void | Promise<void>;
+        action(this: LowLevelHook<S, R>): boolean | Promise<boolean>;
+        after?(
+          this: LowLevelHook<S, R>,
+          reason: Reason | R
+        ): void | Promise<void>;
+        delay?: Delay;
+      }
+  );
+
+class LowLevelHook<S = never, R = never> {
+  constructor(options: LowLevelHookOptions<S, R>);
+
+  stop(reason?: Reason.BY_STOP | R): Promise<void> | undefined;
+
+  delete(): void;
+
+  isRunning: boolean;
+
+  state: S;
+
+  static deleteAll(): void;
+
+  static on<D extends "keyboard" | "mouse">(
+    device: D,
+    button: D extends "mouse" ? MouseButton | "wheel" : KeyboardButton | number,
+    state: boolean,
+    listener: () => void
+  ): () => void;
+}
+```
+
+Similar to [GlobalHotkey](#globalhotkey), but also allows you to add callback for mouse, does not block the key itself, can't be provoked by synthetic clicks, can add multiple callbacks for the same button
+
+```ts
+import { LowLevelHook } from "keysender";
+
+new LowLevelHook({
+  device: "keyboard",
+  key: "a",
+  mode: "hold",
+  action() {
+    console.log("'a' pressed");
+
+    return true;
+  },
+});
+
+new LowLevelHook({
+  device: "mouse",
+  key: "left",
+  mode: "once",
+  action() {
+    console.log("left mouse button was pressed");
+  },
+});
+```
+
+---
+
+### on
+
+```ts
+static on<D extends "keyboard" | "mouse">(
+  device: D,
+  button: D extends "mouse" ? MouseButton | "wheel" : KeyboardButton | number,
+  state: boolean,
+  listener: () => void
+): () => void;
+```
+
+Adds **listener** for given **device**, **button** and **state**
+
+```ts
+import { LowLevelHook } from "keysender";
+
+LowLevelHook.on("mouse", "left", true, () => {
+  console.log("left mouse button was pressed");
+});
+
+LowLevelHook.on("keyboard", "a", false, () => {
+  console.log("a was released");
+});
+
+LowLevelHook.on("mouse", "wheel", true, () => {
+  console.log("wheel went forward");
+});
+```
+
+---
+
+### isButtonPressed
+
+```ts
+function isButtonPressed<D extends "keyboard" | "mouse">(
+  device: D,
+  button: D extends "keyboard" ? KeyboardButton | number : MouseButton
+): boolean;
+```
+
+Returns array with objects {handle, title, className} of all open windows
+
+```ts
+import { isButtonPressed } from "keysender";
+
+console.log(isButtonPressed("mouse", "x1"));
+
+console.log(isButtonPressed("keyboard", "f1"));
+```
+
+---
+
 ### textToImg
 
 ```ts
-textToImg(
+function textToImg(
   text: string,
   path: string,
   fontSize: number,
@@ -1236,7 +1381,7 @@ const img3 = textToImg("Hello World!", "./path/to/font.otf", 36, {
 ### getAllWindows
 
 ```ts
-getAllWindows(): Array<{
+function getAllWindows(): Array<{
   handle: number;
   className: string;
   title: string;
@@ -1256,12 +1401,15 @@ console.log(getAllWindows());
 ### getWindowChildren
 
 ```ts
-getWindowChildren(parentHandle: number): {
+function getWindowChildren(parentHandle: number): {
   handle: number;
   className: string;
   title: string;
 }[];
-getWindowChildren(parentTitle: string | null, parentClassName?: string | null): {
+function getWindowChildren(
+  parentTitle: string | null,
+  parentClassName?: string | null
+): {
   handle: number;
   className: string;
   title: string;
@@ -1287,7 +1435,7 @@ console.log(getWindowChildren("Some title", "SomeClass"));
 ### getScreenSize
 
 ```ts
-getScreenSize(): size;
+function getScreenSize(): size;
 ```
 
 Returns object with screen size
@@ -1303,7 +1451,7 @@ console.log(getScreenSize());
 ### vkToString
 
 ```ts
-vkToString(virtualKey: number): KeyboardButton;
+function vkToString(virtualKey: number): KeyboardButton;
 ```
 
 Returns string name of **virtualKey**
@@ -1319,7 +1467,7 @@ console.log(vkToString(66)); // "b"
 ### sleep
 
 ```ts
-sleep(ms: number | [from: number, to: number]): Promise<void>;
+function sleep(ms: number | [from: number, to: number]): Promise<void>;
 ```
 
 This method used under the hood of all async methods

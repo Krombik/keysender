@@ -2,8 +2,6 @@
 
 #include "helper.hpp"
 
-#ifdef IS_WINDOWS
-
 Napi::Value Workwindow::capture(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
 
@@ -20,41 +18,15 @@ Napi::Value Workwindow::capture(const Napi::CallbackInfo &info) {
 
     const int x = part.Get("x").As<Napi::Number>().Int32Value();
 
-    if (x < 0) {
-      Napi::Error::New(env, "x should be >= 0")
-          .ThrowAsJavaScriptException();
-
-      return env.Undefined();
-    }
-
     rect.left = x;
 
     const int y = part.Get("y").As<Napi::Number>().Int32Value();
-
-    if (y < 0) {
-      Napi::Error::New(env, "y should be >= 0")
-          .ThrowAsJavaScriptException();
-
-      return env.Undefined();
-    }
 
     rect.top = y;
 
     width = part.Get("width").As<Napi::Number>().Int32Value();
 
-    if (width <= 0) {
-      Napi::Error::New(env, "width should be > 0")
-          .ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
-
     height = part.Get("height").As<Napi::Number>().Int32Value();
-
-    if (height <= 0) {
-      Napi::Error::New(env, "height should be > 0")
-          .ThrowAsJavaScriptException();
-      return env.Undefined();
-    }
 
     if (info[1].IsString()) {
       format = info[1].As<Napi::String>();
@@ -154,40 +126,13 @@ Napi::Value Workwindow::capture(const Napi::CallbackInfo &info) {
 }
 
 Napi::Value Workwindow::getColor(const Napi::CallbackInfo &info) {
-  Napi::Env env = info.Env();
-
-  if (info.Length() != 2 || !info[0].IsNumber() || !info[1].IsNumber()) {
-    Napi::Error::New(env, "Expected 2 arguments: Number, Number")
-        .ThrowAsJavaScriptException();
-
-    return env.Undefined();
-  }
-
-  const int x = info[0].As<Napi::Number>().Int32Value();
-
-  if (x < 0) {
-    Napi::Error::New(info.Env(), "x should be >= 0")
-        .ThrowAsJavaScriptException();
-
-    return env.Undefined();
-  }
-
-  const int y = info[1].As<Napi::Number>().Int32Value();
-
-  if (y < 0) {
-    Napi::Error::New(info.Env(), "y should be >= 0")
-        .ThrowAsJavaScriptException();
-
-    return env.Undefined();
-  }
-
   HDC context = GetDC(hWnd);
 
-  const unsigned int color = GetPixel(context, x, y);
+  const unsigned int color = GetPixel(context, info[0].As<Napi::Number>().Int32Value(), info[1].As<Napi::Number>().Int32Value());
 
   ReleaseDC(hWnd, context);
 
-  return Napi::Number::New(env, color);
+  return Napi::Number::New(info.Env(), color);
 }
 
 void Workwindow::kill(const Napi::CallbackInfo &info) {
@@ -246,76 +191,44 @@ BOOL CALLBACK Workwindow::EnumChildProc(HWND hWnd, LPARAM lParam) {
 }
 
 void Workwindow::setWorkwindow(const Napi::CallbackInfo &info) {
-  const size_t argsCount = info.Length();
+  if (info[0].IsNumber()) {
+    hWnd = (HWND)info[0].As<Napi::Number>().Int64Value();
 
-  if (argsCount > 0) {
-    Napi::Env env = info.Env();
-
-    bool isError = false;
-
-    if (argsCount > 1) {
-      for (size_t i = 1; i < argsCount; i++) {
-        if (isError |= !info[i].IsBuffer() && !info[i].IsNull()) {
-          break;
-        }
-      }
+    if (info[1].IsBuffer()) {
+      childClassName = Helper::bufferToWstring(info[1]);
     }
 
-    if (isError || argsCount > 4 || (!info[0].IsBuffer() && !info[0].IsNull() && !info[0].IsNumber() && !info[0].IsUndefined()) || (info[0].IsNull() && info[1].IsNull())) {
-      Napi::Error::New(info.Env(), "Expected 0-4 arguments: Buffer || Null || Number, Buffer || Null, Buffer || Null, Buffer || Null")
-          .ThrowAsJavaScriptException();
-
-      return;
+    if (info[2].IsBuffer()) {
+      childTitle = Helper::bufferToWstring(info[2]);
+    }
+  } else {
+    if (info[0].IsBuffer()) {
+      title = Helper::bufferToWstring(info[0]);
     }
 
-    if (info[0].IsNumber()) {
-      hWnd = (HWND)info[0].As<Napi::Number>().Int64Value();
-
-      if (info[1].IsBuffer()) {
-        childClassName = Helper::bufferToWstring(info[1]);
-      }
-
-      if (info[2].IsBuffer()) {
-        childTitle = Helper::bufferToWstring(info[2]);
-      }
-    } else {
-      if (info[0].IsBuffer()) {
-        title = Helper::bufferToWstring(info[0]);
-      }
-
-      if (info[1].IsBuffer()) {
-        className = Helper::bufferToWstring(info[1]);
-      }
-
-      if (info[2].IsBuffer()) {
-        childClassName = Helper::bufferToWstring(info[2]);
-      }
-
-      if (info[3].IsBuffer()) {
-        childTitle = Helper::bufferToWstring(info[3]);
-      }
+    if (info[1].IsBuffer()) {
+      className = Helper::bufferToWstring(info[1]);
     }
 
-    if (hWnd == NULL) {
-      EnumWindows(EnumWindowsProc, (LPARAM)this);
+    if (info[2].IsBuffer()) {
+      childClassName = Helper::bufferToWstring(info[2]);
     }
 
-    if (!childClassName.empty() || !childTitle.empty()) {
-      EnumChildWindows(hWnd, EnumChildProc, (LPARAM)this);
+    if (info[3].IsBuffer()) {
+      childTitle = Helper::bufferToWstring(info[3]);
     }
+  }
+
+  if (hWnd == NULL) {
+    EnumWindows(EnumWindowsProc, (LPARAM)this);
+  }
+
+  if (!childClassName.empty() || !childTitle.empty()) {
+    EnumChildWindows(hWnd, EnumChildProc, (LPARAM)this);
   }
 };
 
 Napi::Value Workwindow::refresh(const Napi::CallbackInfo &info) {
-  Napi::Env env = info.Env();
-
-  if (className.empty() && title.empty()) {
-    Napi::Error::New(env, "Refresh available only if title and/or className exist")
-        .ThrowAsJavaScriptException();
-
-    return env.Undefined();
-  }
-
   hWnd = NULL;
 
   EnumWindows(EnumWindowsProc, (LPARAM)this);
@@ -324,84 +237,35 @@ Napi::Value Workwindow::refresh(const Napi::CallbackInfo &info) {
     EnumChildWindows(hWnd, EnumChildProc, (LPARAM)this);
   }
 
-  return Napi::Boolean::New(env, hWnd != NULL);
+  return Napi::Boolean::New(info.Env(), hWnd != NULL);
 }
 
 Napi::Value Workwindow::getWorkwindow(const Napi::CallbackInfo &info) {
-  return Helper::windowGetter(hWnd, info.Env());
+  return Helper::windowGetter(info, hWnd);
 }
 
 void Workwindow::setWindowView(const Napi::CallbackInfo &info) {
-  Napi::Env env = info.Env();
-
-  if (hWnd == NULL) {
-    Napi::Error::New(env, "handle = 0")
-        .ThrowAsJavaScriptException();
-
-    return;
-  }
-
-  uint16_t x, y, width, height;
-
   RECT rect;
 
   GetWindowRect(hWnd, &rect);
 
-  Napi::Object windowView(env, info[0]);
+  Napi::Object windowView(info.Env(), info[0]);
 
-  if (!windowView.Get("width").IsNumber()) {
-    width = rect.right - rect.left;
-  } else {
-    width = windowView.Get("width").As<Napi::Number>().Int32Value();
+  Napi::Value x = windowView.Get("x");
 
-    if (width < 0) {
-      Napi::Error::New(env, "width should be > 0")
-          .ThrowAsJavaScriptException();
+  Napi::Value y = windowView.Get("y");
 
-      return;
-    }
-  }
+  Napi::Value width = windowView.Get("width");
 
-  if (!windowView.Get("height").IsNumber()) {
-    height = rect.bottom - rect.top;
-  } else {
-    height = windowView.Get("height").As<Napi::Number>().Int32Value();
+  Napi::Value height = windowView.Get("height");
 
-    if (height < 0) {
-      Napi::Error::New(env, "height should be > 0")
-          .ThrowAsJavaScriptException();
-
-      return;
-    }
-  }
-
-  if (windowView.Get("x").IsNumber()) {
-    x = windowView.Get("x").As<Napi::Number>().Int32Value();
-
-    if (x >= 0) {
-      rect.left = x;
-    } else {
-      Napi::Error::New(env, "x should be >= 0")
-          .ThrowAsJavaScriptException();
-
-      return;
-    }
-  }
-
-  if (windowView.Get("y").IsNumber()) {
-    y = windowView.Get("y").As<Napi::Number>().Int32Value();
-
-    if (y >= 0) {
-      rect.top = y;
-    } else {
-      Napi::Error::New(env, "y should be >= 0")
-          .ThrowAsJavaScriptException();
-
-      return;
-    }
-  }
-
-  SetWindowPos(hWnd, NULL, rect.left, rect.top, width, height, NULL);
+  SetWindowPos(hWnd,
+               NULL,
+               x.IsNumber() ? x.As<Napi::Number>().Int32Value() : rect.left,
+               y.IsNumber() ? y.As<Napi::Number>().Int32Value() : rect.top,
+               width.IsNumber() ? width.As<Napi::Number>().Int32Value() : rect.right - rect.left,
+               height.IsNumber() ? height.As<Napi::Number>().Int32Value() : rect.bottom - rect.top,
+               NULL);
 }
 
 Napi::Value Workwindow::getWindowView(const Napi::CallbackInfo &info) {
@@ -436,5 +300,3 @@ Napi::Value Workwindow::isOpen(const Napi::CallbackInfo &info) {
 void Workwindow::setForeground(const Napi::CallbackInfo &info) {
   SetForegroundWindow(hWnd);
 }
-
-#endif

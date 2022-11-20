@@ -125,9 +125,10 @@ export declare class _Virtual extends _Worker {}
 export declare class _GlobalHotkey {
   protected _register(
     key: KeyboardRegularButton | number,
-    mode: "once" | "toggle" | "hold",
     action: () => Promise<void> | void
   ): void;
+
+  protected _getButtonState(): boolean;
 
   /** reassigns hotkey to {@link newKey}, if some hotkey already registered for {@link newKey}, {@link _GlobalHotkey.unregister unregister} previous hotkey and registers new hotkey */
   reassignment(newKey: KeyboardRegularButton | number): void;
@@ -139,13 +140,6 @@ export declare class _GlobalHotkey {
   delete(): void;
   /** delete all hotkeys */
   static deleteAll(): void;
-
-  /**
-   * * if `options.mode` is `"hold"` - state of `options.key` (`true` if `options.key` is pressed, `false` if it isn't),
-   * * if `options.mode` is `"toggle"` - state of `toggler`,
-   * * if `options.mode` is `"once"` - always `true`
-   */
-  hotkeyState: boolean;
 }
 
 export declare const _textToImg: (
@@ -168,5 +162,27 @@ export declare function _getWindowChildren(
 export declare function vkToString(virtualKey: number): KeyboardButton;
 
 export declare function getScreenSize(): Size;
+
+export declare type Device = "mouse" | "keyboard";
+
+export declare function isButtonPressed<D extends Device>(
+  device: D,
+  button: D extends "keyboard" ? KeyboardButton | number : MouseButton
+): boolean;
+
+export declare class _Hook {
+  protected _register(
+    device: Device,
+    button: MouseButton | "wheel" | KeyboardButton | number,
+    state: boolean,
+    callback: () => void
+  ): void;
+
+  protected _getButtonState(): boolean;
+
+  delete(): void;
+
+  static deleteAll(): void;
+}
 
 module.exports = require("../../build/Release/key_sender.node");

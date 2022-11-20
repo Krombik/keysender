@@ -1,18 +1,12 @@
 #include "virtual.hpp"
 
-#ifdef IS_WINDOWS
+#include "helper.hpp"
 
-const std::map<uint8_t, std::array<UINT, 2>> Virtual::msgs = {
-    {0, {WM_LBUTTONUP, WM_LBUTTONDOWN}},
-    {1, {WM_RBUTTONUP, WM_RBUTTONDOWN}},
-    {2, {WM_MBUTTONUP, WM_MBUTTONDOWN}}};
-
-const std::map<UINT, UINT> Virtual::wParams = {{WM_LBUTTONDOWN, MK_LBUTTON},
-                                               {WM_RBUTTONDOWN, MK_RBUTTON},
-                                               {WM_MBUTTONDOWN, MK_MBUTTON},
-                                               {WM_LBUTTONUP, 0},
-                                               {WM_RBUTTONUP, 0},
-                                               {WM_MBUTTONUP, 0}};
+const std::map<std::string, UINT> Virtual::wParams = {{"left", MK_LBUTTON},
+                                                      {"right", MK_RBUTTON},
+                                                      {"middle", MK_MBUTTON},
+                                                      {"x1", MK_XBUTTON1},
+                                                      {"x2", MK_XBUTTON2}};
 
 void Virtual::mousePosGetter(POINT *coords) {
   GetCursorPos(coords);
@@ -28,10 +22,8 @@ Napi::Value Virtual::getLastCoords(const Napi::CallbackInfo &info) {
   return coords;
 };
 
-void Virtual::mbToggler(uint8_t button, bool isButtonDown) {
-  const UINT action = msgs.at(button)[(int)isButtonDown];
-
-  PostMessageA(hWnd, action, wParams.at(action), MAKELPARAM(lastCoords.x, lastCoords.y));
+void Virtual::mbToggler(std::string button, bool isButtonDown) {
+  PostMessageA(hWnd, Helper::mouseEvents.at(button)[(int)isButtonDown], isButtonDown ? wParams.at(button) : 0, MAKELPARAM(lastCoords.x, lastCoords.y));
 }
 
 void Virtual::mover(POINT coords, bool isAbsolute) {
@@ -100,5 +92,3 @@ Napi::Object Virtual::Init(Napi::Env env, Napi::Object exports) {
 
   return exports;
 }
-
-#endif

@@ -12,7 +12,9 @@ std::wstring Helper::bufferToWstring(Napi::Value val) {
   return wstr;
 }
 
-#ifdef IS_WINDOWS
+void Helper::tsfCallback(Napi::Env env, Napi::Function jsCallback) {
+  jsCallback.Call({});
+}
 
 BOOL CALLBACK Helper::EnumWindowsProc(HWND hWnd, LPARAM lParam) {
   if (!IsWindowVisible(hWnd) || !IsWindowEnabled(hWnd) || GetWindowTextLengthA(hWnd) == 0) {
@@ -80,7 +82,9 @@ std::wstring Helper::titleGetter(HWND hWnd) {
   return title;
 }
 
-Napi::Object Helper::windowGetter(HWND hWnd, Napi::Env env) {
+Napi::Object Helper::windowGetter(const Napi::CallbackInfo &info, HWND hWnd) {
+  Napi::Env env = info.Env();
+
   Napi::Object window = Napi::Object::New(env);
 
   window["handle"] = HandleToLong(hWnd);
@@ -104,23 +108,16 @@ Napi::Object Helper::windowGetter(HWND hWnd, Napi::Env env) {
   return window;
 }
 
-bool Helper::getKeyCode(Napi::Value key, UINT *keyCode) {
-  if (key.IsNumber()) {
-    *keyCode = key.As<Napi::Number>();
-  } else {
-    const std::string keyName = key.As<Napi::String>();
+const std::map<std::string, std::array<UINT, 2>> Helper::mouseEvents = {
+    {"left", {WM_LBUTTONUP, WM_LBUTTONDOWN}},
+    {"right", {WM_RBUTTONUP, WM_RBUTTONDOWN}},
+    {"middle", {WM_MBUTTONUP, WM_MBUTTONDOWN}},
+    {"x1", {WM_XBUTTONUP, WM_XBUTTONDOWN}},
+    {"x2", {WM_XBUTTONUP, WM_XBUTTONDOWN}}};
 
-    if (keysDef.count(keyName) == 0) {
-      return false;
-    }
+const std::map<std::string, UINT> Helper::mouseButtons = {{"left", VK_LBUTTON}, {"right", VK_RBUTTON}, {"middle", VK_MBUTTON}, {"x1", VK_XBUTTON1}, {"x2", VK_XBUTTON2}};
 
-    *keyCode = keysDef.at(keyName);
-  }
-
-  return true;
-}
-
-const std::map<std::string, UINT> Helper::keysDef = {
+const std::map<std::string, UINT> Helper::keyboardButtons = {
     {"backspace", VK_BACK},
     {"tab", VK_TAB},
     {"enter", VK_RETURN},
@@ -240,5 +237,3 @@ const std::map<std::string, UINT> Helper::keysDef = {
     {"|", VK_OEM_5},
     {"]", VK_OEM_6},
     {"'", VK_OEM_7}};
-
-#endif

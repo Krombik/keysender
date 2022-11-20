@@ -3,23 +3,7 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#define SOME_NUMBER 5
 #define NONEXISTENT_VIRTUAL_KEY 255
-
-enum HotkeyState {
-  HOTKEY_REGISTERED,
-  HOTKEY_REASSIGNMENT,
-  HOTKEY_UNREGISTERED,
-  HOTKEY_DELETED
-};
-
-#ifdef IS_WINDOWS
-
-struct TsfnContext {
-  HotkeyState state = HOTKEY_REGISTERED;
-  UINT keyCode;
-  Napi::ThreadSafeFunction tsfn;
-};
 
 struct WindowInfo {
   HWND hWnd = NULL;
@@ -42,7 +26,5 @@ typedef struct _BITMAP : BITMAPINFO {
     bmiHeader.biClrImportant = 0;
   }
 } MAKEBITMAPINFO;
-
-#endif
 
 #endif

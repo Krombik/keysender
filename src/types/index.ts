@@ -131,7 +131,7 @@ export type KeyboardButton =
   | KeyboardSpecButton
   | number;
 
-export type MouseButton = "left" | "right" | "middle";
+export type MouseButton = "left" | "right" | "middle" | "x1" | "x2";
 
 export type Image = {
   data: Buffer;

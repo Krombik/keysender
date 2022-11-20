@@ -1,7 +1,7 @@
-import { Delay, RGB, WindowInfo } from "./types";
-import { _WindowInfo } from "./addon";
+import { Delay, RGB, WindowInfo } from "../types";
+import { _WindowInfo } from "../addon";
 import fs from "fs";
-import { CancelableFunction, SetThisParameter } from "./types/utils";
+import { CancelableFunction, SetThisParameter } from "../types/utils";
 
 const resolvedPromise = Promise.resolve();
 
