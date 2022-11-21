@@ -129,16 +129,16 @@ void Hook::registerHook(const Napi::CallbackInfo &info) {
 }
 
 void Hook::unregister(const Napi::CallbackInfo &info) {
-  HookData data = device == "mouse" ? mouse : keyboard;
+  HookData &data = device == "mouse" ? mouse : keyboard;
 
   if (data.set.erase(&context) > 0) {
-    context.tsf.Release();
-
-    if (data.set.size() == 0) {
+    if (data.set.empty()) {
       UnhookWindowsHookEx(data.hhk);
 
       data.hhk = nullptr;
     }
+
+    context.tsf.Release();
   }
 }
 
