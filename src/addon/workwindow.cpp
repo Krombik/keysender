@@ -16,13 +16,9 @@ Napi::Value Workwindow::capture(const Napi::CallbackInfo &info) {
   if (info[0].IsObject()) {
     Napi::Object part(env, info[0]);
 
-    const int x = part.Get("x").As<Napi::Number>().Int32Value();
+    rect.left = part.Get("x").As<Napi::Number>().Int32Value();
 
-    rect.left = x;
-
-    const int y = part.Get("y").As<Napi::Number>().Int32Value();
-
-    rect.top = y;
+    rect.top = part.Get("y").As<Napi::Number>().Int32Value();
 
     width = part.Get("width").As<Napi::Number>().Int32Value();
 
@@ -191,40 +187,44 @@ BOOL CALLBACK Workwindow::EnumChildProc(HWND hWnd, LPARAM lParam) {
 }
 
 void Workwindow::setWorkwindow(const Napi::CallbackInfo &info) {
-  if (info[0].IsNumber()) {
-    hWnd = (HWND)info[0].As<Napi::Number>().Int64Value();
+  if (info.Length() > 0) {
+    if (info[0].IsNumber()) {
+      hWnd = (HWND)info[0].As<Napi::Number>().Int64Value();
 
-    if (info[1].IsBuffer()) {
-      childClassName = Helper::bufferToWstring(info[1]);
+      if (info[1].IsBuffer()) {
+        childClassName = Helper::bufferToWstring(info[1]);
+      }
+
+      if (info[2].IsBuffer()) {
+        childTitle = Helper::bufferToWstring(info[2]);
+      }
+    } else {
+      if (info[0].IsBuffer()) {
+        title = Helper::bufferToWstring(info[0]);
+      }
+
+      if (info[1].IsBuffer()) {
+        className = Helper::bufferToWstring(info[1]);
+      }
+
+      if (info[2].IsBuffer()) {
+        childClassName = Helper::bufferToWstring(info[2]);
+      }
+
+      if (info[3].IsBuffer()) {
+        childTitle = Helper::bufferToWstring(info[3]);
+      }
     }
 
-    if (info[2].IsBuffer()) {
-      childTitle = Helper::bufferToWstring(info[2]);
+    if (hWnd == NULL) {
+      EnumWindows(EnumWindowsProc, (LPARAM)this);
+    }
+
+    if (!childClassName.empty() || !childTitle.empty()) {
+      EnumChildWindows(hWnd, EnumChildProc, (LPARAM)this);
     }
   } else {
-    if (info[0].IsBuffer()) {
-      title = Helper::bufferToWstring(info[0]);
-    }
-
-    if (info[1].IsBuffer()) {
-      className = Helper::bufferToWstring(info[1]);
-    }
-
-    if (info[2].IsBuffer()) {
-      childClassName = Helper::bufferToWstring(info[2]);
-    }
-
-    if (info[3].IsBuffer()) {
-      childTitle = Helper::bufferToWstring(info[3]);
-    }
-  }
-
-  if (hWnd == NULL) {
-    EnumWindows(EnumWindowsProc, (LPARAM)this);
-  }
-
-  if (!childClassName.empty() || !childTitle.empty()) {
-    EnumChildWindows(hWnd, EnumChildProc, (LPARAM)this);
+    hWnd = NULL;
   }
 };
 
