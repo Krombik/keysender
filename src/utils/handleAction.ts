@@ -172,7 +172,7 @@ function handleAction<S, R>(
         await after();
       }
 
-      this.isRunning = false;
+      this.isRunning = innerToggler = false;
 
       resolve!();
     }
@@ -182,9 +182,9 @@ function handleAction<S, R>(
     return getFn(() => (innerToggler = this._getButtonState()));
   }
 
-  const fn = getFn(() => innerToggler);
-
   if (mode === "toggle") {
+    const fn = getFn(() => innerToggler);
+
     return () => {
       if ((innerToggler = !innerToggler)) {
         fn();
