@@ -19,7 +19,7 @@ bool DisableInput::check(DisableInputData &data, WPARAM wParam, int16_t vkCode) 
     for (std::set<DisableInputContext>::iterator it = data.enabled.begin(); it != data.enabled.end(); ++it) {
       DisableInputContext ctx = *it;
 
-      if (!(ctx.vkCode == vkCode && (wParam == ctx.down || ctx.action == wParam))) {
+      if (ctx.vkCode == vkCode && (wParam == ctx.down || ctx.action == wParam)) {
         return false;
       }
     }
@@ -198,8 +198,8 @@ void DisableInput::disable(DisableInputData &data, Napi::Value &value, std::func
   } else {
     data.inverted = true;
 
-    if (mouse.hhk == nullptr) {
-      mouse.hhk = SetWindowsHookExW(idHook, lpfn, NULL, 0);
+    if (data.hhk == nullptr) {
+      data.hhk = SetWindowsHookExW(idHook, lpfn, NULL, 0);
     }
   }
 }
