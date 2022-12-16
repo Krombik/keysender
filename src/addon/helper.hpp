@@ -8,7 +8,7 @@ class Helper {
  public:
   static std::wstring bufferToWstring(Napi::Value val);
   static void tsfCallback(Napi::Env env, Napi::Function jsCallback);
-
+  static std::string getKeyName(UINT vkCode);
   static std::wstring classNameGetter(HWND hWnd);
   static std::wstring titleGetter(HWND hWnd);
   static Napi::Object windowGetter(const Napi::CallbackInfo &info, HWND hWnd);

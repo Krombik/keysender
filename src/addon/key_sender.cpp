@@ -1,4 +1,5 @@
 
+#include "disableInput.hpp"
 #include "hardware.hpp"
 #include "hook.hpp"
 #include "hotkey.hpp"
@@ -11,6 +12,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   Hotkey::Init(env, exports);
   Hook::Init(env, exports);
 
+  exports["disableInput"] = Napi::Function::New(env, &DisableInput::call);
   exports["_textToImg"] = Napi::Function::New(env, textToImg);
   exports["_getAllWindows"] = Napi::Function::New(env, getAllWindows);
   exports["_getWindowChildren"] = Napi::Function::New(env, getWindowChildren);

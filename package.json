@@ -1,6 +1,6 @@
 {
   "name": "keysender",
-  "version": "2.1.4",
+  "version": "2.2.0",
   "description": "Node.js keyboard and mouse inputs emulator, global hotkey register for Windows",
   "keywords": [
     "automation",
@@ -39,9 +39,9 @@
     "node-addon-api": "^5.0.0"
   },
   "devDependencies": {
-    "@types/node": "^18.11.9",
-    "prettier": "^2.7.1",
-    "typescript": "^4.9.3"
+    "@types/node": "^18.11.15",
+    "prettier": "^2.8.1",
+    "typescript": "^4.9.4"
   },
   "files": [
     "dist",

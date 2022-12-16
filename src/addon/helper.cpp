@@ -1,5 +1,15 @@
 #include "helper.hpp"
 
+std::string Helper::getKeyName(UINT vkCode) {
+  for (std::map<std::string, UINT>::const_iterator it = keyboardButtons.begin(); it != keyboardButtons.end(); ++it) {
+    if (it->second == vkCode) {
+      return it->first;
+    }
+  }
+
+  return "";
+};
+
 std::wstring Helper::bufferToWstring(Napi::Value val) {
   Napi::Buffer<wchar_t> buffer = val.As<Napi::Buffer<wchar_t>>();
 

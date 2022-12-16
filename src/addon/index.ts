@@ -6,6 +6,7 @@ import {
   Image,
   KeyboardRegularButton,
   TextToImgOptions,
+  KeyboardSpecButton,
 } from "../types";
 
 export declare type _WindowInfo = {
@@ -105,12 +106,6 @@ export declare class _Worker {
   get lastCoords(): Position;
 
   /**
-   * if `true` - every mouse move method first back to last known coordinates ([0, 0] on first move)
-   * @default false
-   */
-  set saveMode(value: boolean);
-
-  /**
    * Sets workwindow position and/or size
    */
   setView(view: Partial<Position & Size>): void;
@@ -169,6 +164,34 @@ export declare function isButtonPressed<D extends Device>(
   device: D,
   button: D extends "keyboard" ? KeyboardButton | number : MouseButton
 ): boolean;
+
+export declare type DisableInputOptions = {
+  mouse?: (MouseButton | "wheel-forward" | "wheel-back" | "move")[];
+  keyboard?: (KeyboardRegularButton | KeyboardSpecButton)[];
+};
+
+export declare type BlockedInput = { state: boolean } & (
+  | { device: "mouse"; button: MouseButton | "wheel" }
+  | { device: "keyboard"; button: KeyboardRegularButton | KeyboardSpecButton }
+);
+
+/**
+ * disables the device buttons provided in {@link options}
+ * @param options - if some device was not provided, disables all functionality of it
+ */
+export declare function disableInput(
+  disable: true,
+  options?: DisableInputOptions
+): void;
+/**
+ * enables the device buttons provided in {@link options}
+ * @param options - if some device was not provided, enables all functionality of it
+ * @returns array with information about blocked inputs since the last time {@link disableInput} execution (skips mouse move records because it is called too often)
+ */
+export declare function disableInput(
+  disable: false,
+  options?: DisableInputOptions
+): BlockedInput[];
 
 export declare class _Hook {
   protected _register(

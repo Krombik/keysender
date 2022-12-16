@@ -10,6 +10,7 @@
                 "src/addon/hardware.cpp",
                 "src/addon/virtual.cpp",
                 "src/addon/hotkey.cpp",
+                "src/addon/disableInput.cpp",
                 "src/addon/hook.cpp",
                 "src/addon/helper.cpp",
                 "src/addon/utilities.cpp"

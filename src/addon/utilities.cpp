@@ -5,15 +5,9 @@
 Napi::Value vkToString(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
 
-  UINT keyCode = info[0].As<Napi::Number>();
+  std::string name = Helper::getKeyName(info[0].As<Napi::Number>());
 
-  for (std::map<std::string, UINT>::const_iterator it = Helper::keyboardButtons.begin(); it != Helper::keyboardButtons.end(); ++it) {
-    if (it->second == keyCode) {
-      return Napi::String::New(env, it->first);
-    }
-  }
-
-  return env.Undefined();
+  return name != "" ? Napi::String::New(env, name) : env.Undefined();
 }
 
 Napi::Value getAllWindows(const Napi::CallbackInfo &info) {

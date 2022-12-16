@@ -102,6 +102,12 @@ void Hook::registerHook(const Napi::CallbackInfo &info) {
       const std::array<UINT, 2> events = Helper::mouseEvents.at(button);
 
       setWParam(state, events[1], events[0]);
+
+      if (button == "x1") {
+        context.data = XBUTTON1;
+      } else if (button == "x2") {
+        context.data = XBUTTON2;
+      }
     } else {
       context.wParam = WM_MOUSEWHEEL;
 

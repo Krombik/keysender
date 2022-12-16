@@ -16,8 +16,6 @@ class Mouse {
   virtual void mousePosGetter(POINT *coords) = 0;
   virtual void mover(POINT coords, bool isAbsolute) = 0;
 
-  bool saveMode = false;
-  void setSaveMode(const Napi::CallbackInfo &info, const Napi::Value &value);
   virtual void mbToggler(std::string button, bool isButtonDown) = 0;
   virtual void wheelScroller(int x) = 0;
 };

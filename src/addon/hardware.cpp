@@ -51,18 +51,14 @@ void Hardware::mousePosGetter(POINT *coords) {
 Napi::Value Hardware::getLastCoords(const Napi::CallbackInfo &info) {
   Napi::Object coords = Napi::Object::New(info.Env());
 
-  if (saveMode) {
-    coords["x"] = lastCoords.x;
-    coords["y"] = lastCoords.y;
-  } else {
-    POINT curr;
+  POINT curr;
 
-    GetCursorPos(&curr);
-    ScreenToClient(hWnd, &curr);
+  GetCursorPos(&curr);
 
-    coords["x"] = curr.x;
-    coords["y"] = curr.y;
-  }
+  ScreenToClient(hWnd, &curr);
+
+  coords["x"] = curr.x;
+  coords["y"] = curr.y;
 
   return coords;
 };
@@ -110,27 +106,6 @@ void Hardware::mover(POINT coords, bool isAbsolute) {
   ip.mi.time = 0;
   ip.mi.dwFlags = MOUSEEVENTF_MOVE;
 
-  if (saveMode) {
-    POINT currCoords;
-
-    GetCursorPos(&currCoords);
-
-    ScreenToClient(hWnd, &currCoords);
-
-    if (currCoords.x != lastCoords.x && currCoords.y != lastCoords.y) {
-      ip.mi.dx = lastCoords.x - currCoords.x;
-      ip.mi.dy = lastCoords.y - currCoords.y;
-
-      SendInput(1, &ip, sizeof(INPUT));
-    }
-    if (isAbsolute) {
-      lastCoords.x = coords.x;
-      lastCoords.y = coords.y;
-    } else {
-      lastCoords.x = ip.mi.dx + coords.x;
-      lastCoords.y = ip.mi.dy + coords.y;
-    }
-  }
   if (isAbsolute) {
     ip.mi.dx = ((coords.x - GetSystemMetrics(SM_XVIRTUALSCREEN) + 1) << 16) / GetSystemMetrics(SM_CXVIRTUALSCREEN);
     ip.mi.dy = ((coords.y - GetSystemMetrics(SM_YVIRTUALSCREEN) + 1) << 16) / GetSystemMetrics(SM_CYVIRTUALSCREEN);
@@ -228,7 +203,6 @@ Napi::Object Hardware::Init(Napi::Env env, Napi::Object exports) {
           InstanceMethod("setView", &Hardware::setWindowView),
           InstanceMethod("getView", &Hardware::getWindowView),
           InstanceAccessor("lastCoords", &Hardware::getLastCoords, NULL),
-          InstanceAccessor("saveMode", NULL, &Hardware::setSaveMode),
       });
 
   constructor = Napi::Persistent(func);

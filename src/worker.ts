@@ -236,14 +236,6 @@ const handleWorker = (WorkerClass: typeof _Worker): typeof Worker =>
           };
 
           return {
-            set saveMode(value: boolean) {
-              worker.saveMode = value;
-            },
-
-            get saveMode() {
-              throw Error("Not Supported Exception");
-            },
-
             ...bindPick(worker, ["getPos"]),
 
             toggle,

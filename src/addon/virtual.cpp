@@ -27,10 +27,6 @@ void Virtual::mbToggler(std::string button, bool isButtonDown) {
 }
 
 void Virtual::mover(POINT coords, bool isAbsolute) {
-  if (saveMode) {
-    PostMessageA(hWnd, WM_MOUSEMOVE, 1, MAKELPARAM(lastCoords.x, lastCoords.y));
-  }
-
   PostMessageA(hWnd, WM_MOUSEMOVE, 1, isAbsolute ? MAKELPARAM(coords.x, coords.y) : MAKELPARAM(lastCoords.x + coords.x, lastCoords.y + coords.y));
 
   if (isAbsolute) {
@@ -81,7 +77,6 @@ Napi::Object Virtual::Init(Napi::Env env, Napi::Object exports) {
           InstanceMethod("setView", &Virtual::setWindowView),
           InstanceMethod("getView", &Virtual::getWindowView),
           InstanceAccessor("lastCoords", &Virtual::getLastCoords, NULL),
-          InstanceAccessor("saveMode", NULL, &Virtual::setSaveMode),
       });
 
   constructor = Napi::Persistent(func);

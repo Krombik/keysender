@@ -84,7 +84,6 @@ new GlobalHotkey({
     - [.humanMoveTo](#humanmoveto)
     - [.scrollWheel](#scrollwheel)
     - [.getPos](#getpos)
-    - [.saveMode](#saveMode)
   - [.workwindow](#workwindow)
     - [.set](#set)
     - [.get](#get)
@@ -110,6 +109,7 @@ new GlobalHotkey({
   - [deleteAll](#deleteall)
 - [LowLevelHook](#lowlevelhook)
   - [on](#on)
+- [disableInput](#disableinput)
 - [isButtonPressed](#isbuttonpressed)
 - [textToImg](#texttoimg)
 - [getAllWindows](#getallwindows)
@@ -496,27 +496,6 @@ const obj = new Hardware(handle); // or Virtual
 await obj.mouse.moveTo(25, 50);
 
 console.log(obj.mouse.getPos()); // {x: 25, y: 50}
-```
-
----
-
-### saveMod
-
-```ts
-/**
- * @default false
- */
-set saveMode(value: boolean);
-```
-
-if `true` - every mouse move method first back to last known coordinates ([0, 0] on first move)
-
-```ts
-import { Hardware } from "keysender";
-
-const obj = new Hardware(handle); // or Virtual
-
-obj.mouse.saveMode = true;
 ```
 
 ---
@@ -1296,6 +1275,52 @@ LowLevelHook.on("keyboard", "a", false, () => {
 LowLevelHook.on("mouse", "wheel", true, () => {
   console.log("wheel went forward");
 });
+```
+
+---
+
+### disableInput
+
+```ts
+type BlockedInput = {
+  state: boolean;
+} & (
+  | {
+      device: "mouse";
+      button: MouseButton | "wheel";
+    }
+  | {
+      device: "keyboard";
+      button: KeyboardRegularButton | KeyboardSpecButton;
+    }
+);
+
+type DisableInputOptions = {
+  mouse?: (MouseButton | "wheel-forward" | "wheel-back" | "move")[];
+  keyboard?: (KeyboardRegularButton | KeyboardSpecButton)[];
+};
+
+function disableInput(disable: true, options?: DisableInputOptions): void;
+
+function disableInput(
+  disable: false,
+  options?: DisableInputOptions
+): BlockedInput[];
+```
+
+Disables or enables the device buttons provided in **options**, if some device was not provided, disables or enables all functionality of it. <br/>
+Enabling returns array with information about blocked inputs since the last time [disableInput](#disableinput) execution (skips mouse move records because it is called too often)
+
+```ts
+import { disableInput } from "keysender";
+
+disableInput(true); // disables all inputs from mouse and keyboard
+
+disableInput(true, { mouse: [] }); // disables all inputs from keyboard
+
+disableInput(true, { keyboard: [], mouse: ["move"] }); // disables mouse move
+
+disableInput(false); // enables all inputs
 ```
 
 ---

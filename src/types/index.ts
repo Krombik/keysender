@@ -235,7 +235,7 @@ export interface Keyboard {
   }>;
 }
 
-export interface Mouse extends Pick<_Worker, "getPos" | "saveMode"> {
+export interface Mouse extends Pick<_Worker, "getPos"> {
   /**
    * @param [button="left"] - name of mouse button, if not provided defaults to `"left"`
    * @param [delayAfterPress=35] - milliseconds to await after {@link button} pressed, if not provided defaults to `35`
