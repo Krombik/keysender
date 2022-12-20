@@ -188,8 +188,8 @@ void DisableInput::disable(DisableInputData &data, Napi::Value &value, std::func
           data.disabled.insert(handleItem(actions.Get(i).As<Napi::String>()));
         }
 
-        if (mouse.hhk == nullptr) {
-          mouse.hhk = SetWindowsHookExW(idHook, lpfn, NULL, 0);
+        if (data.hhk == nullptr) {
+          data.hhk = SetWindowsHookExW(idHook, lpfn, NULL, 0);
         }
       }
     }
@@ -279,7 +279,7 @@ Napi::Value DisableInput::call(const Napi::CallbackInfo &info) {
 
   enable(keyboard, options.Get("keyboard"), &handleKeyboard, Helper::keyboardButtons.size());
 
-  Napi::Array arr = Napi::Array::New(env, blockedInputs.size());
+  Napi::Array arr = Napi::Array::New(env);
 
   std::map<BlockedInput, Napi::Object> itemMap;
 
