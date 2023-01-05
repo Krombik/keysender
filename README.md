@@ -127,7 +127,7 @@ new GlobalHotkey({
 /** Finds the first window with {handle} */
 constructor(handle?: number);
 /**
- * Finds the first window with {title} and/or {className} and sets it as current workwindow
+ * Finds the first window with {title} and/or {className} and sets it as current workwindow. In case no parameter is specified, the workwindow is set as the entire desktop.
  * */
 constructor(title: string | null, className?: string | null);
 /**
