@@ -39,35 +39,35 @@ bool DisableInput::check(DisableInputData &data, WPARAM wParam, int16_t vkCode) 
     }
 
     return true;
-  } else {
-    for (std::set<DisableInputContext>::iterator it = data.disabled.begin(); it != data.disabled.end(); ++it) {
-      DisableInputContext ctx = *it;
+  }
 
-      if (ctx.vkCode == vkCode) {
-        const bool isDown = wParam == ctx.down;
+  for (std::set<DisableInputContext>::iterator it = data.disabled.begin(); it != data.disabled.end(); ++it) {
+    DisableInputContext ctx = *it;
 
-        if (isDown || ctx.action == wParam) {
-          if (isDown) {
-            const size_t size = data.pressedButtons.size();
+    if (ctx.vkCode == vkCode) {
+      const bool isDown = wParam == ctx.down;
 
-            data.pressedButtons.insert(MAKELONG(ctx.action, vkCode));
+      if (isDown || ctx.action == wParam) {
+        if (isDown) {
+          const size_t size = data.pressedButtons.size();
 
-            if (data.pressedButtons.size() > size) {
-              blockedInputs.push_back({wParam, vkCode});
-            }
-          } else if (wParam != WM_MOUSEMOVE) {
-            data.pressedButtons.erase(MAKELONG(ctx.action, vkCode));
+          data.pressedButtons.insert(MAKELONG(ctx.action, vkCode));
 
+          if (data.pressedButtons.size() > size) {
             blockedInputs.push_back({wParam, vkCode});
           }
+        } else if (wParam != WM_MOUSEMOVE) {
+          data.pressedButtons.erase(MAKELONG(ctx.action, vkCode));
 
-          return true;
+          blockedInputs.push_back({wParam, vkCode});
         }
+
+        return true;
       }
     }
-
-    return false;
   }
+
+  return false;
 }
 
 LRESULT CALLBACK DisableInput::MouseHookProc(int nCode, WPARAM wParam, LPARAM lParam) {
@@ -94,26 +94,28 @@ LRESULT CALLBACK DisableInput::KeyboardHookProc(int nCode, WPARAM wParam, LPARAM
   return CallNextHookEx(0, nCode, wParam, lParam);
 }
 
-DisableInputContext DisableInput::handleMouse(std::string action) {
+DisableInputContext DisableInput::handleMouse(const Napi::Value &action) {
   DisableInputContext item;
 
-  if (action == "move") {
+  const std::string key = action.As<Napi::String>();
+
+  if (key == "move") {
     item.action = WM_MOUSEMOVE;
-  } else if (action == "wheel-forward" || action == "wheel-back") {
+  } else if (key == "wheel-forward" || key == "wheel-back") {
     item.action = WM_MOUSEWHEEL;
 
     item.vkCode = "wheel-forward" ? WHEEL_DELTA : -WHEEL_DELTA;
   } else {
-    if (action == "left") {
+    if (key == "left") {
       item.down = WM_LBUTTONDOWN;
-    } else if (action == "right") {
+    } else if (key == "right") {
       item.down = WM_RBUTTONDOWN;
-    } else if (action == "middle") {
+    } else if (key == "middle") {
       item.down = WM_MBUTTONDOWN;
     } else {
       item.down = WM_XBUTTONDOWN;
 
-      item.vkCode = action == "x1" ? XBUTTON1 : XBUTTON2;
+      item.vkCode = key == "x1" ? XBUTTON1 : XBUTTON2;
     }
 
     item.action = downUpMap.at(item.down);
@@ -122,14 +124,14 @@ DisableInputContext DisableInput::handleMouse(std::string action) {
   return item;
 }
 
-DisableInputContext DisableInput::handleKeyboard(std::string action) {
+DisableInputContext DisableInput::handleKeyboard(const Napi::Value &action) {
   DisableInputContext item;
 
   item.down = WM_KEYDOWN;
 
   item.action = downUpMap.at(item.down);
 
-  item.vkCode = Helper::keyboardButtons.at(action);
+  item.vkCode = Helper::getKeyboardKeyCode(action);
 
   return item;
 }
@@ -148,13 +150,13 @@ void DisableInput::cleanup(DisableInputData &data) {
   data.enabled.clear();
 }
 
-void DisableInput::enable(DisableInputData &data, Napi::Value &value, std::function<DisableInputContext(std::string)> handleItem, size_t count) {
+void DisableInput::enable(DisableInputData &data, const Napi::Value &value, std::function<DisableInputContext(Napi::Value)> handleItem, size_t count) {
   if (value.IsArray()) {
     Napi::Array actions = value.As<Napi::Array>();
 
     if (data.inverted) {
       for (size_t i = 0; i < actions.Length(); i++) {
-        data.enabled.insert(handleItem(actions.Get(i).As<Napi::String>()));
+        data.enabled.insert(handleItem(actions.Get(i)));
       }
 
       if (data.enabled.size() == count) {
@@ -162,7 +164,7 @@ void DisableInput::enable(DisableInputData &data, Napi::Value &value, std::funct
       }
     } else {
       for (size_t i = 0; i < actions.Length(); i++) {
-        data.disabled.erase(handleItem(actions.Get(i).As<Napi::String>()));
+        data.disabled.erase(handleItem(actions.Get(i)));
       }
 
       if (data.disabled.empty()) {
@@ -174,7 +176,7 @@ void DisableInput::enable(DisableInputData &data, Napi::Value &value, std::funct
   }
 }
 
-void DisableInput::disable(DisableInputData &data, Napi::Value &value, std::function<DisableInputContext(std::string)> handleItem, int idHook, HOOKPROC lpfn) {
+void DisableInput::disable(DisableInputData &data, const Napi::Value &value, std::function<DisableInputContext(Napi::Value)> handleItem, int idHook, HOOKPROC lpfn) {
   if (value.IsArray()) {
     Napi::Array actions = value.As<Napi::Array>();
 

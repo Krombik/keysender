@@ -15,7 +15,7 @@ Napi::Value getAllWindows(const Napi::CallbackInfo &info) {
 
   std::vector<HWND> hWnds;
 
-  EnumWindows(Helper::EnumAllWindowsProc, reinterpret_cast<LPARAM>(&hWnds));
+  EnumWindows(&Helper::EnumAllWindowsProc, reinterpret_cast<LPARAM>(&hWnds));
 
   Napi::Array windows = Napi::Array::New(env);
 
@@ -180,11 +180,8 @@ Napi::Value getScreenSize(const Napi::CallbackInfo &info) {
 }
 
 Napi::Value isButtonPressed(const Napi::CallbackInfo &info) {
-  Napi::Value btn = info[1];
-
-  return Napi::Number::New(
+  return Napi::Boolean::New(
       info.Env(),
-      GetAsyncKeyState(std::string(info[0].As<Napi::String>()) == "mouse" ? Helper::mouseButtons.at(btn.As<Napi::String>())
-                                                                          : (btn.IsString() ? Helper::keyboardButtons.at(btn.As<Napi::String>())
-                                                                                            : btn.As<Napi::Number>().Int32Value())) < 0);
+      GetAsyncKeyState(std::string(info[0].As<Napi::String>()) == "mouse" ? Helper::mouseButtons.at(info[1].As<Napi::String>())
+                                                                          : Helper::getKeyboardKeyCode(info[1])) < 0);
 };

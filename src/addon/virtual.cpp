@@ -46,8 +46,10 @@ void Virtual::keyToggler(UINT key, bool isKeyDown) {
   PostMessageA(hWnd, isKeyDown ? WM_KEYDOWN : WM_KEYUP, key, 0 | (key << 16) | (0 << 24) | (0 << 29) | ((UINT)!isKeyDown << 30) | ((UINT)!isKeyDown << 31));
 }
 
-void Virtual::charPrinter(int code) {
-  SendMessageW(hWnd, WM_CHAR, (WPARAM)code, 0);
+void Virtual::charPrinter(std::wstring str) {
+  for (size_t i = 0; i < str.size(); i++) {
+    SendMessageW(hWnd, WM_CHAR, str.at(i), 0);
+  }
 }
 
 Napi::FunctionReference Virtual::constructor;
@@ -71,6 +73,7 @@ Napi::Object Virtual::Init(Napi::Env env, Napi::Object exports) {
           InstanceMethod("capture", &Virtual::capture),
           InstanceMethod("getColor", &Virtual::getColor),
           InstanceMethod("kill", &Virtual::kill),
+          InstanceMethod("close", &Virtual::close),
           InstanceMethod("refresh", &Virtual::refresh),
           InstanceMethod("setWorkwindow", &Virtual::setWorkwindow),
           InstanceMethod("getWorkwindow", &Virtual::getWorkwindow),

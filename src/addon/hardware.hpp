@@ -24,7 +24,7 @@ class Hardware : public Keyboard, public Mouse, public Workwindow, public Napi::
   Napi::Value getLastCoords(const Napi::CallbackInfo &info);
   void mbToggler(std::string button, bool isButtonDown);
   void wheelScroller(int x);
-  void charPrinter(int code);
+  void charPrinter(std::wstring str);
 #
 };
 

@@ -56,11 +56,11 @@ class DisableInput {
   static bool check(DisableInputData &data, WPARAM wParam, int16_t key);
   static LRESULT CALLBACK KeyboardHookProc(int nCode, WPARAM wParam, LPARAM lParam);
   static LRESULT CALLBACK MouseHookProc(int nCode, WPARAM wParam, LPARAM lParam);
-  static DisableInputContext handleMouse(std::string action);
-  static DisableInputContext handleKeyboard(std::string action);
+  static DisableInputContext handleMouse(const Napi::Value &action);
+  static DisableInputContext handleKeyboard(const Napi::Value &action);
   static void cleanup(DisableInputData &data);
-  static void disable(DisableInputData &data, Napi::Value &value, std::function<DisableInputContext(std::string)> handleItem, int idHook, HOOKPROC lpfn);
-  static void enable(DisableInputData &data, Napi::Value &value, std::function<DisableInputContext(std::string)> handleItem, size_t count);
+  static void disable(DisableInputData &data, const Napi::Value &value, std::function<DisableInputContext(Napi::Value)> handleItem, int idHook, HOOKPROC lpfn);
+  static void enable(DisableInputData &data, const Napi::Value &value, std::function<DisableInputContext(Napi::Value)> handleItem, size_t count);
   static DisableInputData mouse;
   static DisableInputData keyboard;
   static std::vector<BlockedInput> blockedInputs;

@@ -13,7 +13,7 @@ class Keyboard {
 
  private:
   virtual void keyToggler(UINT key, bool isKeyDown) = 0;
-  virtual void charPrinter(int code) = 0;
+  virtual void charPrinter(std::wstring str) = 0;
 };
 
 #endif

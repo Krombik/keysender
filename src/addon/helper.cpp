@@ -10,8 +10,8 @@ std::string Helper::getKeyName(UINT vkCode) {
   return "";
 };
 
-std::wstring Helper::bufferToWstring(Napi::Value val) {
-  Napi::Buffer<wchar_t> buffer = val.As<Napi::Buffer<wchar_t>>();
+std::wstring Helper::bufferToWstring(const Napi::Value &value) {
+  Napi::Buffer<wchar_t> buffer = value.As<Napi::Buffer<wchar_t>>();
 
   std::wstring wstr;
 
@@ -118,6 +118,10 @@ Napi::Object Helper::windowGetter(const Napi::CallbackInfo &info, HWND hWnd) {
   return window;
 }
 
+UINT Helper::getKeyboardKeyCode(const Napi::Value &value) {
+  return value.IsString() ? keyboardButtons.at(value.As<Napi::String>()) : value.As<Napi::Number>().Int32Value();
+}
+
 const std::map<std::string, std::array<UINT, 2>> Helper::mouseEvents = {
     {"left", {WM_LBUTTONUP, WM_LBUTTONDOWN}},
     {"right", {WM_RBUTTONUP, WM_RBUTTONDOWN}},
@@ -135,18 +139,18 @@ const std::map<std::string, UINT> Helper::keyboardButtons = {
     {"ctrl", VK_CONTROL},
     {"alt", VK_MENU},
     {"pause", VK_PAUSE},
-    {"capslock", VK_CAPITAL},
+    {"capsLock", VK_CAPITAL},
     {"escape", VK_ESCAPE},
     {"space", VK_SPACE},
-    {"pageup", VK_PRIOR},
-    {"pagedown", VK_NEXT},
+    {"pageUp", VK_PRIOR},
+    {"pageDown", VK_NEXT},
     {"end", VK_END},
     {"home", VK_HOME},
     {"left", VK_LEFT},
     {"up", VK_UP},
     {"right", VK_RIGHT},
     {"down", VK_DOWN},
-    {"prntscrn", VK_SNAPSHOT},
+    {"printScreen", VK_SNAPSHOT},
     {"insert", VK_INSERT},
     {"delete", VK_DELETE},
     {"0", 0x30},
@@ -185,8 +189,8 @@ const std::map<std::string, UINT> Helper::keyboardButtons = {
     {"x", 0x58},
     {"y", 0x59},
     {"z", 0x5a},
-    {"lwin", VK_LWIN},
-    {"rwin", VK_RWIN},
+    {"lWin", VK_LWIN},
+    {"rWin", VK_RWIN},
     {"num0", VK_NUMPAD0},
     {"num0", VK_NUMPAD0},
     {"num1", VK_NUMPAD1},
@@ -228,22 +232,22 @@ const std::map<std::string, UINT> Helper::keyboardButtons = {
     {"f22", VK_F22},
     {"f23", VK_F23},
     {"f24", VK_F24},
-    {"numlock", VK_NUMLOCK},
-    {"scrolllock", VK_SCROLL},
-    {"lshift", VK_LSHIFT},
-    {"rshift", VK_RSHIFT},
-    {"lctrl", VK_LCONTROL},
-    {"rctrl", VK_RCONTROL},
-    {"lalt", VK_LMENU},
-    {"ralt", VK_RMENU},
+    {"numLock", VK_NUMLOCK},
+    {"scrollLock", VK_SCROLL},
+    {"lShift", VK_LSHIFT},
+    {"rShift", VK_RSHIFT},
+    {"lCtrl", VK_LCONTROL},
+    {"rCtrl", VK_RCONTROL},
+    {"lAlt", VK_LMENU},
+    {"rAlt", VK_RMENU},
     {";", VK_OEM_1},
     {"=", VK_OEM_PLUS},
     {",", VK_OEM_COMMA},
     {"-", VK_OEM_MINUS},
     {".", VK_OEM_PERIOD},
     {"/", VK_OEM_2},
-    {"~", VK_OEM_3},
+    {"`", VK_OEM_3},
     {"[", VK_OEM_4},
-    {"|", VK_OEM_5},
+    {"\\", VK_OEM_5},
     {"]", VK_OEM_6},
     {"'", VK_OEM_7}};

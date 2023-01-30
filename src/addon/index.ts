@@ -6,7 +6,6 @@ import {
   Image,
   KeyboardRegularButton,
   TextToImgOptions,
-  KeyboardSpecButton,
 } from "../types";
 
 export declare type _WindowInfo = {
@@ -27,7 +26,7 @@ export declare class _Worker {
 
   toggleKey(key: KeyboardButton | number, state: boolean): void;
 
-  printChar(charCode: number): void;
+  printChar(buffer: Buffer): void;
 
   /**
    * Checks if the current workwindow exist
@@ -154,7 +153,9 @@ export declare function _getWindowChildren(
 ): _WindowInfo[];
 
 /** @returns string name of {@link virtualKey} */
-export declare function vkToString(virtualKey: number): KeyboardButton;
+export declare function vkToString(
+  virtualKey: number
+): Exclude<KeyboardButton, number>;
 
 export declare function getScreenSize(): Size;
 
@@ -162,17 +163,17 @@ export declare type Device = "mouse" | "keyboard";
 
 export declare function isButtonPressed<D extends Device>(
   device: D,
-  button: D extends "keyboard" ? KeyboardButton | number : MouseButton
+  button: D extends "keyboard" ? KeyboardButton : MouseButton
 ): boolean;
 
 export declare type DisableInputOptions = {
   mouse?: (MouseButton | "wheel-forward" | "wheel-back" | "move")[];
-  keyboard?: (KeyboardRegularButton | KeyboardSpecButton)[];
+  keyboard?: KeyboardButton[];
 };
 
 export declare type BlockedInput = { state: boolean } & (
   | { device: "mouse"; button: MouseButton | "wheel" }
-  | { device: "keyboard"; button: KeyboardRegularButton | KeyboardSpecButton }
+  | { device: "keyboard"; button: Exclude<KeyboardButton, number> }
 );
 
 /**
@@ -196,7 +197,7 @@ export declare function disableInput(
 export declare class _Hook {
   protected _register(
     device: Device,
-    button: MouseButton | "wheel" | KeyboardButton | number,
+    button: MouseButton | "wheel" | KeyboardButton,
     state: boolean,
     callback: () => void
   ): void;

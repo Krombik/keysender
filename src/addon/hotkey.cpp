@@ -41,7 +41,7 @@ void Hotkey::messagesGetter(HotkeyContext *context) {
       if (currState != prevState) {
         prevState = currState;
 
-        context->tsf.BlockingCall(Helper::tsfCallback);
+        context->tsf.BlockingCall(&Helper::tsfCallback);
       }
     }
   }
@@ -60,7 +60,7 @@ void Hotkey::messagesGetter(HotkeyContext *context) {
 }
 
 void Hotkey::registerHotkey(const Napi::CallbackInfo &info) {
-  const UINT keyCode = Helper::keyboardButtons.at(info[0].As<Napi::String>());
+  const UINT keyCode = Helper::getKeyboardKeyCode(info[0]);
 
   if (!hotkeyPointers.empty()) {
     unregisterDuplicate(keyCode);
@@ -76,7 +76,7 @@ void Hotkey::registerHotkey(const Napi::CallbackInfo &info) {
 }
 
 void Hotkey::reassignmentHotkey(const Napi::CallbackInfo &info) {
-  const UINT keyCode = Helper::keyboardButtons.at(info[0].As<Napi::String>());
+  const UINT keyCode = Helper::getKeyboardKeyCode(info[0]);
 
   if (hotkeyPointers.size() > 1) {
     unregisterDuplicate(keyCode);

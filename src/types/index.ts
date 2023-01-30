@@ -8,18 +8,18 @@ export type KeyboardRegularButton =
   | "tab"
   | "enter"
   | "pause"
-  | "capslock"
+  | "capsLock"
   | "escape"
   | "space"
-  | "pageup"
-  | "pagedown"
+  | "pageUp"
+  | "pageDown"
   | "end"
   | "home"
   | "left"
   | "up"
   | "right"
   | "down"
-  | "prntscrn"
+  | "printScreen"
   | "insert"
   | "delete"
   | "0"
@@ -99,17 +99,17 @@ export type KeyboardRegularButton =
   | "f22"
   | "f23"
   | "f24"
-  | "numlock"
-  | "scrolllock"
+  | "numLock"
+  | "scrollLock"
   | ";"
   | "="
   | ","
   | "-"
   | "."
   | "/"
-  | "~"
+  | "`"
   | "["
-  | "|"
+  | "\\"
   | "]"
   | "'";
 
@@ -117,14 +117,14 @@ export type KeyboardSpecButton =
   | "alt"
   | "ctrl"
   | "shift"
-  | "lshift"
-  | "rshift"
-  | "lctrl"
-  | "rctrl"
-  | "lalt"
-  | "ralt"
-  | "lwin"
-  | "rwin";
+  | "lShift"
+  | "rShift"
+  | "lCtrl"
+  | "rCtrl"
+  | "lAlt"
+  | "rAlt"
+  | "lWin"
+  | "rWin";
 
 export type KeyboardButton =
   | KeyboardRegularButton
@@ -209,7 +209,7 @@ export interface Keyboard {
     delayAfterRelease?: Delay
   ): Promise<void>;
 
-  sendKeys: CancelableFunction<{
+  readonly sendKeys: CancelableFunction<{
     /**
      * Pressing and releasing array of {@link keys keys or combinations of keys}
      * @param keys - array with keys
@@ -224,7 +224,7 @@ export interface Keyboard {
     ): Promise<void>;
   }>;
 
-  printText: CancelableFunction<{
+  readonly printText: CancelableFunction<{
     /**
      * Prints given text
      * @param text - string to print
@@ -267,7 +267,7 @@ export interface Mouse extends Pick<_Worker, "getPos"> {
    */
   move(x: number, y: number, delay?: Delay): Promise<void>;
 
-  humanMoveTo: CancelableFunction<{
+  readonly humanMoveTo: CancelableFunction<{
     /**
      * Simulate human similar mouse movement from current cursor position to [{@link x}, {@link y}] in current workwindow
      * @param [speed=5] - move speed, if not provided defaults to `5`

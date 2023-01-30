@@ -11,8 +11,8 @@ struct WindowInfo {
   std::wstring title;
 };
 
-typedef struct _BITMAP : BITMAPINFO {
-  _BITMAP(int height, int width) {
+struct MAKEBITMAPINFO : BITMAPINFO {
+  MAKEBITMAPINFO(int height, int width) {
     bmiHeader.biWidth = width;
     bmiHeader.biHeight = -height;
     bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -25,6 +25,6 @@ typedef struct _BITMAP : BITMAPINFO {
     bmiHeader.biClrUsed = 0;
     bmiHeader.biClrImportant = 0;
   }
-} MAKEBITMAPINFO;
+};
 
 #endif

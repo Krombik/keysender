@@ -17,10 +17,10 @@ void Hook::callStack(std::set<HookContext *> const &stack, WPARAM wParam, int16_
         } else if (context.state && wParam == context.wParam) {
           context.state = false;
 
-          context.tsf.BlockingCall(Helper::tsfCallback);
+          context.tsf.BlockingCall(&Helper::tsfCallback);
         }
       } else if (context.wParam == wParam) {
-        context.tsf.BlockingCall(Helper::tsfCallback);
+        context.tsf.BlockingCall(&Helper::tsfCallback);
       }
     }
   }
@@ -89,14 +89,12 @@ Napi::Value Hook::getButtonState(const Napi::CallbackInfo &info) {
 void Hook::registerHook(const Napi::CallbackInfo &info) {
   device = info[0].As<Napi::String>();
 
-  Napi::Value btn = info[1];
-
   const bool state(info[2].As<Napi::Boolean>());
 
   context.tsf = Napi::ThreadSafeFunction::New(info.Env(), info[3].As<Napi::Function>(), "F", 0, 1);
 
   if (device == "mouse") {
-    const std::string button = btn.As<Napi::String>();
+    const std::string button = info[1].As<Napi::String>();
 
     if (button != "wheel") {
       const std::array<UINT, 2> events = Helper::mouseEvents.at(button);
@@ -124,7 +122,7 @@ void Hook::registerHook(const Napi::CallbackInfo &info) {
   } else if (device == "keyboard") {
     setWParam(state, WM_KEYDOWN, WM_KEYUP);
 
-    context.data = btn.IsString() ? Helper::keyboardButtons.at(btn.As<Napi::String>()) : btn.As<Napi::Number>().Int32Value();
+    context.data = Helper::getKeyboardKeyCode(info[1]);
 
     keyboard.set.insert(&context);
 

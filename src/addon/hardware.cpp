@@ -157,22 +157,30 @@ void Hardware::keyToggler(UINT key, bool isKeyDown) {
   SendInput(1, &ip, sizeof(INPUT));
 }
 
-void Hardware::charPrinter(int code) {
-  INPUT ip;
+void Hardware::charPrinter(std::wstring str) {
+  std::vector<INPUT> vec;
 
-  ip.type = INPUT_KEYBOARD;
+  for (size_t i = 0; i < str.size(); i++) {
+    INPUT input;
 
-  ip.ki.time = 0;
-  ip.ki.wVk = 0;
-  ip.ki.dwExtraInfo = 0;
-  ip.ki.dwFlags = KEYEVENTF_UNICODE;
-  ip.ki.wScan = code;
+    input.type = INPUT_KEYBOARD;
 
-  SendInput(1, &ip, sizeof(INPUT));
+    input.ki.time = 0;
+    input.ki.wVk = 0;
+    input.ki.dwExtraInfo = 0;
+    input.ki.dwFlags = KEYEVENTF_UNICODE;
+    input.ki.wScan = str.at(i);
 
-  ip.ki.dwFlags |= KEYEVENTF_KEYUP;
+    vec.push_back(input);
 
-  SendInput(1, &ip, sizeof(INPUT));
+    INPUT nextInput = input;
+
+    nextInput.ki.dwFlags |= KEYEVENTF_KEYUP;
+
+    vec.push_back(nextInput);
+  }
+
+  SendInput(vec.size(), vec.data(), sizeof(INPUT));
 }
 
 Napi::FunctionReference Hardware::constructor;

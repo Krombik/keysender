@@ -22,17 +22,19 @@ declare class Worker {
   /** Provides methods to work with workwindow */
   readonly workwindow: Workwindow;
 
-  /** Finds the first window with {@link handle} */
-  constructor(handle?: number);
-  /** Finds the first window with {@link title} and/or {@link className} and sets it as current workwindow */
+  /** Use entire desktop as workwindow */
+  constructor();
+  /** Use the first window with {@link handle} */
+  constructor(handle: number);
+  /** Use the first window with {@link title} and/or {@link className} and sets it as current workwindow */
   constructor(title: string | null, className?: string | null);
-  /** Finds the first child window with {@link childClassName} and/or {@link childTitle} of window with {@link parentHandle} and sets it as current workwindow */
+  /** Use the first child window with {@link childClassName} and/or {@link childTitle} of window with {@link parentHandle} and sets it as current workwindow */
   constructor(
     parentHandle: number,
     childClassName: string | null,
     childTitle?: string | null
   );
-  /** Finds the first child window with {@link childClassName} and/or {@link childTitle} of the first found window with {@link parentTitle} and/or {@link parentClassName} and sets it as current workwindow */
+  /** Use the first child window with {@link childClassName} and/or {@link childTitle} of the first found window with {@link parentTitle} and/or {@link parentClassName} and sets it as current workwindow */
   constructor(
     parentTitle: string | null,
     parentClassName: string | null,
@@ -58,7 +60,7 @@ const handleWorker = (WorkerClass: typeof _Worker): typeof Worker =>
     constructor(...args: any[]) {
       const worker = new WorkerClass();
 
-      handleSetWorkwindow(worker)(...args);
+      handleSetWorkwindow(worker).apply(null, args);
 
       lazyGetters(this, {
         keyboard() {
@@ -117,27 +119,39 @@ const handleWorker = (WorkerClass: typeof _Worker): typeof Worker =>
               delayAfterCharTyping = 0,
               delay = 0
             ) {
-              this.isCancelable = true;
+              if (text) {
+                if (delayAfterCharTyping) {
+                  this.isCancelable = true;
 
-              const l = text.length - 1;
+                  const it = new Intl.Segmenter()
+                    .segment(text)
+                    [Symbol.iterator]();
 
-              for (let i = 0; i < l; i++) {
-                if (this.cancel()) {
-                  return;
+                  let curr = it.next();
+
+                  for (let next = it.next(); !next.done; next = it.next()) {
+                    if (this.isCanceled()) {
+                      return;
+                    }
+
+                    worker.printChar(Buffer.from(curr.value.segment, "ucs2"));
+
+                    await sleep(delayAfterCharTyping);
+
+                    curr = next;
+                  }
+
+                  if (this.isCanceled()) {
+                    return;
+                  }
+
+                  delete this.isCancelable;
+
+                  worker.printChar(Buffer.from(curr.value.segment, "ucs2"));
+                } else {
+                  worker.printChar(Buffer.from(text, "ucs2"));
                 }
-
-                worker.printChar(text.codePointAt(i)!);
-
-                await sleep(delayAfterCharTyping);
               }
-
-              if (this.cancel()) {
-                return;
-              }
-
-              delete this.isCancelable;
-
-              worker.printChar(text.codePointAt(l)!);
 
               return sleep(delay);
             }),
@@ -165,14 +179,14 @@ const handleWorker = (WorkerClass: typeof _Worker): typeof Worker =>
               const l = keys.length - 1;
 
               for (let i = 0; i < l; i++) {
-                if (this.cancel()) {
+                if (this.isCanceled()) {
                   return;
                 }
 
                 await sendKey(keys[i], delayAfterPress, delayAfterRelease);
               }
 
-              if (this.cancel()) {
+              if (this.isCanceled()) {
                 return;
               }
 
@@ -375,7 +389,7 @@ const handleWorker = (WorkerClass: typeof _Worker): typeof Worker =>
                 const count = 1 / dotIterator;
 
                 for (let i = 1; i < count; i++) {
-                  if (this.cancel()) {
+                  if (this.isCanceled()) {
                     return;
                   }
 
@@ -400,7 +414,7 @@ const handleWorker = (WorkerClass: typeof _Worker): typeof Worker =>
                   );
                 }
 
-                if (this.cancel()) {
+                if (this.isCanceled()) {
                   return;
                 }
 

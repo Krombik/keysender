@@ -124,14 +124,16 @@ new GlobalHotkey({
 ### Hardware or Virtual
 
 ```ts
-/** Finds the first window with {handle} */
-constructor(handle?: number);
+/** Use entire desktop as workwindow */
+constructor();
+/** Use the first window with {handle} */
+constructor(handle: number);
 /**
- * Finds the first window with {title} and/or {className} and sets it as current workwindow. In case no parameter is specified, the workwindow is set as the entire desktop.
+ * Use the first window with {title} and/or {className} and sets it as current workwindow
  * */
 constructor(title: string | null, className?: string | null);
 /**
- * Finds the first child window with {childClassName} and/or {childTitle}
+ * Use the first child window with {childClassName} and/or {childTitle}
  * of window with {parentHandle} and sets it as current workwindow
  * */
 constructor(
@@ -140,7 +142,7 @@ constructor(
   childTitle?: string | null
 );
 /**
- * Finds the first child window with {childClassName} and/or {childTitle}
+ * Use the first child window with {childClassName} and/or {childTitle}
  * of the first found window with {parentTitle} and/or {parentClassName}
  * and sets it as current workwindow
  * */
@@ -509,11 +511,13 @@ Provides methods to work with workwindow
 ### set
 
 ```ts
-/** Sets current workwindow by {handle}. */
-set(handle?: number): void;
+/** Sets entire desktop as current workwindow */
+set();
+/** Sets current workwindow by {handle} */
+set(handle: number): void;
 /**
  * Finds the first window with {title}
- * and/or {className} and sets it as current workwindow.
+ * and/or {className} and sets it as current workwindow
  * */
 set(title: string | null, className?: string | null): void;
 /**
@@ -1297,7 +1301,7 @@ type BlockedInput = {
 
 type DisableInputOptions = {
   mouse?: (MouseButton | "wheel-forward" | "wheel-back" | "move")[];
-  keyboard?: (KeyboardRegularButton | KeyboardSpecButton)[];
+  keyboard?: KeyboardButton[];
 };
 
 function disableInput(disable: true, options?: DisableInputOptions): void;
@@ -1517,18 +1521,18 @@ type KeyboardRegularButton =
   | "tab"
   | "enter"
   | "pause"
-  | "capslock"
+  | "capsLock"
   | "escape"
   | "space"
-  | "pageup"
-  | "pagedown"
+  | "pageUp"
+  | "pageDown"
   | "end"
   | "home"
   | "left"
   | "up"
   | "right"
   | "down"
-  | "prntscrn"
+  | "printScreen"
   | "insert"
   | "delete"
   | "0"
@@ -1608,17 +1612,17 @@ type KeyboardRegularButton =
   | "f22"
   | "f23"
   | "f24"
-  | "numlock"
-  | "scrolllock"
+  | "numLock"
+  | "scrollLock"
   | ";"
   | "="
   | ","
   | "-"
   | "."
   | "/"
-  | "~"
+  | "`"
   | "["
-  | "|"
+  | "\\"
   | "]"
   | "'";
 
@@ -1626,14 +1630,14 @@ type KeyboardSpecButton =
   | "alt"
   | "ctrl"
   | "shift"
-  | "lshift"
-  | "rshift"
-  | "lctrl"
-  | "rctrl"
-  | "lalt"
-  | "ralt"
-  | "lwin"
-  | "rwin";
+  | "lShift"
+  | "rShift"
+  | "lCtrl"
+  | "rCtrl"
+  | "lAlt"
+  | "rAlt"
+  | "lWin"
+  | "rWin";
 
 type KeyboardButton = KeyboardRegularButton | KeyboardSpecButton | number;
 ```

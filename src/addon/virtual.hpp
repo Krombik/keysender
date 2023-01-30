@@ -22,7 +22,7 @@ class Virtual : public Keyboard, public Mouse, public Workwindow, public Napi::O
   Napi::Value Virtual::getLastCoords(const Napi::CallbackInfo &info);
   void mbToggler(std::string button, bool isButtonDown);
   void wheelScroller(int x);
-  void charPrinter(int code);
+  void charPrinter(std::wstring str);
 };
 
 #endif

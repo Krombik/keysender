@@ -1,6 +1,8 @@
 export type SetWorkwindow = {
+  /** Sets entire desktop as current workwindow */
+  (): void;
   /** Sets current workwindow by {@link handle}. */
-  (handle?: number): void;
+  (handle: number): void;
   /** Sets current workwindow by first window with {@link title} and/or {@link className} and sets it as current workwindow. */
   (title: string | null, className?: string | null): void;
   /** Sets current workwindow by first child window with {@link childClassName} and/or {@link childTitle} of window with {@link parentHandle}. */

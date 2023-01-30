@@ -137,12 +137,12 @@ export const normalizeWindowInfo = (windowInfo: _WindowInfo): WindowInfo => ({
   title: windowInfo.title.toString("ucs2"),
 });
 
-type CancelRef = { cancel(): true | void; isCancelable?: true };
+type CancelRef = { isCanceled(): true | void; isCancelable?: true };
 
 export const makeCancelable = <Fn extends (...args: any[]) => any>(
   fn: SetThisParameter<CancelRef, Fn>
 ) => {
-  const cancelRef: CancelRef = { cancel: noop };
+  const cancelRef: CancelRef = { isCanceled: noop };
 
   const cancelableFn = fn.bind(cancelRef) as CancelableFunction<Fn>;
 
@@ -151,8 +151,8 @@ export const makeCancelable = <Fn extends (...args: any[]) => any>(
   cancelableFn.cancelCurrent = () => {
     if (!promise && cancelRef.isCancelable) {
       promise = new Promise<void>((resolve) => {
-        cancelRef.cancel = () => {
-          cancelRef.cancel = noop;
+        cancelRef.isCanceled = () => {
+          cancelRef.isCanceled = noop;
 
           delete cancelRef.isCancelable;
 
