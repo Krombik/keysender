@@ -18,7 +18,7 @@ class Helper {
   static UINT getKeyboardKeyCode(const Napi::Value &value);
   static const std::map<std::string, UINT> mouseButtons;
   static const std::map<std::string, UINT> keyboardButtons;
-  static const std::map<std::string, std::array<UINT, 2>> Helper::mouseEvents;
+  static const std::map<std::string, std::array<UINT, 2>> mouseEvents;
 };
 
 #endif

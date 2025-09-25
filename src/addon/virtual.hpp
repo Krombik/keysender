@@ -19,7 +19,7 @@ class Virtual : public Keyboard, public Mouse, public Workwindow, public Napi::O
   void mover(POINT coords, bool isAbsolute);
   void keyToggler(UINT key, bool isKeyDown);
 
-  Napi::Value Virtual::getLastCoords(const Napi::CallbackInfo &info);
+  Napi::Value getLastCoords(const Napi::CallbackInfo &info);
   void mbToggler(std::string button, bool isButtonDown);
   void wheelScroller(int x);
   void charPrinter(std::wstring str);

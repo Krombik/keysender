@@ -1,6 +1,6 @@
 {
   "name": "keysender",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "Node.js keyboard and mouse inputs emulator, global hotkey register for Windows",
   "keywords": [
     "automation",
@@ -22,7 +22,7 @@
   "main": "./dist/index.js",
   "scripts": {
     "install": "node-gyp rebuild",
-    "build": "yarn tsc"
+    "build": "pnpm tsc"
   },
   "types": "./dist/index.d.ts",
   "repository": {
@@ -37,12 +37,12 @@
   },
   "homepage": "https://github.com/Krombik/keysender#readme",
   "dependencies": {
-    "node-addon-api": "^5.1.0"
+    "node-addon-api": "8.5.0"
   },
   "devDependencies": {
-    "@types/node": "^18.11.18",
-    "prettier": "^2.8.3",
-    "typescript": "^4.9.4"
+    "@types/node": "24.5.2",
+    "prettier": "3.6.2",
+    "typescript": "5.9.2"
   },
   "files": [
     "dist",
